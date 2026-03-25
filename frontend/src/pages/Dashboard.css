@@ -1,0 +1,372 @@
+.candidate-dash-wrap {
+  min-height: calc(100vh - 82px);
+  padding: 2.2rem 0 3.2rem;
+  background:
+    radial-gradient(720px 260px at 4% 0%, rgba(14, 116, 144, 0.13), transparent),
+    radial-gradient(660px 280px at 98% 15%, rgba(245, 158, 11, 0.13), transparent),
+    var(--bg-canvas);
+}
+
+.candidate-dash-grid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.dash-profile-card,
+.dash-main-card {
+  border-radius: 18px;
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  box-shadow: 0 18px 36px rgba(2, 12, 27, 0.07);
+}
+
+.dash-profile-card {
+  padding: 1.2rem;
+  display: grid;
+  gap: 0.7rem;
+  align-self: start;
+  position: sticky;
+  top: 96px;
+}
+
+.dash-profile-card h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.dash-profile-card p {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.profile-row svg {
+  color: #64748b;
+}
+
+.profile-skills-block {
+  margin-top: 0.3rem;
+}
+
+.profile-skills-block h3 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.chip-list {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.38rem;
+}
+
+.chip-list span {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--brand-ink);
+  padding: 0.27rem 0.48rem;
+  border-radius: 999px;
+  border: 1px solid #bde0ea;
+  background: #edf8fb;
+}
+
+.completion-wrap {
+  margin-top: 0.55rem;
+  border-radius: 12px;
+  background: #f8fbfd;
+  border: 1px solid var(--border-soft);
+  padding: 0.65rem;
+}
+
+.completion-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.completion-track {
+  margin: 0.45rem 0 0.55rem;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.completion-track span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(140deg, var(--brand-ink), var(--brand-ink-2));
+}
+
+.inline-link {
+  color: var(--brand-ink);
+  font-weight: 700;
+  font-size: 0.84rem;
+}
+
+.dash-main-card {
+  padding: 1rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 0.65rem;
+}
+
+.stat-box {
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  padding: 0.8rem;
+  background: linear-gradient(130deg, #fff 10%, #f7fcfe 100%);
+}
+
+.stat-box small {
+  color: var(--text-soft);
+}
+
+.stat-box strong {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 1.45rem;
+}
+
+.resume-upload-card,
+.applications-table-card {
+  border-radius: 14px;
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  padding: 0.9rem;
+}
+
+.resume-upload-card h2,
+.applications-table-card h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.resume-upload-card p {
+  margin: 0.3rem 0 0.65rem;
+  color: var(--text-soft);
+}
+
+.resume-upload-card input[type='file'] {
+  margin-bottom: 0.65rem;
+  width: 100%;
+}
+
+.resume-upload-card button {
+  border-radius: 10px;
+  padding: 0.56rem 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(140deg, var(--brand-ink), var(--brand-ink-2));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.resume-upload-card button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.upload-note {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.applications-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.7rem;
+}
+
+.applications-title-row a {
+  color: var(--brand-ink);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.simple-table-wrap {
+  overflow-x: auto;
+}
+
+.simple-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.simple-table-wrap th,
+.simple-table-wrap td {
+  text-align: left;
+  padding: 0.58rem 0.5rem;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 0.89rem;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  padding: 0.18rem 0.48rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.status-pill.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.accepted {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.empty-panel {
+  border: 1px dashed var(--border-soft);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-soft);
+}
+
+.empty-panel a {
+  color: var(--brand-ink);
+  font-weight: 700;
+}
+
+@media (max-width: 1050px) {
+  .candidate-dash-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-profile-card {
+    position: static;
+  }
+}
+
+@media (max-width: 700px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.resume-upload-card {
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 12px;
+  width: 400px;
+}
+
+.custom-upload {
+  display: inline-block;
+  background: #0f766e;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.custom-upload:hover {
+  background: #115e59;
+}
+
+.file-info {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.download-btn {
+  background: #22c55e;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.upload-success {
+  margin-top: 10px;
+  color: green;
+  font-weight: 500;
+}
+.resume-upload-card {
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 12px;
+  width: 400px;
+}
+
+.upload-section {
+  display: flex;
+  flex-direction: column;   /* 👈 MAIN FIX */
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.custom-upload {
+  background: #0f766e;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.upload-btn {
+  background: #14b8a6;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: flex;              /* 👈 important */
+    align-items: center;        /* vertical center */
+    justify-content: center;    /* horizontal center */
+    gap: 8px;
+}
+
+.file-info {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.download-btn {
+  background: #22c55e;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.upload-success {
+  margin-top: 10px;
+  color: green;
+  font-weight: 500;
+}

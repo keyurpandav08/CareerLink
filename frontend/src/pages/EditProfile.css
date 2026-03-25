@@ -1,0 +1,98 @@
+.profile-edit-wrap {
+  min-height: calc(100vh - 82px);
+  padding: 2.3rem 1rem 3rem;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(700px 230px at 8% 0%, rgba(14, 116, 144, 0.14), transparent),
+    var(--bg-canvas);
+}
+
+.profile-edit-card {
+  width: min(620px, 100%);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 44px rgba(2, 12, 27, 0.08);
+  padding: 1.5rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.profile-edit-card h1 {
+  margin: 0;
+  font-size: 1.55rem;
+}
+
+.profile-edit-card p {
+  margin: 0 0 0.65rem;
+  color: var(--text-soft);
+}
+
+.profile-edit-card label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.profile-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 0.55rem 0.68rem;
+}
+
+.profile-input:focus-within {
+  border-color: var(--brand-ink);
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.16);
+}
+
+.profile-input svg {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.profile-input input,
+.profile-input select {
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: 0.2rem 0;
+  background: transparent;
+}
+
+.profile-save-btn {
+  margin-top: 0.4rem;
+  border-radius: 12px;
+  background: linear-gradient(140deg, var(--brand-ink), var(--brand-ink-2));
+  color: #fff;
+  font-weight: 700;
+  padding: 0.75rem;
+  box-shadow: 0 14px 24px rgba(14, 116, 144, 0.26);
+}
+
+.profile-save-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.profile-alert {
+  border-radius: 11px;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.profile-alert.ok {
+  border: 1px solid #86efac;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.profile-alert.bad {
+  border: 1px solid #fca5a5;
+  background: #fee2e2;
+  color: #991b1b;
+}

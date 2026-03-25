@@ -1,0 +1,110 @@
+.create-job-wrap {
+  min-height: calc(100vh - 82px);
+  padding: 2.2rem 0 3rem;
+  background:
+    radial-gradient(680px 240px at 94% 0%, rgba(14, 116, 144, 0.13), transparent),
+    var(--bg-canvas);
+}
+
+.create-job-card {
+  border-radius: 18px;
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  box-shadow: 0 20px 40px rgba(2, 12, 27, 0.08);
+  padding: 1rem;
+}
+
+.create-job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.create-job-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.create-job-header p {
+  margin: 0.3rem 0 0;
+  color: var(--text-soft);
+}
+
+.create-job-header a {
+  color: var(--brand-ink);
+  font-weight: 700;
+}
+
+.create-job-alert {
+  border-radius: 12px;
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+  color: #991b1b;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.create-job-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.create-job-form label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.create-job-form input,
+.create-job-form select,
+.create-job-form textarea {
+  width: 100%;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 0.58rem 0.65rem;
+  outline: none;
+}
+
+.create-job-form textarea {
+  resize: vertical;
+}
+
+.create-job-form input:focus,
+.create-job-form select:focus,
+.create-job-form textarea:focus {
+  border-color: var(--brand-ink);
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.16);
+}
+
+.create-job-form .full-width {
+  grid-column: 1 / -1;
+}
+
+.create-job-form button[type='submit'] {
+  grid-column: 1 / -1;
+  border-radius: 12px;
+  border: none;
+  padding: 0.75rem;
+  color: #fff;
+  font-weight: 700;
+  background: linear-gradient(140deg, var(--brand-ink), var(--brand-ink-2));
+  box-shadow: 0 14px 24px rgba(14, 116, 144, 0.24);
+}
+
+.create-job-form button[type='submit']:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  .create-job-form {
+    grid-template-columns: 1fr;
+  }
+}

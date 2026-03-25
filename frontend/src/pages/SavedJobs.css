@@ -1,0 +1,77 @@
+.saved-jobs-wrap {
+  min-height: calc(100vh - 82px);
+  padding: 2.2rem 0 3rem;
+  background:
+    radial-gradient(700px 240px at 95% 0%, rgba(14, 116, 144, 0.12), transparent),
+    var(--bg-canvas);
+}
+
+.saved-jobs-card {
+  border-radius: 18px;
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  box-shadow: 0 20px 40px rgba(2, 12, 27, 0.08);
+  padding: 1rem;
+}
+
+.saved-jobs-card header h1 {
+  margin: 0;
+  font-size: 1.55rem;
+}
+
+.saved-jobs-card header p {
+  margin: 0.35rem 0 1rem;
+  color: var(--text-soft);
+}
+
+.saved-empty {
+  border: 1px dashed var(--border-soft);
+  border-radius: 12px;
+  padding: 1.2rem;
+  text-align: center;
+  color: var(--text-soft);
+}
+
+.saved-empty svg {
+  margin-bottom: 0.45rem;
+}
+
+.saved-empty a {
+  color: var(--brand-ink);
+  font-weight: 700;
+}
+
+.saved-jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.8rem;
+}
+
+.saved-job-item {
+  border-radius: 14px;
+  border: 1px solid var(--border-soft);
+  padding: 0.8rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.saved-job-item h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.saved-job-item p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+}
+
+.saved-job-item span {
+  font-weight: 700;
+}
+
+.saved-job-item a {
+  color: var(--brand-ink);
+  font-weight: 700;
+  font-size: 0.9rem;
+}

@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700&display=swap');
+
+:root {
+  --brand-ink: #0e7490;
+  --brand-ink-2: #0f766e;
+  --brand-gold: #f59e0b;
+
+  --primary: var(--brand-ink);
+  --primary-hover: #155e75;
+  --secondary: #0f172a;
+  --accent: var(--brand-gold);
+
+  --background: #f3f8fa;
+  --surface: #ffffff;
+  --bg-canvas: #f4fafc;
+
+  --text-main: #0f172a;
+  --text-secondary: #334155;
+  --text-soft: #64748b;
+
+  --border: #dbe7ed;
+  --border-soft: #d5e4ec;
+  --danger: #ef4444;
+  --success: #16a34a;
+
+  --font-sans: 'Manrope', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Sora', 'Manrope', system-ui, sans-serif;
+
+  --radius-sm: 0.4rem;
+  --radius-md: 0.7rem;
+  --radius-lg: 1rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.01em;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  color: var(--text-main);
+  background: #fff;
+}
+
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.btn-primary-glow {
+  border-radius: 11px;
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  background: linear-gradient(145deg, var(--brand-ink), var(--brand-ink-2));
+  box-shadow: 0 14px 26px rgba(14, 116, 144, 0.24);
+}
+
+.btn-outline {
+  border-radius: 11px;
+  border: 1px solid var(--border-soft);
+  color: var(--text-main);
+  font-weight: 700;
+  background: #fff;
+}

@@ -1,0 +1,246 @@
+.auth-shell {
+  min-height: calc(100vh - 82px);
+  padding: 2rem 1rem 3rem;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(700px 260px at 10% 0%, rgba(14, 116, 144, 0.12), transparent),
+    radial-gradient(620px 280px at 96% 15%, rgba(245, 158, 11, 0.15), transparent),
+    var(--bg-canvas);
+}
+
+.register-shell {
+  padding-top: 2.8rem;
+}
+
+.auth-card {
+  width: min(760px, 100%);
+  border: 1px solid var(--border-soft);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 24px 48px rgba(2, 12, 27, 0.08);
+  padding: 2rem;
+}
+
+.login-card-modern {
+  max-width: 430px;
+}
+
+.auth-logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.8rem;
+}
+
+.auth-logo-wrap img {
+  height: 64px;
+  width: auto;
+}
+
+.auth-card h1 {
+  margin: 0;
+  text-align: center;
+  font-size: 1.8rem;
+  color: var(--text-main);
+}
+
+.auth-subtitle {
+  margin: 0.45rem auto 1.1rem;
+  text-align: center;
+  color: var(--text-soft);
+  max-width: 550px;
+}
+
+.role-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+.role-toggle button {
+  padding: 0.7rem;
+  font-weight: 700;
+  color: var(--text-soft);
+  background: #f8fcfd;
+}
+
+.role-toggle button.active {
+  background: linear-gradient(135deg, var(--brand-ink), var(--brand-ink-2));
+  color: #fff;
+}
+
+.auth-banner {
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.85rem;
+  font-size: 0.9rem;
+}
+
+.auth-banner.success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.auth-banner.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.register-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 0.85rem;
+}
+
+.register-grid label {
+  margin-bottom: 0.28rem;
+}
+
+.auth-form label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.auth-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.58rem 0.68rem;
+}
+
+.auth-input:focus-within {
+  border-color: var(--brand-ink);
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.16);
+}
+
+.auth-input svg {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.auth-input input,
+.auth-input select {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-main);
+  padding: 0.22rem 0;
+  font-size: 0.94rem;
+}
+
+.auth-input.input-error {
+  border-color: #ef4444;
+}
+
+.auth-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  color: #64748b;
+}
+
+.auth-row-right {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.auth-row-right a {
+  color: var(--brand-ink);
+  font-weight: 700;
+  font-size: 0.84rem;
+}
+
+.auth-submit {
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(140deg, var(--brand-ink), var(--brand-ink-2));
+  color: #fff;
+  font-weight: 700;
+  padding: 0.76rem 1rem;
+  margin-top: 0.25rem;
+  box-shadow: 0 14px 24px rgba(14, 116, 144, 0.24);
+}
+
+.auth-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-switch {
+  margin-top: 0.95rem;
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 0.92rem;
+}
+
+.auth-switch a {
+  color: var(--brand-ink);
+  font-weight: 700;
+}
+
+.terms-check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.86rem;
+  color: var(--text-soft);
+}
+
+.terms-check input {
+  accent-color: var(--brand-ink);
+}
+
+.terms-check a {
+  color: var(--brand-ink);
+  font-weight: 700;
+}
+
+.password-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.password-rules span {
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  padding: 0.28rem 0.55rem;
+  font-size: 0.76rem;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.password-rules .ok {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 768px) {
+  .auth-card {
+    padding: 1.3rem;
+  }
+
+  .register-grid {
+    grid-template-columns: 1fr;
+  }
+}
