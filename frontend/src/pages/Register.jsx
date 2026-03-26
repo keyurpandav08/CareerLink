@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, IdCard, KeyRound, Mail, Phone, ShieldCheck, UserRound } from 'lucide-react';
 import SkillTagInput from '../components/SkillTagInput';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 import api from '../services/api';
 import logo from '../pages/joblithic.png';
 import './Auth.css';
@@ -15,6 +16,7 @@ const initialData = {
   confirmPassword: '',
   skills: '',
   experience: 'Fresher',
+  companyName: '',
   role: { name: 'APPLICANT' }
 };
 
@@ -78,6 +80,10 @@ const Register = () => {
       setError('Please add at least one skill.');
       return;
     }
+    if (selectedRole === 'EMPLOYER' && !formData.companyName.trim()) {
+      setError('Company name is required for employer registration.');
+      return;
+    }
 
     setLoading(true);
 
@@ -94,6 +100,8 @@ const Register = () => {
       if (selectedRole === 'APPLICANT') {
         payload.skills = formData.skills;
         payload.experience = formData.experience;
+      } else {
+        payload.companyName = formData.companyName.trim();
       }
 
       await api.post('/users/register', payload);
@@ -145,7 +153,7 @@ const Register = () => {
 
         <form onSubmit={handleSubmit} className="auth-form register-grid">
           <div>
-            <label htmlFor="fullName">Full Name</label>
+            <label htmlFor="fullName">{selectedRole === 'EMPLOYER' ? 'Contact Person' : 'Full Name'}</label>
             <div className="auth-input">
               <IdCard size={16} />
               <input
@@ -153,7 +161,7 @@ const Register = () => {
                 value={formData.fullName}
                 onChange={(event) => handleFieldChange('fullName', event.target.value)}
                 required
-                placeholder="Your full name"
+                placeholder={selectedRole === 'EMPLOYER' ? 'HR / hiring manager name' : 'Your full name'}
               />
             </div>
           </div>
@@ -234,6 +242,24 @@ const Register = () => {
             </>
           )}
 
+          {selectedRole === 'EMPLOYER' && (
+            <>
+              <div className="full-width">
+                <label htmlFor="companyName">Company Name</label>
+                <div className="auth-input">
+                  <IdCard size={16} />
+                  <input
+                    id="companyName"
+                    value={formData.companyName}
+                    onChange={(event) => handleFieldChange('companyName', event.target.value)}
+                    required
+                    placeholder="e.g. DevSphere Pvt Ltd"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
           <div>
             <label htmlFor="password">Password</label>
             <div className="auth-input">
@@ -295,6 +321,8 @@ const Register = () => {
         <p className="auth-switch">
           Already registered? <Link to="/login">Sign in</Link>
         </p>
+        <div className="auth-divider"><span>or</span></div>
+        <GoogleAuthButton label="Create account with Google" onError={setError} />
       </div>
     </section>
   );

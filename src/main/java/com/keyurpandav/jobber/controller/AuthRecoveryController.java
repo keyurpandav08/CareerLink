@@ -4,15 +4,24 @@ import com.keyurpandav.jobber.dto.UserDto;
 import com.keyurpandav.jobber.entity.User;
 import com.keyurpandav.jobber.service.EmailService;
 import com.keyurpandav.jobber.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,6 +38,9 @@ public class AuthRecoveryController {
 
     @Value("${app.mail.otp-expiry-minutes:10}")
     private long otpExpiryMinutes;
+
+    @Value("${app.oauth.google.client-id:}")
+    private String googleClientId;
 
     @GetMapping("/me")
     public ResponseEntity<?> currentUser() {
@@ -118,12 +130,71 @@ public class AuthRecoveryController {
         }
     }
 
+    @PostMapping("/google")
+    public ResponseEntity<?> googleAuth(@RequestBody Map<String, String> body, HttpServletRequest request) {
+        String credential = body.get("credential");
+        String fullName = body.get("fullName");
+
+        if (credential == null || credential.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Google credential is required"));
+        }
+
+        try {
+            Map<String, Object> tokenInfo = verifyGoogleCredential(credential.trim());
+            String email = String.valueOf(tokenInfo.getOrDefault("email", ""));
+            String emailVerified = String.valueOf(tokenInfo.getOrDefault("email_verified", "false"));
+            String audience = String.valueOf(tokenInfo.getOrDefault("aud", ""));
+
+            if (email.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Google account email not available"));
+            }
+            if (!"true".equalsIgnoreCase(emailVerified)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Google email is not verified"));
+            }
+            if (!googleClientId.isBlank() && !googleClientId.equals(audience)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Google client mismatch"));
+            }
+
+            User user = userService.findOrCreateGoogleApplicant(email, fullName);
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+            request.getSession(true).setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Google sign-in successful",
+                    "user", UserDto.toDto(user)
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Google authentication failed"));
+        }
+    }
+
     private String generateOtp() {
         return String.valueOf(100000 + RANDOM.nextInt(900000));
     }
 
     private String normalizeEmail(String email) {
         return email.trim().toLowerCase();
+    }
+
+    private Map<String, Object> verifyGoogleCredential(String credential) {
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(5000);
+        requestFactory.setReadTimeout(5000);
+        RestTemplate restTemplate = new RestTemplate(requestFactory);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+                "https://oauth2.googleapis.com/tokeninfo?id_token=" + credential,
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                Map.class
+        );
+
+        return response.getBody() != null ? new HashMap<>(response.getBody()) : Map.of();
     }
 
     private String mapForgotPasswordError(Exception e) {

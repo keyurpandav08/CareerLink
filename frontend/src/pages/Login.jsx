@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, KeyRound, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 import { getDashboardPathByRole } from '../utils/role';
 import api from '../services/api';
 import logo from '../pages/joblithic.png';
@@ -108,6 +109,9 @@ const Login = () => {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        <div className="auth-divider"><span>or</span></div>
+        <GoogleAuthButton onError={setError} />
 
         <p className="auth-switch">
           New here? <Link to="/register">Create account</Link>

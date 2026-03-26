@@ -224,6 +224,9 @@ const AdminDashboard = () => {
   };
 
   const handleApplicationStatusUpdate = async (applicationId, status) => {
+    const confirmed = window.confirm(`Update this application status to ${status}?`);
+    if (!confirmed) return;
+
     try {
       setBusy(true);
       await api.put(`/admin/applications/${applicationId}/status`, { status });

@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Briefcase, DollarSign, MapPin } from 'lucide-react';
+import {
+  ArrowLeft,
+  Bookmark,
+  BookmarkCheck,
+  Briefcase,
+  DollarSign,
+  MapPin,
+  Share2,
+  Sparkles,
+  Star
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getRoleName } from '../utils/role';
 import api from '../services/api';
@@ -9,10 +19,33 @@ import './JobDetail.css';
 const defaultApplyData = {
   expectedSalary: '',
   noticePeriod: 'Immediate',
+  resumeUrl: '',
   experienceSummary: '',
   agreeEligibility: false,
   agreeProfileAccurate: false,
   agreeDataConsent: false
+};
+
+const splitContent = (value) => {
+  if (!value) return [];
+  return value
+    .split(/\r?\n|[|,]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const createInitials = (value = '') =>
+  value
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'JL';
+
+const formatSalary = (salary) => {
+  if (!salary) return 'Salary not disclosed';
+  if (salary >= 100000) return `INR ${(salary / 100000).toFixed(1).replace('.0', '')} LPA`;
+  return `INR ${salary}`;
 };
 
 const JobDetail = () => {
@@ -26,6 +59,8 @@ const JobDetail = () => {
   const [applyData, setApplyData] = useState(defaultApplyData);
   const [applying, setApplying] = useState(false);
   const [applyFeedback, setApplyFeedback] = useState('');
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -33,7 +68,7 @@ const JobDetail = () => {
         setLoading(true);
         const response = await api.get(`/job/${id}`);
         setJob(response.data);
-      } catch (requestError) {
+      } catch {
         setError('Failed to load job details.');
       } finally {
         setLoading(false);
@@ -43,9 +78,20 @@ const JobDetail = () => {
     fetchJob();
   }, [id]);
 
+  useEffect(() => {
+    if (!job) return;
+    const stored = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+    const savedJobs = Array.isArray(stored) ? stored : [];
+    setSaved(savedJobs.some((item) => item.id === job.id));
+  }, [job]);
+
   const roleName = getRoleName(user);
   const isApplicant = roleName === 'APPLICANT';
   const canApply = Boolean(user) && isApplicant && job?.status === 'Open';
+
+  const highlights = useMemo(() => splitContent(job?.jobHighlights), [job?.jobHighlights]);
+  const skills = useMemo(() => splitContent(job?.keySkills), [job?.keySkills]);
+  const requirements = useMemo(() => splitContent(job?.jobRequirements), [job?.jobRequirements]);
 
   const isApplyFormValid = useMemo(() => (
     applyData.expectedSalary.trim() &&
@@ -54,6 +100,47 @@ const JobDetail = () => {
     applyData.agreeProfileAccurate &&
     applyData.agreeDataConsent
   ), [applyData]);
+
+  const toggleSave = () => {
+    if (!user) {
+      navigate('/login', { state: { message: 'Login required to save jobs.' } });
+      return;
+    }
+
+    if (!job) return;
+
+    const stored = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+    const savedJobs = Array.isArray(stored) ? stored : [];
+    const exists = savedJobs.some((item) => item.id === job.id);
+    const updated = exists
+      ? savedJobs.filter((item) => item.id !== job.id)
+      : [...savedJobs, job];
+
+    localStorage.setItem('savedJobs', JSON.stringify(updated));
+    setSaved(!exists);
+    setApplyFeedback(exists ? 'Job removed from saved list.' : 'Job saved successfully.');
+  };
+
+  const shareJob = async () => {
+    if (!job) return;
+
+    const shareData = {
+      title: job.title,
+      text: `${job.title} at ${job.employerName}`,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        setApplyFeedback('Job link copied to clipboard.');
+      }
+    } catch {
+      setApplyFeedback('Unable to share this job right now.');
+    }
+  };
 
   const openApplyModal = () => {
     if (!user) {
@@ -91,11 +178,13 @@ const JobDetail = () => {
       await api.post('/applications/apply-json', {
         userId: user.id,
         jobId: job.id,
-        applicationNote: note
+        applicationNote: note,
+        resumeUrl: applyData.resumeUrl.trim() || undefined
       });
-      setApplyFeedback('Application submitted successfully.');
+      setApplyFeedback('');
       setApplyOpen(false);
       setApplyData(defaultApplyData);
+      setSuccessModalOpen(true);
     } catch (requestError) {
       const message = requestError.response?.data?.error || 'Failed to submit application.';
       setApplyFeedback(message);
@@ -113,37 +202,122 @@ const JobDetail = () => {
       <div className="container job-detail-shell">
         <Link to="/jobs" className="back-link"><ArrowLeft size={16} />Back to jobs</Link>
 
-        <article className="job-detail-card">
-          <header className="job-detail-head">
-            <div>
-              <h1>{job.title}</h1>
-              <div className="job-meta-row">
-                <span><Briefcase size={15} />{job.employerName || 'Confidential'}</span>
-                <span><MapPin size={15} />{job.location}</span>
-                <span><DollarSign size={15} />${job.salary}</span>
+        <div className="job-detail-grid">
+          <article className="job-hero-card">
+            <header className="job-company-head">
+              <div className="job-company-brand">
+                {job.companyLogoUrl ? (
+                  <img src={job.companyLogoUrl} alt={job.employerName} className="company-logo" />
+                ) : (
+                  <div className="company-logo company-logo-fallback">{createInitials(job.employerName)}</div>
+                )}
+
+                <div>
+                  <span className="company-kicker">Featured opportunity</span>
+                  <h1>{job.title}</h1>
+                  <div className="company-name-row">
+                    <strong>{job.employerName || 'Confidential company'}</strong>
+                    <span className={`job-status ${String(job.status).toLowerCase()}`}>{job.status}</span>
+                  </div>
+                  <div className="company-review-row">
+                    <span><Star size={14} />{job.companyReviewSummary || 'Trusted employer profile'}</span>
+                    <span>{job.companyReviewCount || 0}+ reviews</span>
+                  </div>
+                </div>
               </div>
+
+              <div className="job-meta-badges">
+                <span><Briefcase size={15} />{job.jobType || 'Full-time'}</span>
+                <span><MapPin size={15} />{job.location}</span>
+                <span><DollarSign size={15} />{formatSalary(job.salary)}</span>
+                <span><Sparkles size={15} />{job.experienceLevel || '0-2 years'}</span>
+              </div>
+            </header>
+
+            <section className="job-section-card">
+              <div className="section-title-row">
+                <h2>Job details</h2>
+                <span>Quick overview</span>
+              </div>
+
+              <div className="detail-grid">
+                <div>
+                  <h3>Job highlights</h3>
+                  <ul>
+                    {(highlights.length ? highlights : [
+                      'Structured hiring process',
+                      'Role aligned to current skill demand',
+                      'Fast-response employer dashboard'
+                    ]).map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </div>
+
+                <div>
+                  <h3>Key skills</h3>
+                  <div className="skill-chip-row">
+                    {(skills.length ? skills : ['Communication', 'Problem Solving']).map((item) => (
+                      <span key={item} className="skill-chip">{item}</span>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3>Location</h3>
+                  <p>{job.location}</p>
+                </div>
+
+                <div>
+                  <h3>Salary</h3>
+                  <p>{formatSalary(job.salary)}</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="job-section-card">
+              <div className="section-title-row">
+                <h2>Description</h2>
+                <span>Role and company context</span>
+              </div>
+
+              <div className="description-block">
+                <h3>Role overview</h3>
+                <p>{job.description}</p>
+              </div>
+
+              <div className="description-block">
+                <h3>About company</h3>
+                <p>{job.aboutCompany || `${job.employerName} is actively hiring and looking for candidates who can contribute from day one.`}</p>
+              </div>
+
+              <div className="description-block">
+                <h3>Job requirements</h3>
+                <ul>
+                  {(requirements.length ? requirements : ['Relevant technical foundation', 'Ability to work in team environments', 'Strong learning mindset']).map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          </article>
+
+          <aside className="job-side-card">
+            <div className="job-side-actions">
+              <button type="button" className="apply-main-btn" onClick={openApplyModal} disabled={!canApply}>
+                {canApply ? 'Apply now' : (roleName === 'EMPLOYER' ? 'Employer account cannot apply' : 'Application unavailable')}
+              </button>
+              <button type="button" className={`side-action-btn ${saved ? 'saved' : ''}`} onClick={toggleSave}>
+                {saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+                {saved ? 'Saved' : 'Save job'}
+              </button>
+              <button type="button" className="side-action-btn" onClick={shareJob}>
+                <Share2 size={16} />
+                Share job
+              </button>
             </div>
-            <span className={`job-status ${String(job.status).toLowerCase()}`}>{job.status}</span>
-          </header>
 
-          <section className="job-description">
-            <h2>Job Description</h2>
-            <p>{job.description}</p>
-          </section>
-
-          {applyFeedback && <div className="apply-feedback">{applyFeedback}</div>}
-
-          <div className="job-actions-row">
-            <button
-              type="button"
-              className="apply-main-btn"
-              onClick={openApplyModal}
-              disabled={!canApply}
-            >
-              {canApply ? 'Apply with details' : (roleName === 'EMPLOYER' ? 'Employer account cannot apply' : 'Application unavailable')}
-            </button>
-          </div>
-        </article>
+            {applyFeedback && <div className="apply-feedback">{applyFeedback}</div>}
+          </aside>
+        </div>
 
         {applyOpen && (
           <div className="apply-modal-overlay">
@@ -170,6 +344,14 @@ const JobDetail = () => {
                 <option value="30 Days">30 Days</option>
                 <option value="60+ Days">60+ Days</option>
               </select>
+
+              <label>Resume Link (optional)</label>
+              <input
+                type="url"
+                value={applyData.resumeUrl}
+                onChange={(event) => setApplyData((prev) => ({ ...prev, resumeUrl: event.target.value }))}
+                placeholder="Google Drive / portfolio / resume link"
+              />
 
               <label>Screening Summary (required, min 30 chars)</label>
               <textarea
@@ -214,6 +396,24 @@ const JobDetail = () => {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {successModalOpen && (
+          <div className="apply-modal-overlay">
+            <div className="apply-success-modal">
+              <div className="success-mark">✓</div>
+              <h3>Application submitted successfully</h3>
+              <p>
+                Your profile has been shared with the employer. You can track the status from the applications section.
+              </p>
+              <div className="apply-modal-actions">
+                <Link to="/applications" className="apply-main-btn">View applications</Link>
+                <button type="button" className="ghost-btn-inline" onClick={() => setSuccessModalOpen(false)}>
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

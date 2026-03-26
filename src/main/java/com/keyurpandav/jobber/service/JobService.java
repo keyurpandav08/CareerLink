@@ -7,8 +7,7 @@ import com.keyurpandav.jobber.repository.JobRepository;
 import com.keyurpandav.jobber.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.security.core.context.SecurityContextHolder;   // NEW
-import com.keyurpandav.jobber.enums.StatusType;                          // NEW
+import com.keyurpandav.jobber.enums.StatusType;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,8 +30,35 @@ public class JobService {
         job.setDescription(mydata.getDescription());
         job.setLocation(mydata.getLocation());
         job.setSalary(mydata.getSalary());
+        job.setJobType(mydata.getJobType());
+        job.setExperienceLevel(mydata.getExperienceLevel());
+        job.setKeySkills(mydata.getKeySkills());
+        job.setJobHighlights(mydata.getJobHighlights());
+        job.setAboutCompany(mydata.getAboutCompany());
+        job.setJobRequirements(mydata.getJobRequirements());
+        job.setCompanyLogoUrl(mydata.getCompanyLogoUrl());
+        job.setCompanyReviewSummary(mydata.getCompanyReviewSummary());
+        job.setCompanyReviewCount(mydata.getCompanyReviewCount());
         job.setEmployer(employer);
 
+        // Backfill employer profile from the job form so backend stays simple.
+        if ((employer.getCompanyLogoUrl() == null || employer.getCompanyLogoUrl().isBlank())
+                && mydata.getCompanyLogoUrl() != null && !mydata.getCompanyLogoUrl().isBlank()) {
+            employer.setCompanyLogoUrl(mydata.getCompanyLogoUrl().trim());
+        }
+        if ((employer.getCompanyOverview() == null || employer.getCompanyOverview().isBlank())
+                && mydata.getAboutCompany() != null && !mydata.getAboutCompany().isBlank()) {
+            employer.setCompanyOverview(mydata.getAboutCompany().trim());
+        }
+        if ((employer.getCompanyReviewSummary() == null || employer.getCompanyReviewSummary().isBlank())
+                && mydata.getCompanyReviewSummary() != null && !mydata.getCompanyReviewSummary().isBlank()) {
+            employer.setCompanyReviewSummary(mydata.getCompanyReviewSummary().trim());
+        }
+        if (employer.getCompanyReviewCount() == null && mydata.getCompanyReviewCount() != null) {
+            employer.setCompanyReviewCount(mydata.getCompanyReviewCount());
+        }
+
+        userReopsitory.save(employer);
         jobRepository.save(job);
         return JobDto.toDto(job);
     }

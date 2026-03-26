@@ -41,6 +41,9 @@ app:
   mail:
     from-name: JobLithic
     otp-expiry-minutes: 10
+  oauth:
+    google:
+      client-id: 70973069398-7ls6cr55u14pdrl4r79ri1o3b2a4env1.apps.googleusercontent.com
 
 server:
   port: 8080

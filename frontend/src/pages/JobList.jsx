@@ -1,22 +1,33 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Bookmark, BookmarkCheck, Briefcase, DollarSign, MapPin, Search, IndianRupee} from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Bookmark, BookmarkCheck, MapPin, Search, IndianRupee } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './JobList.css';
 
 const JobList = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchKeyword, setSearchKeyword] = useState(searchParams.get('search') || searchParams.get('skill') || '');
   const [savedJobIds, setSavedJobIds] = useState([]);
-const [salary, setSalary] = useState(500000);
 const [minSalary, setMinSalary] = useState(200000);
 const [maxSalary, setMaxSalary] = useState(1000000);
 const [filteredJobs, setFilteredJobs] = useState([]);
 const [selectedTypes, setSelectedTypes] = useState([]);
 const [selectedExp, setSelectedExp] = useState([]);
+
+const getInitials = (value = '') =>
+  value
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'JL';
+
 useEffect(() => {
   setFilteredJobs(jobs);
 }, [jobs]);
@@ -60,6 +71,11 @@ useEffect(() => {
   };
 
   const toggleSave = (job) => {
+    if (!user) {
+      navigate('/login', { state: { message: 'Login required to save jobs.' } });
+      return;
+    }
+
     const stored = JSON.parse(localStorage.getItem('savedJobs') || '[]');
     const jobsList = Array.isArray(stored) ? stored : [];
     const exists = jobsList.some((item) => item.id === job.id);
@@ -83,7 +99,7 @@ useEffect(() => {
       // Experience
       if (selectedExp.length > 0) {
         result = result.filter(job =>
-          selectedExp.includes(job.experience)
+          selectedExp.includes(job.experienceLevel)
         );
       }
 
@@ -360,7 +376,11 @@ useEffect(() => {
 
                             <div className="job-left">
                               <div className="job-logo">
-                                {job.employerName?.charAt(0) || "J"}
+                                {job.companyLogoUrl ? (
+                                  <img src={job.companyLogoUrl} alt={job.employerName} />
+                                ) : (
+                                  getInitials(job.employerName)
+                                )}
                               </div>
 
                               <div className="job-main">
@@ -383,13 +403,13 @@ useEffect(() => {
 
                           {/* TAGS */}
                           <div className="job-tags">
-                            <span>{job.jobType || "Full Time"}</span>
-                            <span>{job.experience || "0-2 years"}</span>
+                            <span>{job.jobType || "Full-time"}</span>
+                            <span>{job.experienceLevel || "0-2 years"}</span>
                           </div>
 
                           {/* DESCRIPTION */}
                           <p className="job-desc">
-                            {job.description?.slice(0, 120)}...
+                            {(job.jobHighlights || job.description || '').slice(0, 120)}...
                           </p>
 
                           {/* FOOTER */}

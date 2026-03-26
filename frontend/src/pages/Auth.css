@@ -133,7 +133,8 @@
 }
 
 .auth-input input,
-.auth-input select {
+.auth-input select,
+.auth-input textarea {
   width: 100%;
   border: none;
   outline: none;
@@ -141,6 +142,11 @@
   color: var(--text-main);
   padding: 0.22rem 0;
   font-size: 0.94rem;
+}
+
+.auth-input textarea {
+  resize: vertical;
+  min-height: 110px;
 }
 
 .auth-input.input-error {
@@ -190,6 +196,57 @@
 .auth-switch a {
   color: var(--brand-ink);
   font-weight: 700;
+}
+
+.auth-divider {
+  position: relative;
+  text-align: center;
+  margin-top: 0.9rem;
+}
+
+.auth-divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--border-soft);
+}
+
+.auth-divider span {
+  position: relative;
+  padding: 0 0.7rem;
+  background: #fff;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.google-auth-wrap {
+  margin-top: 0.85rem;
+  display: flex;
+  justify-content: center;
+}
+
+.google-auth-disabled {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.google-auth-fallback {
+  width: 100%;
+  margin-top: 0.85rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  color: var(--text-main);
+  padding: 0.76rem 1rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
 }
 
 .terms-check {

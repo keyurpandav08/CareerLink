@@ -48,6 +48,17 @@
   margin-bottom: 0.75rem;
 }
 
+.create-job-note {
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  background: #f8fcfd;
+  color: var(--text-soft);
+  padding: 0.65rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
 .create-job-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -85,6 +96,14 @@
 
 .create-job-form .full-width {
   grid-column: 1 / -1;
+}
+
+.create-job-section-title {
+  margin-top: 0.25rem;
+  padding-top: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-main);
 }
 
 .create-job-form button[type='submit'] {

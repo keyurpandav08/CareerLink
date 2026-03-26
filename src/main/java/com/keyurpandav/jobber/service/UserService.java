@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 @Service
@@ -75,6 +76,11 @@ public class UserService {
         user.setPhone(updatedData.getPhone());
         user.setSkills(updatedData.getSkills());
         user.setExperience(updatedData.getExperience());
+        user.setCompanyName(updatedData.getCompanyName());
+        user.setCompanyLogoUrl(updatedData.getCompanyLogoUrl());
+        user.setCompanyOverview(updatedData.getCompanyOverview());
+        user.setCompanyReviewSummary(updatedData.getCompanyReviewSummary());
+        user.setCompanyReviewCount(updatedData.getCompanyReviewCount());
 
         return UserDto.toDto(userRepository.save(user));
     }
@@ -85,6 +91,37 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(rawPassword));
         return userRepository.save(user);
+    }
+
+    public User findOrCreateGoogleApplicant(String email, String fullName) {
+        return userRepository.findByEmail(email)
+                .orElseGet(() -> {
+                    Role applicantRole = roleRepository.findByName("APPLICANT")
+                            .orElseThrow(() -> new RuntimeException("Default role missing"));
+
+                    String baseUsername = email.split("@")[0]
+                            .replaceAll("[^a-zA-Z0-9._-]", "")
+                            .toLowerCase(Locale.ROOT);
+                    if (baseUsername.isBlank()) {
+                        baseUsername = "user";
+                    }
+
+                    String username = baseUsername;
+                    int suffix = 1;
+                    while (userRepository.existsByUsername(username)) {
+                        username = baseUsername + suffix++;
+                    }
+
+                    User user = User.builder()
+                            .username(username)
+                            .email(email)
+                            .password(passwordEncoder.encode("google-auth-user"))
+                            .fullName(fullName != null && !fullName.isBlank() ? fullName : username)
+                            .role(applicantRole)
+                            .build();
+
+                    return userRepository.save(user);
+                });
     }
 
     private String resolveRequestedRole(User user) {

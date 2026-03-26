@@ -9,8 +9,15 @@ import java.text.SimpleDateFormat;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ApplicationDto {
     private Long id;
+    private Long applicantId;
+    private String applicantFullName;
     private String applicantName;
+    private String applicantEmail;
+    private String applicantPhone;
+    private String applicantSkills;
+    private String applicantExperience;
     private String jobTitle;
+    private String jobLocation;
     private String resumeUrl;
     private String applicationNote;
     private String status;
@@ -26,8 +33,15 @@ public class ApplicationDto {
 
         return ApplicationDto.builder()
                 .id(a.getId())
+                .applicantId(a.getApplicant().getId())
+                .applicantFullName(a.getApplicant().getFullName())
                 .applicantName(a.getApplicant().getUsername())
+                .applicantEmail(a.getApplicant().getEmail())
+                .applicantPhone(a.getApplicant().getPhone())
+                .applicantSkills(a.getApplicant().getSkills())
+                .applicantExperience(a.getApplicant().getExperience())
                 .jobTitle(a.getJob().getTitle())
+                .jobLocation(a.getJob().getLocation())
                 .resumeUrl(a.getResumeUrl())
                 .applicationNote(a.getApplicationNote())
                 .status(a.getStatus().name())

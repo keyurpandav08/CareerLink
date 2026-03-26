@@ -33,6 +33,23 @@ public class Job {
     @NotNull(message = "Salary is required")
     @Positive(message = "Salary must be a positive number")
     private Double salary;
+
+    private String jobType;
+    private String experienceLevel;
+    @Column(length = 1000)
+    private String keySkills;
+    @Column(length = 1600)
+    private String jobHighlights;
+    @Column(length = 2500)
+    private String aboutCompany;
+    @Column(length = 2500)
+    private String jobRequirements;
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String companyLogoUrl;
+    @Column(length = 500)
+    private String companyReviewSummary;
+    private Integer companyReviewCount;
     
     private LocalDate createdAt;
     

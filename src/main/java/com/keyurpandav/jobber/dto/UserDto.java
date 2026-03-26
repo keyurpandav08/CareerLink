@@ -14,6 +14,11 @@ public class UserDto {
     private String phone;
     private String skills;
     private String experience;
+    private String companyName;
+    private String companyLogoUrl;
+    private String companyOverview;
+    private String companyReviewSummary;
+    private Integer companyReviewCount;
     private String roleName;
     private Timestamp createdAt;
     private int applicationCount;
@@ -27,6 +32,11 @@ public class UserDto {
                 .phone(u.getPhone())
                 .skills(u.getSkills())
                 .experience(u.getExperience())
+                .companyName(u.getCompanyName())
+                .companyLogoUrl(u.getCompanyLogoUrl())
+                .companyOverview(u.getCompanyOverview())
+                .companyReviewSummary(u.getCompanyReviewSummary())
+                .companyReviewCount(u.getCompanyReviewCount())
                 .roleName(u.getRole().getName())
                 .createdAt(u.getCreatedAt())
                 .applicationCount(u.getApplications() != null ? u.getApplications().size() : 0)

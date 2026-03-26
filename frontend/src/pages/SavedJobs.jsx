@@ -8,7 +8,7 @@ const SavedJobs = () => {
     try {
       const stored = JSON.parse(localStorage.getItem('savedJobs') || '[]');
       return Array.isArray(stored) ? stored : [];
-    } catch (parsingError) {
+    } catch {
       return [];
     }
   }, []);

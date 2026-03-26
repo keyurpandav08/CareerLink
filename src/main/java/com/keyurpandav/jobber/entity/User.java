@@ -42,6 +42,16 @@ public class User implements UserDetails {
     private String phone;
     private String skills;
     private String experience;
+    @Column(length = 255)
+    private String companyName;
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String companyLogoUrl;
+    @Column(length = 1500)
+    private String companyOverview;
+    @Column(length = 500)
+    private String companyReviewSummary;
+    private Integer companyReviewCount;
     
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")

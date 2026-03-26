@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import SkillTagInput from '../components/SkillTagInput';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './CreateJob.css';
 
 const CreateJob = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     location: '',
@@ -13,14 +15,46 @@ const CreateJob = () => {
     jobType: 'Full-time',
     experienceLevel: '0-2 years',
     skills: '',
-    description: ''
+    jobHighlights: '',
+    description: '',
+    aboutCompany: '',
+    jobRequirements: '',
+    companyReviewSummary: '',
+    companyReviewCount: '250'
   });
   const [loading, setLoading] = useState(false);
+  const [prefillLoading, setPrefillLoading] = useState(true);
   const [error, setError] = useState('');
 
   const setField = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  useEffect(() => {
+    const fetchEmployerProfile = async () => {
+      if (!user?.username) {
+        setPrefillLoading(false);
+        return;
+      }
+
+      try {
+        const response = await api.get(`/users/username/${user.username}`);
+        const profile = response.data;
+        setFormData((prev) => ({
+          ...prev,
+          aboutCompany: profile.companyOverview || prev.aboutCompany,
+          companyReviewSummary: profile.companyReviewSummary || prev.companyReviewSummary,
+          companyReviewCount: String(profile.companyReviewCount ?? prev.companyReviewCount)
+        }));
+      } catch {
+        // Keep the form usable even if profile prefill fails.
+      } finally {
+        setPrefillLoading(false);
+      }
+    };
+
+    fetchEmployerProfile();
+  }, [user?.username]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -30,14 +64,14 @@ const CreateJob = () => {
       setError('Add at least one required skill.');
       return;
     }
-
-    const structuredDescription = [
-      `Job Type: ${formData.jobType}`,
-      `Experience Level: ${formData.experienceLevel}`,
-      `Required Skills: ${formData.skills}`,
-      '',
-      formData.description.trim()
-    ].join('\n');
+    if (!formData.jobHighlights.trim()) {
+      setError('Add job highlights so candidates can quickly understand the role.');
+      return;
+    }
+    if (!formData.jobRequirements.trim()) {
+      setError('Add job requirements before publishing.');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -45,7 +79,15 @@ const CreateJob = () => {
         title: formData.title.trim(),
         location: formData.location.trim(),
         salary: Number(formData.salary),
-        description: structuredDescription
+        jobType: formData.jobType,
+        experienceLevel: formData.experienceLevel,
+        keySkills: formData.skills,
+        jobHighlights: formData.jobHighlights.trim(),
+        description: formData.description.trim(),
+        aboutCompany: formData.aboutCompany.trim(),
+        jobRequirements: formData.jobRequirements.trim(),
+        companyReviewSummary: formData.companyReviewSummary.trim(),
+        companyReviewCount: Number(formData.companyReviewCount) || 0
       });
       navigate('/employer-dashboard');
     } catch (requestError) {
@@ -64,12 +106,18 @@ const CreateJob = () => {
         <header className="create-job-header">
           <div>
             <h1>Create Job Opening</h1>
-            <p>Fill all required details to attract relevant applicants.</p>
+            <p>Fill structured company and role details so the job page looks like a professional hiring portal.</p>
           </div>
           <Link to="/employer-dashboard">Back to dashboard</Link>
         </header>
 
         {error && <div className="create-job-alert">{error}</div>}
+        {prefillLoading && <div className="create-job-note">Loading company details from employer profile...</div>}
+        {!prefillLoading && formData.aboutCompany && (
+          <div className="create-job-note">
+            Company branding and logo are taken from employer settings. Update them from the Settings page when needed.
+          </div>
+        )}
 
         <form className="create-job-form" onSubmit={handleSubmit}>
           <div>
@@ -136,23 +184,82 @@ const CreateJob = () => {
           </div>
 
           <div className="full-width">
-            <label htmlFor="skills">Required Skills</label>
+            <label htmlFor="skills">Key Skills</label>
             <SkillTagInput
               value={formData.skills}
               onChange={(next) => setField('skills', next)}
-              placeholder="Select required skills"
+              placeholder="React, Java, Spring Boot, SQL, Communication"
             />
           </div>
 
           <div className="full-width">
-            <label htmlFor="description">Role Description</label>
+            <label htmlFor="jobHighlights">Job Highlights</label>
+            <textarea
+              id="jobHighlights"
+              value={formData.jobHighlights}
+              onChange={(event) => setField('jobHighlights', event.target.value)}
+              placeholder={'Write 3-6 short points, one per line.\nFlexible hybrid model\nFast-growth product team\nDirect mentorship from senior engineers'}
+              rows={5}
+              required
+            />
+          </div>
+
+          <div className="full-width">
+            <label htmlFor="description">Job Description</label>
             <textarea
               id="description"
               value={formData.description}
               onChange={(event) => setField('description', event.target.value)}
-              placeholder="Responsibilities, must-have requirements, and hiring process."
+              placeholder="What the role will own, day-to-day responsibilities, and what success looks like."
               rows={7}
               required
+            />
+          </div>
+
+          <div className="full-width">
+            <label htmlFor="jobRequirements">Job Requirements</label>
+            <textarea
+              id="jobRequirements"
+              value={formData.jobRequirements}
+              onChange={(event) => setField('jobRequirements', event.target.value)}
+              placeholder={'Add must-have requirements, one per line.\nStrong React fundamentals\nREST API integration\nGood problem solving'}
+              rows={6}
+              required
+            />
+          </div>
+
+          <div className="full-width create-job-section-title">Company Presentation</div>
+
+          <div className="full-width">
+            <label htmlFor="aboutCompany">About Company</label>
+            <textarea
+              id="aboutCompany"
+              value={formData.aboutCompany}
+              onChange={(event) => setField('aboutCompany', event.target.value)}
+              placeholder="Tell candidates about company mission, products, work culture, and why they should join."
+              rows={6}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="companyReviewSummary">Review Headline</label>
+            <input
+              id="companyReviewSummary"
+              value={formData.companyReviewSummary}
+              onChange={(event) => setField('companyReviewSummary', event.target.value)}
+              placeholder="4.4 overall rating from employees"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="companyReviewCount">Review Count</label>
+            <input
+              id="companyReviewCount"
+              type="number"
+              min="0"
+              value={formData.companyReviewCount}
+              onChange={(event) => setField('companyReviewCount', event.target.value)}
+              placeholder="250"
             />
           </div>
 
