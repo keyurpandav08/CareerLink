@@ -294,10 +294,7 @@ const AdminDashboard = () => {
               <RefreshCw size={16} />
               Refresh data
             </button>
-            <div className="admin-hero-note">
-              <BadgeCheck size={16} />
-              <span>Spring Security locked with `ROLE_ADMIN`</span>
-            </div>
+            
           </div>
         </section>
 
