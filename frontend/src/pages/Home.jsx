@@ -368,9 +368,7 @@ useEffect(() => {
         </div>
       </section>
       <div className="verification-note text-center">
-              <p>
-                All employers are manually verified before any job goes live.
-              </p>
+
             </div>
 
     </div>
