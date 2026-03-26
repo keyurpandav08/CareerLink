@@ -1,6 +1,6 @@
 import React from 'react';
 import './index.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoleRoute from './components/PublicRoleRoute';
 import Layout from './components/Layout';
@@ -28,12 +28,38 @@ import InterviewTips from "./pages/InterviewTips";
 import TalentSearch from "./pages/TalentSearch";
 import Pricing from "./pages/Pricing";
 import ForgotPassword from './pages/ForgotPassword';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
           <Routes>
+            <Route
+              path="/admin/login"
+              element={
+                <PublicRoleRoute guestOnly>
+                  <AdminLogin />
+                </PublicRoleRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute role="ADMIN" redirectTo="/admin/login">
+                  <Navigate to="/admin/dashboard" replace />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute role="ADMIN" redirectTo="/admin/login">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Layout Wrapper */}
             <Route path="/" element={<Layout />}>
