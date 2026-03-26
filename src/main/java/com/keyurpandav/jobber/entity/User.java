@@ -7,6 +7,7 @@ import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import java.time.LocalDate;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.List;
@@ -40,11 +41,33 @@ public class User implements UserDetails {
     private String fullName;
     
     private String phone;
+    private String gender;
+    private String location;
+    private LocalDate dateOfBirth;
     private String skills;
     private String experience;
+    private String tenthMarks;
+    private String twelfthMarks;
+    @Column(length = 500)
+    private String graduation;
+    @Column(length = 2500)
+    private String profileSummary;
+    @Column(length = 1200)
+    private String languages;
+    @Column(columnDefinition = "TEXT")
+    private String internships;
+    @Column(columnDefinition = "TEXT")
+    private String projects;
+    @Column(columnDefinition = "TEXT")
+    private String certifications;
+    @Column(length = 500)
+    private String resumeUrl;
+    @Column(length = 255)
+    private String resumeFileName;
+    @Column(length = 1200)
+    private String resumeStoragePath;
     @Column(length = 255)
     private String companyName;
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String companyLogoUrl;
     @Column(length = 1500)

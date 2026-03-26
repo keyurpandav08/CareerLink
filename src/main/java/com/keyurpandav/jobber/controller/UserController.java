@@ -1,18 +1,28 @@
 package com.keyurpandav.jobber.controller;
 import com.keyurpandav.jobber.dto.UserDto;
 import com.keyurpandav.jobber.entity.User;
+import com.keyurpandav.jobber.repository.ApplicationRepository;
 import com.keyurpandav.jobber.service.ResumeAnalysisService;
 import com.keyurpandav.jobber.service.ResumeParserService;
+import com.keyurpandav.jobber.service.ResumeStorageService;
 import com.keyurpandav.jobber.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +33,8 @@ public class UserController {
     private final UserService userService;
     private final ResumeParserService resumeParserService;
     private final ResumeAnalysisService resumeAnalysisService;
+    private final ResumeStorageService resumeStorageService;
+    private final ApplicationRepository applicationRepository;
     
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody User user, BindingResult bindingResult) {
@@ -98,12 +110,57 @@ public class UserController {
             User user = userService.getUserById(userId);
             String resumeText = resumeParserService.extractContent(resumeFile);
             Map<String, Object> analysis = resumeAnalysisService.analyze(resumeText, targetRole, user.getSkills());
+            ResumeStorageService.StoredResume storedResume = resumeStorageService.storeResume(user, resumeFile);
+            String resumeUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/users/{userId}/resume")
+                    .buildAndExpand(userId)
+                    .toUriString();
+            if (user.getResumeStoragePath() != null && !user.getResumeStoragePath().isBlank()) {
+                resumeStorageService.deleteIfExists(user.getResumeStoragePath());
+            }
+            UserDto updatedUser = userService.updateResumeMetadata(
+                    userId,
+                    resumeUrl,
+                    storedResume.originalFileName(),
+                    storedResume.storagePath()
+            );
 
             return ResponseEntity.ok(Map.of(
                     "message", "Resume uploaded and analyzed successfully",
                     "fileName", resumeFile.getOriginalFilename(),
+                    "resumeUrl", resumeUrl,
+                    "user", updatedUser,
                     "analysis", analysis
             ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}/resume")
+    public ResponseEntity<?> viewResume(@PathVariable Long id) {
+        try {
+            User currentUser = getAuthenticatedUser();
+            User applicant = userService.getUserById(id);
+
+            if (!canAccessResume(currentUser, applicant)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
+            }
+            if (applicant.getResumeStoragePath() == null || applicant.getResumeStoragePath().isBlank()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Resume not found"));
+            }
+
+            Resource resource = resumeStorageService.loadAsResource(applicant.getResumeStoragePath());
+            MediaType mediaType = MediaTypeFactory.getMediaType(resource)
+                    .orElse(MediaType.APPLICATION_OCTET_STREAM);
+            String fileName = applicant.getResumeFileName() != null && !applicant.getResumeFileName().isBlank()
+                    ? applicant.getResumeFileName()
+                    : "resume";
+
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
+                    .body(resource);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -116,5 +173,15 @@ public class UserController {
 
     private boolean isAdmin(User user) {
         return user.getRole() != null && "ADMIN".equalsIgnoreCase(user.getRole().getName());
+    }
+
+    private boolean canAccessResume(User currentUser, User applicant) {
+        if (isAdmin(currentUser) || applicant.getId().equals(currentUser.getId())) {
+            return true;
+        }
+
+        return currentUser.getRole() != null
+                && "EMPLOYER".equalsIgnoreCase(currentUser.getRole().getName())
+                && applicationRepository.existsByApplicantIdAndJobEmployerId(applicant.getId(), currentUser.getId());
     }
 }

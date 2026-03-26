@@ -9,6 +9,7 @@ import com.keyurpandav.jobber.repository.JobRepository;
 import com.keyurpandav.jobber.service.ApplicationService;
 import com.keyurpandav.jobber.service.EmailService;
 import com.keyurpandav.jobber.service.ResumeParserService;
+import com.keyurpandav.jobber.service.ResumeStorageService;
 import com.keyurpandav.jobber.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,7 @@ public class ApplicationRestController {
     private final EmailService emailService;
     private final UserService userService;
     private final JobRepository jobRepository;
+    private final ResumeStorageService resumeStorageService;
 
     @PostMapping("/apply")
     public ResponseEntity<?> applyToJob(
@@ -49,7 +52,8 @@ public class ApplicationRestController {
                     .orElseThrow(() -> new RuntimeException("Job not found"));
 
             String extractedResumeText = extractResumeText(resumeFile);
-            Application application = buildApplication(applicant, job, applicationNote, getResumeFileName(resumeFile));
+            String resumeUrl = resolveApplicationResumeUrl(applicant, resumeFile);
+            Application application = buildApplication(applicant, job, applicationNote, resumeUrl);
 
             ApplicationDto createdApplication = applicationService.applyToJob(application);
 
@@ -90,13 +94,10 @@ public class ApplicationRestController {
             User currentUser = getAuthenticatedUser();
             requireApplicantOwner(currentUser, userId);
 
-            String resumeUrl = payload.get("resumeUrl") != null
-                    ? String.valueOf(payload.get("resumeUrl"))
-                    : "resume_not_uploaded";
-
             User applicant = userService.getUserById(userId);
             Job job = jobRepository.findById(jobId)
                     .orElseThrow(() -> new RuntimeException("Job not found"));
+            String resumeUrl = resolveApplicationResumeUrl(applicant, payload.get("resumeUrl"));
 
             String applicationNote = payload.get("applicationNote") != null
                     ? String.valueOf(payload.get("applicationNote"))
@@ -208,11 +209,38 @@ public class ApplicationRestController {
         }
     }
 
-    private String getResumeFileName(MultipartFile resumeFile) {
-        if (resumeFile == null || resumeFile.isEmpty()) {
-            return "resume_not_uploaded";
+    private String resolveApplicationResumeUrl(User applicant, Object resumeUrl) {
+        if (resumeUrl != null) {
+            String candidateResumeUrl = String.valueOf(resumeUrl).trim();
+            if (!candidateResumeUrl.isBlank()) {
+                return candidateResumeUrl;
+            }
         }
-        return resumeFile.getOriginalFilename();
+
+        if (applicant.getResumeUrl() != null && !applicant.getResumeUrl().isBlank()) {
+            return applicant.getResumeUrl();
+        }
+
+        return "resume_not_uploaded";
+    }
+
+    private String resolveApplicationResumeUrl(User applicant, MultipartFile resumeFile) {
+        if (resumeFile != null && !resumeFile.isEmpty()) {
+            ResumeStorageService.StoredResume storedResume = resumeStorageService.storeResume(applicant, resumeFile);
+            String resumeUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/users/{userId}/resume")
+                    .buildAndExpand(applicant.getId())
+                    .toUriString();
+            userService.updateResumeMetadata(
+                    applicant.getId(),
+                    resumeUrl,
+                    storedResume.originalFileName(),
+                    storedResume.storagePath()
+            );
+            return resumeUrl;
+        }
+
+        return resolveApplicationResumeUrl(applicant, (Object) null);
     }
 
     private String getResumePreview(String extractedResumeText) {

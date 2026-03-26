@@ -74,13 +74,35 @@ public class UserService {
         user.setFullName(updatedData.getFullName());
         user.setEmail(updatedData.getEmail());
         user.setPhone(updatedData.getPhone());
+        user.setGender(updatedData.getGender());
+        user.setLocation(updatedData.getLocation());
+        user.setDateOfBirth(updatedData.getDateOfBirth());
         user.setSkills(updatedData.getSkills());
         user.setExperience(updatedData.getExperience());
+        user.setTenthMarks(updatedData.getTenthMarks());
+        user.setTwelfthMarks(updatedData.getTwelfthMarks());
+        user.setGraduation(updatedData.getGraduation());
+        user.setProfileSummary(updatedData.getProfileSummary());
+        user.setLanguages(updatedData.getLanguages());
+        user.setInternships(updatedData.getInternships());
+        user.setProjects(updatedData.getProjects());
+        user.setCertifications(updatedData.getCertifications());
         user.setCompanyName(updatedData.getCompanyName());
         user.setCompanyLogoUrl(updatedData.getCompanyLogoUrl());
         user.setCompanyOverview(updatedData.getCompanyOverview());
         user.setCompanyReviewSummary(updatedData.getCompanyReviewSummary());
         user.setCompanyReviewCount(updatedData.getCompanyReviewCount());
+
+        return UserDto.toDto(userRepository.save(user));
+    }
+
+    public UserDto updateResumeMetadata(Long userId, String resumeUrl, String resumeFileName, String resumeStoragePath) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setResumeUrl(resumeUrl);
+        user.setResumeFileName(resumeFileName);
+        user.setResumeStoragePath(resumeStoragePath);
 
         return UserDto.toDto(userRepository.save(user));
     }

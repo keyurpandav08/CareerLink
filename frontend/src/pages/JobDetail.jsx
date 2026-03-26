@@ -352,6 +352,9 @@ const JobDetail = () => {
                 onChange={(event) => setApplyData((prev) => ({ ...prev, resumeUrl: event.target.value }))}
                 placeholder="Google Drive / portfolio / resume link"
               />
+              <small className="apply-helper-note">
+                If you leave this blank, your latest uploaded profile resume will be used automatically when available.
+              </small>
 
               <label>Screening Summary (required, min 30 chars)</label>
               <textarea

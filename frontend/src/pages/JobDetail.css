@@ -354,6 +354,13 @@
   color: var(--text-soft);
 }
 
+.apply-helper-note {
+  margin-top: -0.2rem;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
 .apply-modal input,
 .apply-modal select,
 .apply-modal textarea {

@@ -19,7 +19,7 @@ const decodeJwtPayload = (token) => {
   }
 };
 
-const GoogleAuthButton = ({ label, onError }) => {
+const GoogleAuthButton = ({ label = 'Continue with Google', onError }) => {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const invalidClientId = clientId && !isLikelyGoogleClientId(clientId);
   const buttonRef = useRef(null);
@@ -107,11 +107,6 @@ const GoogleAuthButton = ({ label, onError }) => {
 GoogleAuthButton.propTypes = {
   label: PropTypes.string,
   onError: PropTypes.func
-};
-
-GoogleAuthButton.defaultProps = {
-  label: 'Continue with Google',
-  onError: undefined
 };
 
 export default GoogleAuthButton;

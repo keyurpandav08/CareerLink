@@ -10,7 +10,7 @@ const splitSkills = (value) => (value || '')
   .map((item) => normalize(item))
   .filter(Boolean);
 
-const SkillTagInput = ({ value, onChange, placeholder = 'Add a skill and press Enter' }) => {
+const SkillTagInput = ({ value, onChange, placeholder = 'Add a skill and press Enter', options = SKILL_OPTIONS }) => {
   const [skills, setSkills] = useState(splitSkills(value));
   const [query, setQuery] = useState('');
 
@@ -41,11 +41,11 @@ const SkillTagInput = ({ value, onChange, placeholder = 'Add a skill and press E
 
   const filteredOptions = useMemo(() => {
     const normalizedQuery = query.toLowerCase();
-    return SKILL_OPTIONS
+    return options
       .filter((skill) => !skills.some((item) => item.toLowerCase() === skill.toLowerCase()))
       .filter((skill) => skill.toLowerCase().includes(normalizedQuery))
       .slice(0, 8);
-  }, [query, skills]);
+  }, [options, query, skills]);
 
   const handleInputKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ',') {

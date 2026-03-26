@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
+  Award,
   Briefcase,
   CheckCircle2,
   ClipboardCheck,
@@ -8,8 +9,11 @@ import {
   Eye,
   FileBadge2,
   FileText,
+  GraduationCap,
+  Languages,
   Mail,
   Phone,
+  Sparkles,
   XCircle
 } from 'lucide-react';
 import api from '../services/api';
@@ -22,6 +26,27 @@ const STAT_ICONS = {
   pending: Clock3,
   accepted: CheckCircle2,
   rejected: XCircle
+};
+
+const hasResume = (resumeUrl) => resumeUrl && resumeUrl !== 'resume_not_uploaded';
+
+const splitCommaList = (value) => (value || '')
+  .split(',')
+  .map((item) => item.trim())
+  .filter(Boolean);
+
+const DetailBlock = ({ icon: Icon, title, value, multiline = false }) => {
+  if (!value) return null;
+
+  return (
+    <section className="profile-modal-section">
+      <small>{title}</small>
+      <div className={multiline ? 'profile-section-copy multiline' : 'profile-section-copy'}>
+        {Icon && <Icon size={15} />}
+        <p>{value}</p>
+      </div>
+    </section>
+  );
 };
 
 const EmployerDashboard = () => {
@@ -114,12 +139,15 @@ const EmployerDashboard = () => {
   if (loading) return <div className="container employer-page-state">Loading employer dashboard...</div>;
   if (error) return <div className="container employer-page-state error">{error}</div>;
 
+  const selectedSkills = splitCommaList(selectedApplication?.applicantSkills);
+  const selectedLanguages = splitCommaList(selectedApplication?.applicantLanguages);
+
   return (
     <div className="employer-dashboard container">
       <section className="employer-header">
         <div>
           <h1>Employer Control Center</h1>
-          <p>Manage jobs, review applications, and update hiring pipeline.</p>
+          <p>Manage jobs, review applications, and update your hiring pipeline with better candidate visibility.</p>
         </div>
         <div className="header-actions">
           <Link to="/post-job" className="solid-btn">Post New Job</Link>
@@ -163,7 +191,7 @@ const EmployerDashboard = () => {
                   <h3>{job.title}</h3>
                   <span className={`status-chip ${String(job.status).toLowerCase()}`}>{job.status}</span>
                 </div>
-                <p className="job-meta">{job.location} · {job.jobType || 'Full-time'}</p>
+                <p className="job-meta">{job.location} | {job.jobType || 'Full-time'}</p>
                 <p className="job-desc">{job.description}</p>
                 <div className="job-actions">
                   <button onClick={() => updateJobStatus(job.id, job.status === 'Open' ? 'Close' : 'Open')} disabled={actionLoading}>
@@ -208,7 +236,7 @@ const EmployerDashboard = () => {
                 <div className="pipeline-top">
                   <div>
                     <h3>{app.applicantFullName || app.applicantName}</h3>
-                    <p>{app.jobTitle} · {app.jobLocation || 'Location not set'}</p>
+                    <p>{app.jobTitle} | {app.jobLocation || 'Location not set'}</p>
                   </div>
                   <span className={`status-chip ${String(app.status).toLowerCase()}`}>{app.status}</span>
                 </div>
@@ -227,10 +255,10 @@ const EmployerDashboard = () => {
                     View profile
                   </button>
 
-                  {app.resumeUrl && app.resumeUrl !== 'resume_not_uploaded' ? (
+                  {hasResume(app.resumeUrl) ? (
                     <a href={app.resumeUrl} target="_blank" rel="noreferrer" className="outline-action-btn">
                       <FileBadge2 size={15} />
-                      Show resume
+                      View resume
                     </a>
                   ) : (
                     <button type="button" className="outline-action-btn muted" disabled>
@@ -242,7 +270,7 @@ const EmployerDashboard = () => {
                   <select
                     value={app.status}
                     disabled={actionLoading}
-                    onChange={(e) => updateApplicationStatus(app.id, e.target.value)}
+                    onChange={(event) => updateApplicationStatus(app.id, event.target.value)}
                   >
                     <option value="PENDING">PENDING</option>
                     <option value="REVIEWED">REVIEWED</option>
@@ -260,7 +288,7 @@ const EmployerDashboard = () => {
 
       {selectedApplication && (
         <div className="profile-modal-overlay" onClick={() => setSelectedApplication(null)}>
-          <div className="profile-modal-card" onClick={(event) => event.stopPropagation()}>
+          <div className="profile-modal-card wide-profile-modal" onClick={(event) => event.stopPropagation()}>
             <div className="profile-modal-head">
               <div>
                 <h3>{selectedApplication.applicantFullName || selectedApplication.applicantName}</h3>
@@ -276,7 +304,19 @@ const EmployerDashboard = () => {
               </div>
               <div>
                 <small>Phone</small>
-                <strong>{selectedApplication.applicantPhone || '-'}</strong>
+                <strong>{selectedApplication.applicantPhone || 'Not added'}</strong>
+              </div>
+              <div>
+                <small>Gender</small>
+                <strong>{selectedApplication.applicantGender || 'Not added'}</strong>
+              </div>
+              <div>
+                <small>Location</small>
+                <strong>{selectedApplication.applicantLocation || 'Not added'}</strong>
+              </div>
+              <div>
+                <small>Date of Birth</small>
+                <strong>{selectedApplication.applicantDateOfBirth || 'Not added'}</strong>
               </div>
               <div>
                 <small>Experience</small>
@@ -286,23 +326,92 @@ const EmployerDashboard = () => {
                 <small>Applied On</small>
                 <strong>{selectedApplication.appliedAt || '-'}</strong>
               </div>
+              <div>
+                <small>Resume</small>
+                <strong>{selectedApplication.resumeFileName || (hasResume(selectedApplication.resumeUrl) ? 'Uploaded resume' : 'Unavailable')}</strong>
+              </div>
             </div>
 
-            <div className="profile-modal-section">
-              <small>Key Skills</small>
-              <p>{selectedApplication.applicantSkills || 'No skills added by applicant.'}</p>
-            </div>
+            {selectedApplication.applicantProfileSummary && (
+              <DetailBlock
+                icon={FileText}
+                title="Profile Summary"
+                value={selectedApplication.applicantProfileSummary}
+                multiline
+              />
+            )}
 
-            <div className="profile-modal-section">
-              <small>Candidate Note</small>
-              <p>{selectedApplication.applicationNote || 'No candidate note shared.'}</p>
+            {selectedSkills.length > 0 && (
+              <section className="profile-modal-section">
+                <small>Key Skills</small>
+                <div className="profile-tag-list">
+                  {selectedSkills.map((skill) => <span key={skill}>{skill}</span>)}
+                </div>
+              </section>
+            )}
+
+            {selectedLanguages.length > 0 && (
+              <section className="profile-modal-section">
+                <small>Languages</small>
+                <div className="profile-tag-list">
+                  {selectedLanguages.map((language) => (
+                    <span key={language}>
+                      <Languages size={14} />
+                      {language}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <div className="profile-detail-grid">
+              <DetailBlock
+                icon={GraduationCap}
+                title="Graduation"
+                value={selectedApplication.applicantGraduation}
+                multiline
+              />
+              <DetailBlock
+                icon={Sparkles}
+                title="10th Marks"
+                value={selectedApplication.applicantTenthMarks}
+              />
+              <DetailBlock
+                icon={Sparkles}
+                title="12th Marks"
+                value={selectedApplication.applicantTwelfthMarks}
+              />
+              <DetailBlock
+                icon={Briefcase}
+                title="Internship"
+                value={selectedApplication.applicantInternships}
+                multiline
+              />
+              <DetailBlock
+                icon={FolderKanban}
+                title="Projects"
+                value={selectedApplication.applicantProjects}
+                multiline
+              />
+              <DetailBlock
+                icon={Award}
+                title="Certifications"
+                value={selectedApplication.applicantCertifications}
+                multiline
+              />
+              <DetailBlock
+                icon={FileText}
+                title="Candidate Note"
+                value={selectedApplication.applicationNote}
+                multiline
+              />
             </div>
 
             <div className="profile-modal-actions">
-              {selectedApplication.resumeUrl && selectedApplication.resumeUrl !== 'resume_not_uploaded' ? (
+              {hasResume(selectedApplication.resumeUrl) ? (
                 <a href={selectedApplication.resumeUrl} target="_blank" rel="noreferrer" className="solid-btn">
                   <FileBadge2 size={15} />
-                  Show resume
+                  View Resume
                 </a>
               ) : (
                 <button type="button" className="ghost-btn-inline" disabled>Resume unavailable</button>

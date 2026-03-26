@@ -44,7 +44,6 @@ public class Job {
     private String aboutCompany;
     @Column(length = 2500)
     private String jobRequirements;
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String companyLogoUrl;
     @Column(length = 500)
