@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getDashboardPathByRole, getRoleName } from "../utils/role";
 
-const ProtectedRoute = ({ children, role, roles }) => {
+const ProtectedRoute = ({ children, role, roles, redirectTo = "/login" }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -10,7 +10,7 @@ const ProtectedRoute = ({ children, role, roles }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   const currentRole = getRoleName(user);

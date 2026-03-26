@@ -1,26 +1,29 @@
 package com.keyurpandav.jobber.service;
 
-import com.keyurpandav.jobber.config.SecurityConfig;
 import com.keyurpandav.jobber.dto.UserDto;
 import com.keyurpandav.jobber.entity.Role;
 import com.keyurpandav.jobber.entity.User;
 import com.keyurpandav.jobber.repository.RoleRepository;
 import com.keyurpandav.jobber.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final String DEFAULT_ROLE = "APPLICANT";
+    private static final Set<String> SELF_REGISTER_ROLES = Set.of("APPLICANT", "EMPLOYER");
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final SecurityConfig securityConfig;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public UserDto register(User user){
-        // Check for duplicate username or email
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new RuntimeException("Username already exists: " + user.getUsername());
         }
@@ -28,24 +31,15 @@ public class UserService {
             throw new RuntimeException("Email already registered: " + user.getEmail());
         }
 
-        if (user.getRole() == null) {
-            user.setRole(roleRepository.findByName("APPLICANT")
-                    .orElseThrow(() -> new RuntimeException("Default role missing")));
-        } else if (user.getRole().getId() != null) {
-            Role r = roleRepository.findById(user.getRole().getId())
-                    .orElseThrow(() -> new RuntimeException("Role not found"));
-            user.setRole(r);
-        } else if (user.getRole().getName() != null && !user.getRole().getName().isBlank()) {
-            Role r = roleRepository.findByName(user.getRole().getName().toUpperCase())
-                    .orElseThrow(() -> new RuntimeException("Role not found"));
-            user.setRole(r);
-        } else {
-            user.setRole(roleRepository.findByName("APPLICANT")
-                    .orElseThrow(() -> new RuntimeException("Default role missing")));
+        String requestedRole = resolveRequestedRole(user);
+        if (!SELF_REGISTER_ROLES.contains(requestedRole)) {
+            throw new RuntimeException("Only applicant or employer accounts can be created from registration.");
         }
 
-        // Encode password
-        user.setPassword(securityConfig.passwordEncoder().encode(user.getPassword()));
+        Role role = roleRepository.findByName(requestedRole)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+        user.setRole(role);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         return UserDto.toDto(userRepository.save(user));
     }
@@ -89,7 +83,26 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
-        user.setPassword(securityConfig.passwordEncoder().encode(rawPassword));
+        user.setPassword(passwordEncoder.encode(rawPassword));
         return userRepository.save(user);
+    }
+
+    private String resolveRequestedRole(User user) {
+        if (user.getRole() == null) {
+            return DEFAULT_ROLE;
+        }
+
+        if (user.getRole().getId() != null) {
+            return roleRepository.findById(user.getRole().getId())
+                    .map(Role::getName)
+                    .map(String::toUpperCase)
+                    .orElseThrow(() -> new RuntimeException("Role not found"));
+        }
+
+        if (user.getRole().getName() != null && !user.getRole().getName().isBlank()) {
+            return user.getRole().getName().trim().toUpperCase();
+        }
+
+        return DEFAULT_ROLE;
     }
 }

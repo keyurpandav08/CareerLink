@@ -1,11 +1,14 @@
 package com.keyurpandav.jobber.controller;
 
+import com.keyurpandav.jobber.dto.UserDto;
 import com.keyurpandav.jobber.entity.User;
 import com.keyurpandav.jobber.service.EmailService;
 import com.keyurpandav.jobber.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.SecureRandom;
@@ -26,6 +29,17 @@ public class AuthRecoveryController {
 
     @Value("${app.mail.otp-expiry-minutes:10}")
     private long otpExpiryMinutes;
+
+    @GetMapping("/me")
+    public ResponseEntity<?> currentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+        }
+
+        User user = userService.getUserByUsername(auth.getName());
+        return ResponseEntity.ok(UserDto.toDto(user));
+    }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {

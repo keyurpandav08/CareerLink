@@ -37,6 +37,8 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/resume/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/users/register").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/job", "/job/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/job/**").hasRole("EMPLOYER")

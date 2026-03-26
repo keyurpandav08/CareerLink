@@ -106,31 +106,17 @@ public class ApplicationService {
 
         application.setStatus(updatedStatus);
         Application saved = applicationRepository.save(application);
+        sendStatusUpdateNotification(saved, updatedStatus);
+        return ApplicationDto.toDto(saved);
+    }
 
-        if (saved.getApplicant() != null
-                && saved.getApplicant().getEmail() != null
-                && updatedStatus == ApplicationStatusType.ACCEPTED) {
-            try {
-                String fullName = saved.getApplicant().getFullName() != null
-                        ? saved.getApplicant().getFullName()
-                        : saved.getApplicant().getUsername();
-                String employerName = saved.getJob() != null
-                        && saved.getJob().getEmployer() != null
-                        ? saved.getJob().getEmployer().getUsername()
-                        : "Employer";
-                String jobTitle = saved.getJob() != null ? saved.getJob().getTitle() : "your application";
+    public ApplicationDto updateStatusForAdmin(Long appId, ApplicationStatusType updatedStatus) {
+        Application application = applicationRepository.findById(appId)
+                .orElseThrow(() -> new IllegalArgumentException("No Application Found with ID: " + appId));
 
-                emailService.sendApplicationStatusUpdate(
-                        saved.getApplicant().getEmail(),
-                        fullName,
-                        jobTitle,
-                        employerName,
-                        updatedStatus.name()
-                );
-            } catch (Exception ignored) {
-            }
-        }
-
+        application.setStatus(updatedStatus);
+        Application saved = applicationRepository.save(application);
+        sendStatusUpdateNotification(saved, updatedStatus);
         return ApplicationDto.toDto(saved);
     }
 
@@ -140,4 +126,31 @@ public class ApplicationService {
                 .orElseThrow(() -> new IllegalArgumentException("No Application Found with ID: " + appId));
     }
 
+    private void sendStatusUpdateNotification(Application saved, ApplicationStatusType updatedStatus) {
+        if (saved.getApplicant() == null
+                || saved.getApplicant().getEmail() == null
+                || updatedStatus != ApplicationStatusType.ACCEPTED) {
+            return;
+        }
+
+        try {
+            String fullName = saved.getApplicant().getFullName() != null
+                    ? saved.getApplicant().getFullName()
+                    : saved.getApplicant().getUsername();
+            String employerName = saved.getJob() != null
+                    && saved.getJob().getEmployer() != null
+                    ? saved.getJob().getEmployer().getUsername()
+                    : "Employer";
+            String jobTitle = saved.getJob() != null ? saved.getJob().getTitle() : "your application";
+
+            emailService.sendApplicationStatusUpdate(
+                    saved.getApplicant().getEmail(),
+                    fullName,
+                    jobTitle,
+                    employerName,
+                    updatedStatus.name()
+            );
+        } catch (Exception ignored) {
+        }
+    }
 }

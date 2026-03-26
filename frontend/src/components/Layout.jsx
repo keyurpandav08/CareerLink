@@ -30,6 +30,11 @@ const employerNav = [
   { to: '/contact', label: 'Support' }
 ];
 
+const adminNav = [
+  { to: '/admin/dashboard', label: 'Admin Panel' },
+  { to: '/', label: 'Public Site' }
+];
+
 const Layout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -42,6 +47,7 @@ const Layout = () => {
 
   const navItems = useMemo(() => {
     if (!isAuthenticated) return guestNav;
+    if (roleName === 'ADMIN') return adminNav;
     return roleName === 'EMPLOYER' ? employerNav : applicantNav;
   }, [isAuthenticated, roleName]);
 
@@ -64,7 +70,7 @@ const Layout = () => {
   };
 
   const dashboardPath = getDashboardPathForUser(user);
-  const profilePath = roleName === 'EMPLOYER' ? '/settings' : '/edit-profile';
+  const profilePath = roleName === 'EMPLOYER' ? '/settings' : roleName === 'ADMIN' ? '/admin/dashboard' : '/edit-profile';
 
   return (
     <div className="app-layout-root">
@@ -96,9 +102,11 @@ const Layout = () => {
                 {showUserMenu && (
                   <div className="user-menu">
                     <Link to={dashboardPath} onClick={() => setShowUserMenu(false)}>Dashboard</Link>
-                    <Link to="/applications" onClick={() => setShowUserMenu(false)}>Applications</Link>
+                    {roleName !== 'ADMIN' && (
+                      <Link to="/applications" onClick={() => setShowUserMenu(false)}>Applications</Link>
+                    )}
                     <Link to={profilePath} onClick={() => setShowUserMenu(false)}>
-                      {roleName === 'EMPLOYER' ? 'Settings' : 'Edit Profile'}
+                      {roleName === 'EMPLOYER' ? 'Settings' : roleName === 'ADMIN' ? 'Admin Panel' : 'Edit Profile'}
                     </Link>
                     <button type="button" onClick={handleLogout} className="danger-item">
                       <LogOut size={15} />

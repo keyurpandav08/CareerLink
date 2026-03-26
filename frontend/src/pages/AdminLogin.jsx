@@ -1,23 +1,20 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, KeyRound, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, KeyRound, Shield, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getDashboardPathByRole } from '../utils/role';
 import api from '../services/api';
 import logo from '../pages/joblithic.png';
 import './Auth.css';
+import './AdminLogin.css';
 
-const Login = () => {
+const AdminLogin = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { login } = useAuth();
 
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const successMessage = location.state?.message || '';
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -36,42 +33,53 @@ const Login = () => {
       const userRes = await api.get('/api/auth/me');
       const currentUser = userRes.data;
 
-      if (currentUser.roleName === 'ADMIN') {
+      if (currentUser.roleName !== 'ADMIN') {
         await api.post('/logout');
-        setError('Admin accounts must sign in from the admin login page.');
+        setError('This portal is only for admin accounts.');
         return;
       }
 
-      login({
-        id: currentUser.id,
-        username: currentUser.username,
-        fullName: currentUser.fullName,
-        email: currentUser.email,
-        roleName: currentUser.roleName
-      });
-
-      navigate(getDashboardPathByRole(currentUser.roleName), { replace: true });
+      login(currentUser);
+      navigate('/admin/dashboard', { replace: true });
     } catch (requestError) {
-      setError('Invalid username or password.');
+      setError(requestError.response?.data?.error || 'Invalid admin username or password.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section className="auth-shell">
-      <div className="auth-card login-card-modern">
+    <section className="auth-shell admin-auth-shell">
+      <div className="auth-card login-card-modern admin-login-card">
+        <div className="admin-login-badge">
+          <Shield size={15} />
+          <span>Secure Admin Portal</span>
+        </div>
+
         <div className="auth-logo-wrap">
           <img src={logo} alt="JobLithic" />
         </div>
-        <h1>Welcome back</h1>
-        <p className="auth-subtitle">Sign in to continue your hiring or job search flow.</p>
 
-        {successMessage && <div className="auth-banner success">{successMessage}</div>}
+        <h1>Admin Sign In</h1>
+        <p className="auth-subtitle">
+          Review platform activity, manage users, moderate jobs, and handle application flow from one control room.
+        </p>
+
+        <div className="admin-login-highlights">
+          <div>
+            <strong>Separate access</strong>
+            <span>Admin users are blocked from the normal login screen.</span>
+          </div>
+          <div>
+            <strong>Backend protected</strong>
+            <span>Every admin API is secured with the `ADMIN` role on Spring Security.</span>
+          </div>
+        </div>
+
         {error && <div className="auth-banner error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <label htmlFor="username">Username</label>
+          <label htmlFor="username">Admin Username</label>
           <div className="auth-input">
             <User size={16} />
             <input
@@ -79,7 +87,7 @@ const Login = () => {
               type="text"
               value={formData.username}
               onChange={(event) => setFormData((prev) => ({ ...prev, username: event.target.value }))}
-              placeholder="Enter username"
+              placeholder="Enter admin username"
               required
             />
           </div>
@@ -100,24 +108,17 @@ const Login = () => {
             </button>
           </div>
 
-          <div className="auth-row-right">
-            <Link to="/forgot-password">Forgot Password?</Link>
-          </div>
-
-          <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+          <button type="submit" className="auth-submit admin-submit" disabled={loading}>
+            {loading ? 'Verifying access...' : 'Enter Admin Panel'}
           </button>
         </form>
 
         <p className="auth-switch">
-          New here? <Link to="/register">Create account</Link>
-        </p>
-        <p className="auth-switch">
-          Admin access? <Link to="/admin/login">Open admin login</Link>
+          User account? <Link to="/login">Go to normal login</Link>
         </p>
       </div>
     </section>
   );
 };
 
-export default Login;
+export default AdminLogin;
