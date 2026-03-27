@@ -1,150 +1,443 @@
-.resume-ai-page {
-  padding: 2.5rem 1rem;
+.resume-insights-page {
+  display: grid;
+  gap: 1.5rem;
 }
 
-.resume-ai-card {
-  max-width: 1100px;
-  margin: 0 auto;
-  border: 1px solid var(--border);
-  border-radius: 18px;
+.resume-insights-hero,
+.resume-score-card,
+.resume-gap-card,
+.resume-keyword-card,
+.resume-growth-card,
+.resume-market-card,
+.resume-insights-error {
+  border: 1px solid rgba(117, 119, 126, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.06);
+}
+
+.resume-insights-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.95fr);
+  gap: 1.5rem;
   padding: 1.6rem;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  box-shadow: var(--shadow-md);
+  border-radius: 28px;
 }
 
-.resume-ai-header {
-  display: flex;
-  gap: 0.8rem;
-  align-items: flex-start;
-  margin-bottom: 1.25rem;
+.resume-insights-hero h1 {
+  font-size: clamp(2.4rem, 5vw, 4.3rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.resume-insights-hero h1 span {
+  color: #2563eb;
+  font-style: italic;
+}
+
+.resume-insights-hero p {
+  max-width: 60ch;
+  margin-top: 0.9rem;
+  color: #64748b;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.resume-insights-form {
+  display: grid;
+  gap: 1rem;
+  padding: 1.15rem;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 30%),
+    #f8fafc;
+}
+
+.resume-insights-upload,
+.resume-insights-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 48px;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  border: 1px dashed rgba(37, 99, 235, 0.35);
+  background: #fff;
   color: #0f172a;
 }
 
-.resume-ai-header p {
-  margin-top: 0.25rem;
-  color: var(--text-secondary);
-}
-
-.resume-ai-form {
-  display: grid;
-  gap: 1rem;
-}
-
-.file-upload {
-  border: 1px dashed #7dd3fc;
-  background: #ecfeff;
-  color: #0c4a6e;
-  border-radius: 12px;
-  padding: 0.9rem;
-  display: inline-flex;
-  gap: 0.5rem;
-  align-items: center;
-  width: fit-content;
+.resume-insights-upload {
   cursor: pointer;
 }
 
-.form-grid {
+.resume-insights-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
 }
 
-.resume-ai-form label {
-  font-weight: 600;
-  margin-bottom: 0.3rem;
-  display: block;
+.resume-insights-grid label,
+.resume-insights-key {
+  display: grid;
+  gap: 0.45rem;
 }
 
-.resume-ai-form select,
-.resume-ai-form input {
-  width: 100%;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  padding: 0.65rem 0.8rem;
-}
-
-.resume-ai-form button {
-  width: fit-content;
-  background: linear-gradient(135deg, #0e7490, #0284c7);
-  color: #fff;
-  border-radius: 10px;
-  padding: 0.7rem 1.1rem;
+.resume-insights-grid label span {
+  color: #64748b;
+  font-size: 0.82rem;
   font-weight: 700;
 }
 
-.resume-ai-form button:disabled {
-  opacity: 0.7;
+.resume-insights-grid select,
+.resume-insights-grid input,
+.resume-insights-key input {
+  width: 100%;
+  border: 1px solid rgba(117, 119, 126, 0.14);
+  border-radius: 14px;
+  padding: 0.8rem 0.9rem;
+  outline: none;
+  background: #fff;
 }
 
-.error-text {
-  color: #b91c1c;
-  margin-top: 0.8rem;
+.resume-insights-key {
+  grid-template-columns: auto 1fr;
+  border-style: solid;
 }
 
-.analysis-section {
+.resume-insights-form button,
+.resume-keyword-card button {
+  min-height: 46px;
+  border-radius: 14px;
+  background: #0b1f3a;
+  color: #fff;
+  font-weight: 800;
+}
+
+.resume-insights-form button:disabled {
+  opacity: 0.72;
+}
+
+.resume-insights-error {
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.resume-insights-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.resume-score-card,
+.resume-gap-card,
+.resume-keyword-card,
+.resume-growth-card {
+  padding: 1.5rem;
+  border-radius: 24px;
+}
+
+.resume-score-card {
+  grid-column: span 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.resume-score-ring {
+  --score-angle: calc(var(--score) * 3.6deg);
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, #fff 78%, transparent 79% 100%),
+    conic-gradient(#2563eb var(--score-angle), #e5e7eb 0deg);
+}
+
+.resume-score-ring strong,
+.resume-score-ring span {
+  display: block;
+  text-align: center;
+}
+
+.resume-score-ring strong {
+  font-family: var(--font-heading);
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.resume-score-ring span {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.resume-score-card p {
   margin-top: 1.25rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.resume-score-card p span {
+  color: #2563eb;
+  font-weight: 800;
+}
+
+.resume-score-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.resume-score-pills span {
+  padding: 0.45rem 0.78rem;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.resume-gap-card {
+  grid-column: span 7;
+  background: #f8fafc;
+}
+
+.resume-gap-card h2,
+.resume-keyword-card h2,
+.resume-growth-card h2,
+.resume-market-card h2 {
+  font-size: 1.4rem;
+}
+
+.resume-gap-list {
   display: grid;
   gap: 1rem;
+  margin-top: 1.25rem;
 }
 
-.analysis-top {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.8rem;
-}
-
-.metric-box {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
-  padding: 0.8rem;
+.resume-gap-row {
   display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.metric-box small {
-  display: block;
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-}
-
-.analysis-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.8rem;
-}
-
-.list-card {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
-  padding: 0.9rem;
-}
-
-.list-card.highlight {
-  border-color: #fca5a5;
-  background: #fef2f2;
-}
-
-.list-card h3 {
-  margin-bottom: 0.65rem;
-  font-size: 1rem;
-}
-
-.list-card ul {
-  list-style: none;
-  display: grid;
-  gap: 0.35rem;
-}
-
-.list-card li {
-  background: #f8fafc;
-  border-radius: 8px;
-  padding: 0.35rem 0.5rem;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
   font-size: 0.92rem;
 }
 
-.empty {
-  color: var(--text-secondary);
+.resume-gap-row strong {
+  color: #2563eb;
+}
+
+.resume-gap-bar {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.resume-gap-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ef4444 0%, #2563eb 100%);
+}
+
+.resume-gap-card blockquote {
+  margin-top: 1.4rem;
+  padding: 1rem;
+  border-left: 4px solid #2563eb;
+  border-radius: 14px;
+  background: #fff;
+  color: #475569;
+  font-style: italic;
+}
+
+.resume-keyword-card {
+  grid-column: span 6;
+}
+
+.resume-keyword-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.1rem 0 1.4rem;
+}
+
+.resume-keyword-list span {
+  padding: 0.52rem 0.82rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.resume-keyword-list span.detected {
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.resume-keyword-list span.missing {
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+}
+
+.resume-growth-card {
+  grid-column: span 6;
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(18px);
+}
+
+.resume-growth-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.15rem;
+}
+
+.resume-growth-list article {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.resume-growth-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.resume-growth-list strong,
+.resume-growth-list span {
+  display: block;
+}
+
+.resume-growth-list span {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.resume-growth-list article svg:last-child {
+  margin-left: auto;
+  color: #94a3b8;
+}
+
+.resume-market-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+  gap: 1.5rem;
+  padding: 1.7rem;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.2), transparent 30%),
+    linear-gradient(145deg, #0b1f3a, #07142a);
+  color: #fff;
+}
+
+.resume-market-card p {
+  max-width: 46ch;
+  margin-top: 0.65rem;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.resume-market-metric {
+  margin-top: 1.5rem;
+}
+
+.resume-market-metric strong {
+  color: #3b82f6;
+  font-size: 3rem;
+  font-weight: 900;
+}
+
+.resume-market-metric span {
+  margin-left: 0.45rem;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.resume-market-jobs {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.resume-market-jobs-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.resume-market-jobs-head span {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.82rem;
+}
+
+.resume-market-job {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.resume-market-job-copy {
+  flex: 1;
+}
+
+.resume-market-job-copy strong,
+.resume-market-job-copy span {
+  display: block;
+}
+
+.resume-market-job-copy span,
+.resume-market-empty {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.84rem;
+}
+
+.resume-market-empty {
+  padding: 1rem 0;
+}
+
+@media (max-width: 1024px) {
+  .resume-insights-hero,
+  .resume-market-card {
+    grid-template-columns: 1fr;
+  }
+
+  .resume-score-card,
+  .resume-gap-card,
+  .resume-keyword-card,
+  .resume-growth-card {
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 720px) {
+  .resume-insights-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .resume-score-ring {
+    width: 210px;
+    height: 210px;
+  }
 }

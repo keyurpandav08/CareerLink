@@ -59,7 +59,7 @@ const SkillTagInput = ({ value, onChange, placeholder = 'Add a skill and press E
 
   return (
     <div className="skill-picker">
-      <div className="skill-picker-box">
+      <div className={`skill-picker-box${skills.length > 2 ? ' skill-picker-box--stacked' : ''}`}>
         {skills.map((skill) => (
           <span key={skill} className="skill-chip">
             {skill}

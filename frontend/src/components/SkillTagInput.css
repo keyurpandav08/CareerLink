@@ -15,6 +15,10 @@
   gap: 0.45rem;
 }
 
+.skill-picker-box--stacked {
+  align-items: flex-start;
+}
+
 .skill-picker-box:focus-within {
   border-color: var(--brand-ink);
   box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.16);
@@ -42,10 +46,15 @@
   border: none;
   outline: none;
   flex: 1 1 180px;
-  min-width: 140px;
+  min-width: 160px;
   padding: 0.25rem 0.3rem;
   background: transparent;
   color: var(--text-main);
+}
+
+.skill-picker-box--stacked input {
+  flex-basis: 100%;
+  width: 100%;
 }
 
 .skill-options {

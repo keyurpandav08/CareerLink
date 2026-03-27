@@ -1,0 +1,404 @@
+.candidate-profile-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.candidate-profile-status,
+.candidate-profile-hero,
+.candidate-profile-card {
+  border: 1px solid rgba(117, 119, 126, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.06);
+}
+
+.candidate-profile-status {
+  padding: 1.5rem;
+  border-radius: 24px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.candidate-profile-hero {
+  overflow: hidden;
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.92)),
+    #f8fbff;
+}
+
+.candidate-profile-cover {
+  position: relative;
+  min-height: 188px;
+  background:
+    linear-gradient(135deg, rgba(11, 31, 58, 0.18), rgba(37, 99, 235, 0.05)),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.4), transparent 20%),
+    linear-gradient(135deg, #dbe4ef, #f6f9fc);
+  background-size: cover;
+  background-position: center;
+}
+
+.candidate-profile-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.06), rgba(15, 23, 42, 0.18));
+}
+
+.candidate-profile-cover-upload {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.1rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(14px);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.14);
+}
+
+.candidate-profile-cover-upload input {
+  display: none;
+}
+
+.candidate-profile-identity-card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin: -54px 1rem 1rem;
+  padding: 1.5rem 1.75rem 1.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 24px 55px rgba(15, 23, 42, 0.08);
+}
+
+.candidate-profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.candidate-profile-hero-avatar {
+  display: grid;
+  place-items: center;
+  width: 116px;
+  height: 116px;
+  flex-shrink: 0;
+  margin-top: -58px;
+  border: 5px solid rgba(255, 255, 255, 0.96);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #111827, #2563eb);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  font-weight: 800;
+  overflow: hidden;
+  box-shadow: 0 20px 34px rgba(15, 23, 42, 0.18);
+}
+
+.candidate-profile-hero-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.candidate-profile-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.candidate-profile-copy h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.7rem, 3vw, 2.25rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.candidate-profile-subtitle {
+  margin: 0;
+  color: #334155;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-transform: capitalize;
+}
+
+.candidate-profile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-top: 0.15rem;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.candidate-profile-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  line-height: 1.4;
+}
+
+.candidate-profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-shrink: 0;
+}
+
+.candidate-profile-edit-btn,
+.candidate-profile-share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+.candidate-profile-edit-btn {
+  padding: 0.8rem 1.1rem;
+  background: #020617;
+  color: #fff;
+  box-shadow: 0 14px 28px rgba(2, 6, 23, 0.16);
+}
+
+.candidate-profile-share-btn {
+  width: 44px;
+  background: #f3f4f6;
+  color: #0f172a;
+}
+
+.candidate-profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 1.5rem;
+}
+
+.candidate-profile-main,
+.candidate-profile-side {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.candidate-profile-card {
+  padding: 1.5rem;
+  border-radius: 24px;
+}
+
+.candidate-profile-card h2 {
+  font-size: 1.2rem;
+}
+
+.candidate-profile-card > p {
+  margin-top: 0.9rem;
+  color: #475569;
+  line-height: 1.8;
+}
+
+.candidate-profile-list {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 1rem;
+}
+
+.candidate-profile-entry {
+  display: flex;
+  gap: 1rem;
+}
+
+.candidate-profile-entry-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.candidate-profile-entry h3 {
+  font-size: 1rem;
+}
+
+.candidate-profile-entry p {
+  color: #64748b;
+}
+
+.candidate-profile-entry-subtitle {
+  margin: 0.22rem 0 0.45rem;
+  font-size: 0.84rem;
+}
+
+.candidate-profile-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.candidate-profile-skills span {
+  padding: 0.45rem 0.78rem;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.candidate-profile-artifact {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid rgba(117, 119, 126, 0.1);
+}
+
+.candidate-profile-artifact-head {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.candidate-profile-artifact-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #fff;
+  color: #ef4444;
+}
+
+.candidate-profile-artifact-head strong,
+.candidate-profile-connect strong {
+  display: block;
+}
+
+.candidate-profile-artifact-head span,
+.candidate-profile-connect span {
+  color: #64748b;
+}
+
+.candidate-profile-artifact-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.candidate-profile-artifact-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(117, 119, 126, 0.16);
+  background: #fff;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.candidate-profile-connect {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.candidate-profile-connect div {
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid rgba(117, 119, 126, 0.08);
+}
+
+@media (max-width: 980px) {
+  .candidate-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-profile-identity-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .candidate-profile-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 760px) {
+  .candidate-profile-cover {
+    min-height: 164px;
+  }
+
+  .candidate-profile-cover-upload {
+    top: 0.9rem;
+    right: 0.9rem;
+  }
+
+  .candidate-profile-identity-card {
+    margin: -42px 0.8rem 0.8rem;
+    padding: 1.2rem;
+    gap: 1rem;
+  }
+
+  .candidate-profile-identity {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .candidate-profile-hero-avatar {
+    width: 98px;
+    height: 98px;
+    margin-top: -44px;
+  }
+
+  .candidate-profile-copy h1 {
+    font-size: 1.8rem;
+  }
+
+  .candidate-profile-meta {
+    gap: 0.6rem 0.85rem;
+    font-size: 0.85rem;
+  }
+
+  .candidate-profile-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .candidate-profile-edit-btn {
+    flex: 1;
+  }
+}

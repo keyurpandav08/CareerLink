@@ -3,6 +3,10 @@
   background: var(--bg-canvas);
 }
 
+.app-layout-root-immersive {
+  background: #f7f9fb;
+}
+
 .site-header {
   position: sticky;
   top: 0;
@@ -162,6 +166,10 @@
 
 .site-content {
   min-height: calc(100vh - 82px);
+}
+
+.site-content-immersive {
+  min-height: 100vh;
 }
 
 @media (max-width: 1024px) {

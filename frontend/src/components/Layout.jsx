@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, User, X, LogOut } from 'lucide-react';
 import Footer from './Footer';
 import { useAuth } from '../context/AuthContext';
@@ -38,6 +38,7 @@ const adminNav = [
 const Layout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
@@ -70,7 +71,21 @@ const Layout = () => {
   };
 
   const dashboardPath = getDashboardPathForUser(user);
-  const profilePath = roleName === 'EMPLOYER' ? '/settings' : roleName === 'ADMIN' ? '/admin/dashboard' : '/edit-profile';
+  const profilePath = roleName === 'EMPLOYER' ? '/settings' : roleName === 'ADMIN' ? '/admin/dashboard' : '/profile';
+  const candidateImmersiveRoutes = new Set(['/dashboard', '/profile', '/edit-profile', '/resume-builder']);
+  const candidateConditionalRoutes = new Set(['/applications', '/settings']);
+  const useImmersiveShell = candidateImmersiveRoutes.has(location.pathname)
+    || (roleName === 'APPLICANT' && candidateConditionalRoutes.has(location.pathname));
+
+  if (useImmersiveShell) {
+    return (
+      <div className="app-layout-root app-layout-root-immersive">
+        <main className="site-content site-content-immersive">
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="app-layout-root">
@@ -106,7 +121,7 @@ const Layout = () => {
                       <Link to="/applications" onClick={() => setShowUserMenu(false)}>Applications</Link>
                     )}
                     <Link to={profilePath} onClick={() => setShowUserMenu(false)}>
-                      {roleName === 'EMPLOYER' ? 'Settings' : roleName === 'ADMIN' ? 'Admin Panel' : 'Edit Profile'}
+                      {roleName === 'EMPLOYER' ? 'Settings' : roleName === 'ADMIN' ? 'Admin Panel' : 'Profile'}
                     </Link>
                     <button type="button" onClick={handleLogout} className="danger-item">
                       <LogOut size={15} />

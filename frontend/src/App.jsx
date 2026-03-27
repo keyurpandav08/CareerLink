@@ -19,6 +19,7 @@ import Terms from './pages/Terms';
 import NotFound from './pages/NotFound';
 import SavedJobs from "./pages/SavedJobs";
 import EditProfile from "./pages/EditProfile";
+import Profile from "./pages/Profile";
 import Applications from "./pages/Applications";
 import Settings from "./pages/Settings";
 import Contact from "./pages/Contact";
@@ -136,6 +137,15 @@ function App() {
                 element={
                   <ProtectedRoute role="EMPLOYER">
                     <EmployerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="profile"
+                element={
+                  <ProtectedRoute role="APPLICANT">
+                    <Profile />
                   </ProtectedRoute>
                 }
               />
