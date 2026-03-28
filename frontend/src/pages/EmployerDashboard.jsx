@@ -14,7 +14,8 @@ import {
   Mail,
   Phone,
   Sparkles,
-  XCircle
+  XCircle,
+  FolderKanban
 } from 'lucide-react';
 import api from '../services/api';
 import './EmployerDashboard.css';
@@ -57,7 +58,8 @@ const EmployerDashboard = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [selectedApplication, setSelectedApplication] = useState(null);
-
+  const [showStatusConfirm, setShowStatusConfirm] = useState(false);
+  const [statusData, setStatusData] = useState(null);
   const loadDashboard = async () => {
     try {
       setLoading(true);
@@ -87,32 +89,26 @@ const EmployerDashboard = () => {
     rejected: applications.filter((app) => app.status === 'REJECTED').length
   }), [applications, jobs]);
 
-  const updateApplicationStatus = async (appId, status) => {
-    const confirmed = window.confirm(`Update this application status to ${status}?`);
-    if (!confirmed) return;
-
-    try {
-      setActionLoading(true);
-      await api.put(`/applications/${appId}/status`, { status });
-      await loadDashboard();
-    } catch (err) {
-      window.alert(err.response?.data?.error || 'Failed to update application status');
-    } finally {
-      setActionLoading(false);
-    }
+  const updateApplicationStatus = (appId, status) => {
+    setStatusData({ appId, status });
+    setShowStatusConfirm(true);
   };
 
-  const updateJobStatus = async (jobId, status) => {
-    const label = String(status).toLowerCase() === 'close' ? 'close' : 'reopen';
-    const confirmed = window.confirm(`Are you sure you want to ${label} this job?`);
-    if (!confirmed) return;
 
+
+  const confirmStatusUpdate = async () => {
     try {
       setActionLoading(true);
-      await api.put(`/job/${jobId}/status`, { status });
+
+      await api.put(`/applications/${statusData.appId}/status`, {
+        status: statusData.status
+      });
+
+      setShowStatusConfirm(false);
       await loadDashboard();
+
     } catch (err) {
-      window.alert(err.response?.data?.error || 'Failed to update job status');
+      window.alert(err.response?.data?.error || 'Failed to update status');
     } finally {
       setActionLoading(false);
     }
@@ -228,6 +224,32 @@ const EmployerDashboard = () => {
             </div>
           </div>
         )}
+    {showStatusConfirm && (
+      <div className="profile-modal-overlay">
+        <div className="confirm-card">
+          <h3>Change Status</h3>
+          <p>
+            Update application status to <b>{statusData?.status}</b>?
+          </p>
+
+          <div className="confirm-actions">
+            <button
+              className="cancel-btn"
+              onClick={() => setShowStatusConfirm(false)}
+            >
+              Cancel
+            </button>
+
+            <button
+              className="yes-btn"
+              onClick={confirmStatusUpdate}
+            >
+              Yes
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
 
         {applications.length ? (
           <div className="pipeline-grid">
@@ -291,7 +313,7 @@ const EmployerDashboard = () => {
           <div className="profile-modal-card wide-profile-modal" onClick={(event) => event.stopPropagation()}>
             <div className="profile-modal-head">
               <div>
-                <h3>{selectedApplication.applicantFullName || selectedApplication.applicantName}</h3>
+                <h3>{selectedApplication?.applicantFullName || selectedApplication.applicantName}</h3>
                 <p>{selectedApplication.jobTitle}</p>
               </div>
               <button type="button" className="ghost-btn-inline" onClick={() => setSelectedApplication(null)}>Close</button>

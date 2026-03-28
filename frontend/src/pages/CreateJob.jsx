@@ -143,14 +143,14 @@ const CreateJob = () => {
           </div>
 
           <div>
-            <label htmlFor="salary">Annual Salary (USD)</label>
+            <label htmlFor="salary">Annual Salary (INR)</label>
             <input
               id="salary"
               type="number"
               min="1"
               value={formData.salary}
               onChange={(event) => setField('salary', event.target.value)}
-              placeholder="e.g. 100000"
+              placeholder="e.g. 900000"
               required
             />
           </div>

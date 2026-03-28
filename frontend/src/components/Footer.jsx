@@ -7,18 +7,20 @@ const Footer = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+const [showSuccess, setShowSuccess] = useState(false);
   const currentYear = new Date().getFullYear();
 
   const submitFeedback = () => {
     if (!rating) return;
-    setSubmitted(true);
+
+    setShowSuccess(true);
+
     setTimeout(() => {
-      setSubmitted(false);
+      setShowSuccess(false);
       setComment('');
       setRating(0);
       setShowFeedback(false);
-    }, 1000);
+    }, 2000);
   };
 
   return (
@@ -93,8 +95,15 @@ const Footer = () => {
               <Send size={14} />
               Send Feedback
             </button>
+            {showSuccess && (
+              <div className="success-overlay">
+                <div className="success-box">
+                  <div className="tick">✔</div>
+                  <h3>Feedback Submitted Successfully!</h3>
+                </div>
+              </div>
+            )}
 
-            {submitted && <span className="feedback-ok">Feedback submitted.</span>}
           </div>
         </div>
       )}

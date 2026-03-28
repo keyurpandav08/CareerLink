@@ -302,15 +302,22 @@ const EditProfile = () => {
           <aside className="edit-profile-sidebar">
             <section className="edit-profile-avatar-card">
               <div className="edit-profile-avatar-frame">
-                <div className="edit-profile-avatar">
+                <div
+                  className="edit-profile-avatar"
+                  onClick={() => document.getElementById("profileUploadInput").click()}
+                >
                   {profilePhoto
                     ? <img src={profilePhoto} alt={displayName} />
                     : createInitials(displayName)}
                 </div>
-                <label className="edit-profile-avatar-upload">
-                  <ImagePlus size={15} />
-                  <input type="file" accept="image/*" onChange={handlePhotoUpload} hidden />
-                </label>
+
+                <input
+                  type="file"
+                  id="profileUploadInput"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  hidden
+                />
               </div>
 
               <h2>{displayName}</h2>
@@ -611,6 +618,7 @@ const EditProfile = () => {
                         icon={Briefcase}
                         id={`project-title-${index}`}
                         label="Project Title"
+                        placeholder="e.g, Job Portal System"
                         value={item.title || ''}
                         onChange={(event) => updateCollectionItem(setProjects, index, 'title', event.target.value)}
                       />
@@ -672,6 +680,7 @@ const EditProfile = () => {
                         id={`certification-name-${index}`}
                         label="Certification Name"
                         value={item.name || ''}
+                        placeholder="e.g. AWS Certified Solutions Architect"
                         onChange={(event) => updateCollectionItem(setCertifications, index, 'name', event.target.value)}
                       />
                       <InputField
@@ -679,6 +688,7 @@ const EditProfile = () => {
                         id={`certification-issuer-${index}`}
                         label="Issuer"
                         value={item.issuer || ''}
+                        placeholder="e.g. Amazon Web Services (AWS)"
                         onChange={(event) => updateCollectionItem(setCertifications, index, 'issuer', event.target.value)}
                       />
                       <InputField
@@ -695,6 +705,7 @@ const EditProfile = () => {
                         id={`certification-url-${index}`}
                         label="Credential URL"
                         value={item.credentialUrl || ''}
+                        placeholder="e.g. https://www.credly.com/badges/your-certificate-link"
                         onChange={(event) => updateCollectionItem(setCertifications, index, 'credentialUrl', event.target.value)}
                       />
                     </div>
