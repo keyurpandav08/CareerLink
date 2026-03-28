@@ -1,4 +1,5 @@
 package com.keyurpandav.jobber.controller;
+
 import com.keyurpandav.jobber.dto.ApplicationDto;
 import com.keyurpandav.jobber.dto.JobDto;
 import com.keyurpandav.jobber.entity.Job;
@@ -16,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,21 +34,17 @@ public class JobController {
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody Job job, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            Map<String, String> errors = new HashMap<>();
-            bindingResult.getFieldErrors().forEach(error -> 
-                errors.put(error.getField(), error.getDefaultMessage())
-            );
-            return ResponseEntity.badRequest().body(errors);
+            return ResponseEntity.badRequest().body(getValidationErrors(bindingResult));
         }
         
         try {
             User employer = requireEmployer(getAuthenticatedUser(), "Only employer can create jobs");
             job.setEmployer(employer);
 
-            JobDto createdJob = jobService.CreateJobPosting(job);
+            JobDto createdJob = jobService.createJobPosting(job);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdJob);
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+            return forbidden(e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -85,14 +83,14 @@ public class JobController {
     public ResponseEntity<?> getJobsByUser(@PathVariable Long myid){
         User currentUser = getAuthenticatedUser();
         if (!Objects.equals(currentUser.getId(), myid)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
+            return forbidden("Access denied");
         }
-        return ResponseEntity.ok(jobService.getjobsbyusers(myid));
+        return ResponseEntity.ok(jobService.getJobsByUser(myid));
     }
     
     @GetMapping("/{myid}")
     public JobDto getJobById(@PathVariable Long myid){
-        return jobService.getjobsbyid(myid);
+        return jobService.getJobById(myid);
     }
     
     @DeleteMapping("/{myid}")
@@ -135,5 +133,15 @@ public class JobController {
             throw new SecurityException(message);
         }
         return user;
+    }
+
+    private Map<String, String> getValidationErrors(BindingResult bindingResult) {
+        Map<String, String> errors = new HashMap<>();
+        bindingResult.getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+        return errors;
+    }
+
+    private ResponseEntity<Map<String, String>> forbidden(String message) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", message));
     }
 }

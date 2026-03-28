@@ -3,101 +3,65 @@ package com.keyurpandav.jobber.service;
 import com.keyurpandav.jobber.dto.JobDto;
 import com.keyurpandav.jobber.entity.Job;
 import com.keyurpandav.jobber.entity.User;
+import com.keyurpandav.jobber.enums.StatusType;
 import com.keyurpandav.jobber.repository.JobRepository;
 import com.keyurpandav.jobber.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import com.keyurpandav.jobber.enums.StatusType;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class JobService {
 
-    @Autowired
-    private JobRepository jobRepository;
+    private final JobRepository jobRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private UserRepository userReopsitory;
-
-    public JobDto CreateJobPosting(Job mydata) {
-        User employer = userReopsitory.findById(mydata.getEmployer().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Employer not found with id: " + mydata.getEmployer().getId()));
+    public JobDto createJobPosting(Job jobData) {
+        User employer = getEmployer(jobData.getEmployer().getId());
 
         Job job = new Job();
-        job.setTitle(mydata.getTitle());
-        job.setDescription(mydata.getDescription());
-        job.setLocation(mydata.getLocation());
-        job.setSalary(mydata.getSalary());
-        job.setJobType(mydata.getJobType());
-        job.setExperienceLevel(mydata.getExperienceLevel());
-        job.setKeySkills(mydata.getKeySkills());
-        job.setJobHighlights(mydata.getJobHighlights());
-        job.setAboutCompany(mydata.getAboutCompany());
-        job.setJobRequirements(mydata.getJobRequirements());
-        job.setCompanyLogoUrl(mydata.getCompanyLogoUrl());
-        job.setCompanyReviewSummary(mydata.getCompanyReviewSummary());
-        job.setCompanyReviewCount(mydata.getCompanyReviewCount());
+        copyJobFields(jobData, job);
         job.setEmployer(employer);
 
-        // Backfill employer profile from the job form so backend stays simple.
-        if ((employer.getCompanyLogoUrl() == null || employer.getCompanyLogoUrl().isBlank())
-                && mydata.getCompanyLogoUrl() != null && !mydata.getCompanyLogoUrl().isBlank()) {
-            employer.setCompanyLogoUrl(mydata.getCompanyLogoUrl().trim());
-        }
-        if ((employer.getCompanyOverview() == null || employer.getCompanyOverview().isBlank())
-                && mydata.getAboutCompany() != null && !mydata.getAboutCompany().isBlank()) {
-            employer.setCompanyOverview(mydata.getAboutCompany().trim());
-        }
-        if ((employer.getCompanyReviewSummary() == null || employer.getCompanyReviewSummary().isBlank())
-                && mydata.getCompanyReviewSummary() != null && !mydata.getCompanyReviewSummary().isBlank()) {
-            employer.setCompanyReviewSummary(mydata.getCompanyReviewSummary().trim());
-        }
-        if (employer.getCompanyReviewCount() == null && mydata.getCompanyReviewCount() != null) {
-            employer.setCompanyReviewCount(mydata.getCompanyReviewCount());
-        }
+        fillEmployerCompanyDetails(employer, jobData);
 
-        userReopsitory.save(employer);
-        jobRepository.save(job);
-        return JobDto.toDto(job);
+        userRepository.save(employer);
+        return JobDto.toDto(jobRepository.save(job));
     }
-    // Add this method to your existing JobService class
+
     public Job getJobEntityById(Long id) {
-        return jobRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Job not found with id: " + id));
+        return getJob(id);
     }
+
     public List<JobDto> getAllJobs() {
         return jobRepository.findAll().stream()
                 .map(JobDto::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    public List<JobDto> getjobsbyusers(Long myid) {
-        User employer = userReopsitory.findById(myid)
-                .orElseThrow(() -> new IllegalArgumentException("Employer not found with id: " + myid));
+    public List<JobDto> getJobsByUser(Long userId) {
+        User employer = getEmployer(userId);
         return jobRepository.findByEmployer(employer).stream()
                 .map(JobDto::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    public JobDto getjobsbyid(Long myid) {
-        Job job = jobRepository.findById(myid)
-                .orElseThrow(() -> new IllegalArgumentException("Job not found with id: " + myid));
-        return JobDto.toDto(job);
+    public JobDto getJobById(Long jobId) {
+        return JobDto.toDto(getJob(jobId));
     }
 
-    public boolean deletejobs(Long myid) {
-        if (!jobRepository.existsById(myid)) {
-            throw new IllegalArgumentException("Job not found with id: " + myid);
+    public boolean deleteJobs(Long jobId) {
+        if (!jobRepository.existsById(jobId)) {
+            throw new IllegalArgumentException("Job not found with id: " + jobId);
         }
-        jobRepository.deleteById(myid);
+        jobRepository.deleteById(jobId);
         return true;
     }
 
     public boolean deleteJobForEmployer(Long jobId, Long employerId) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new IllegalArgumentException("Job not found with id: " + jobId));
+        Job job = getJob(jobId);
 
         if (job.getEmployer() == null || !job.getEmployer().getId().equals(employerId)) {
             throw new IllegalArgumentException("You are not allowed to delete this job");
@@ -108,16 +72,13 @@ public class JobService {
     }
 
     public JobDto updateJobStatus(Long jobId, StatusType status) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new IllegalArgumentException("Job not found with id: " + jobId));
+        Job job = getJob(jobId);
         job.setStatus(status);
-        Job savedJob = jobRepository.save(job);
-        return JobDto.toDto(savedJob);
+        return JobDto.toDto(jobRepository.save(job));
     }
 
     public JobDto updateJobStatusForEmployer(Long jobId, StatusType status, Long employerId) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new IllegalArgumentException("Job not found with id: " + jobId));
+        Job job = getJob(jobId);
 
         if (job.getEmployer() == null || !job.getEmployer().getId().equals(employerId)) {
             throw new IllegalArgumentException("You are not allowed to update this job");
@@ -133,7 +94,51 @@ public class JobService {
         }
         return jobRepository.searchByKeyword(keyword.trim()).stream()
                 .map(JobDto::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
+    private User getEmployer(Long employerId) {
+        return userRepository.findById(employerId)
+                .orElseThrow(() -> new IllegalArgumentException("Employer not found with id: " + employerId));
+    }
+
+    private Job getJob(Long jobId) {
+        return jobRepository.findById(jobId)
+                .orElseThrow(() -> new IllegalArgumentException("Job not found with id: " + jobId));
+    }
+
+    private void copyJobFields(Job source, Job target) {
+        target.setTitle(source.getTitle());
+        target.setDescription(source.getDescription());
+        target.setLocation(source.getLocation());
+        target.setSalary(source.getSalary());
+        target.setJobType(source.getJobType());
+        target.setExperienceLevel(source.getExperienceLevel());
+        target.setKeySkills(source.getKeySkills());
+        target.setJobHighlights(source.getJobHighlights());
+        target.setAboutCompany(source.getAboutCompany());
+        target.setJobRequirements(source.getJobRequirements());
+        target.setCompanyLogoUrl(source.getCompanyLogoUrl());
+        target.setCompanyReviewSummary(source.getCompanyReviewSummary());
+        target.setCompanyReviewCount(source.getCompanyReviewCount());
+    }
+
+    private void fillEmployerCompanyDetails(User employer, Job jobData) {
+        if (isBlank(employer.getCompanyLogoUrl()) && !isBlank(jobData.getCompanyLogoUrl())) {
+            employer.setCompanyLogoUrl(jobData.getCompanyLogoUrl().trim());
+        }
+        if (isBlank(employer.getCompanyOverview()) && !isBlank(jobData.getAboutCompany())) {
+            employer.setCompanyOverview(jobData.getAboutCompany().trim());
+        }
+        if (isBlank(employer.getCompanyReviewSummary()) && !isBlank(jobData.getCompanyReviewSummary())) {
+            employer.setCompanyReviewSummary(jobData.getCompanyReviewSummary().trim());
+        }
+        if (employer.getCompanyReviewCount() == null && jobData.getCompanyReviewCount() != null) {
+            employer.setCompanyReviewCount(jobData.getCompanyReviewCount());
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
 }

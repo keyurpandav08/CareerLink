@@ -29,7 +29,7 @@ public class EmployerRestController {
         try {
             User employer = getCurrentEmployer();
 
-            List<JobDto> jobs = jobService.getjobsbyusers(employer.getId());
+            List<JobDto> jobs = jobService.getJobsByUser(employer.getId());
             List<ApplicationDto> applications = applicationService.getApplicationsByEmployer(employer.getId());
 
             return ResponseEntity.ok(Map.of(

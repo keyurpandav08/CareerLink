@@ -48,67 +48,46 @@ public class ApplicationRestController {
             requireApplicantOwner(currentUser, userId);
 
             User applicant = userService.getUserById(userId);
-            Job job = jobRepository.findById(jobId)
-                    .orElseThrow(() -> new RuntimeException("Job not found"));
-
+            Job job = getJob(jobId);
             String extractedResumeText = extractResumeText(resumeFile);
             String resumeUrl = resolveApplicationResumeUrl(applicant, resumeFile);
             Application application = buildApplication(applicant, job, applicationNote, resumeUrl);
+            ApplicationDto createdApplication = saveApplicationAndSendConfirmation(applicant, job, application);
 
-            ApplicationDto createdApplication = applicationService.applyToJob(application);
-
-            try {
-                emailService.sendApplicationConfirmation(applicant.getEmail(), job.getTitle());
-            } catch (Exception ignored) {
-            }
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(
-                    Map.of(
-                            "application", createdApplication,
-                            "parsedResumePreview", getResumePreview(extractedResumeText)
-                    )
-            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "application", createdApplication,
+                    "parsedResumePreview", getResumePreview(extractedResumeText)
+            ));
 
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+            return forbidden(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                    Map.of("error", "Application failed: " + e.getMessage())
-            );
+            return ResponseEntity.badRequest().body(Map.of("error", "Application failed: " + e.getMessage()));
         }
     }
 
     @PostMapping("/apply-json")
     public ResponseEntity<?> applyToJobJson(@RequestBody Map<String, Object> payload) {
         try {
-            Object userIdObj = payload.get("userId");
-            Object jobIdObj = payload.get("jobId");
-
-            if (userIdObj == null || jobIdObj == null) {
-                return ResponseEntity.badRequest().body(Map.of("error", "userId and jobId are required"));
-            }
-
-            Long userId = Long.valueOf(String.valueOf(userIdObj));
-            Long jobId = Long.valueOf(String.valueOf(jobIdObj));
+            Long userId = getRequiredLong(payload, "userId");
+            Long jobId = getRequiredLong(payload, "jobId");
 
             User currentUser = getAuthenticatedUser();
             requireApplicantOwner(currentUser, userId);
 
             User applicant = userService.getUserById(userId);
-            Job job = jobRepository.findById(jobId)
-                    .orElseThrow(() -> new RuntimeException("Job not found"));
+            Job job = getJob(jobId);
             String resumeUrl = resolveApplicationResumeUrl(applicant, payload.get("resumeUrl"));
 
             String applicationNote = payload.get("applicationNote") != null
                     ? String.valueOf(payload.get("applicationNote"))
                     : null;
             Application application = buildApplication(applicant, job, applicationNote, resumeUrl);
-
-            ApplicationDto createdApplication = applicationService.applyToJob(application);
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdApplication);
+            return ResponseEntity.status(HttpStatus.CREATED).body(applicationService.applyToJob(application));
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+            return forbidden(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -119,15 +98,12 @@ public class ApplicationRestController {
         try {
             requireSameUser(getAuthenticatedUser(), userId);
 
-            List<ApplicationDto> applications =
-                    applicationService.getApplicationsByUser(userId);
+            List<ApplicationDto> applications = applicationService.getApplicationsByUser(userId);
             return ResponseEntity.ok(applications);
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+            return forbidden(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                    Map.of("error", e.getMessage())
-            );
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -139,11 +115,9 @@ public class ApplicationRestController {
             List<ApplicationDto> applications = applicationService.getApplicationsByEmployer(employerId);
             return ResponseEntity.ok(applications);
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+            return forbidden(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                    Map.of("error", e.getMessage())
-            );
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -151,13 +125,11 @@ public class ApplicationRestController {
     public ResponseEntity<?> updateApplicationStatus(@PathVariable Long appId, @RequestBody Map<String, String> body) {
         try {
             User employer = requireEmployer(getAuthenticatedUser(), "Only employer can update status");
-
-            String status = body.getOrDefault("status", "").toUpperCase();
-            ApplicationStatusType statusType = ApplicationStatusType.valueOf(status);
+            ApplicationStatusType statusType = ApplicationStatusType.valueOf(body.getOrDefault("status", "").toUpperCase());
             ApplicationDto updated = applicationService.updateStatusForEmployer(appId, statusType, employer.getId());
             return ResponseEntity.ok(updated);
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+            return forbidden(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -247,5 +219,31 @@ public class ApplicationRestController {
         return extractedResumeText.length() > 200
                 ? extractedResumeText.substring(0, 200) + "..."
                 : extractedResumeText;
+    }
+
+    private Job getJob(Long jobId) {
+        return jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+    }
+
+    private ApplicationDto saveApplicationAndSendConfirmation(User applicant, Job job, Application application) {
+        ApplicationDto createdApplication = applicationService.applyToJob(application);
+        try {
+            emailService.sendApplicationConfirmation(applicant.getEmail(), job.getTitle());
+        } catch (Exception ignored) {
+        }
+        return createdApplication;
+    }
+
+    private Long getRequiredLong(Map<String, Object> payload, String key) {
+        Object value = payload.get(key);
+        if (value == null) {
+            throw new IllegalArgumentException("userId and jobId are required");
+        }
+        return Long.valueOf(String.valueOf(value));
+    }
+
+    private ResponseEntity<Map<String, String>> forbidden(String message) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", message));
     }
 }

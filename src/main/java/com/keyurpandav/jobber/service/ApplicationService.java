@@ -11,10 +11,7 @@ import com.keyurpandav.jobber.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,78 +22,55 @@ public class ApplicationService {
     private final UserRepository userRepository;
     private final EmailService emailService;
 
-    public ApplicationDto applyToJob(Application mydata) {
-        User user = userRepository.findById(mydata.getApplicant().getId())
-                .orElseThrow(() -> new IllegalArgumentException("No User Found with ID: " + mydata.getApplicant().getId()));
+    public ApplicationDto applyToJob(Application applicationData) {
+        User applicant = getUser(applicationData.getApplicant().getId());
+        Job job = getJob(applicationData.getJob().getId());
 
-        Job job = jobRepository.findById(mydata.getJob().getId())
-                .orElseThrow(() -> new IllegalArgumentException("No Job Found with ID: " + mydata.getJob().getId()));
-
-        Application application = new Application();
-
-        applicationRepository.findByApplicantAndJob(user, job)
+        applicationRepository.findByApplicantAndJob(applicant, job)
                 .ifPresent(existing -> {
                     throw new IllegalArgumentException("You have already applied for this job.");
                 });
 
-        application.setApplicant(user);
+        Application application = new Application();
+        application.setApplicant(applicant);
         application.setJob(job);
         application.setStatus(ApplicationStatusType.PENDING);
-        application.setAppliedAt(Timestamp.valueOf(LocalDateTime.now()));
-        application.setResumeUrl(mydata.getResumeUrl());
-        application.setApplicationNote(mydata.getApplicationNote());
+        application.setResumeUrl(applicationData.getResumeUrl());
+        application.setApplicationNote(applicationData.getApplicationNote());
 
-        Application savedApplication = applicationRepository.save(application);
-        return ApplicationDto.toDto(savedApplication);
+        return ApplicationDto.toDto(applicationRepository.save(application));
     }
 
     public List<ApplicationDto> getApplicationsByUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("No User Found with ID: " + userId));
-
-        List<Application> applications = applicationRepository.findByApplicant(user);
-        return applications.stream()
+        return applicationRepository.findByApplicant(getUser(userId)).stream()
                 .map(ApplicationDto::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<ApplicationDto> getApplicationsByJob(Long jobId) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new IllegalArgumentException("No Job Found with ID: " + jobId));
-
-        List<Application> applications = applicationRepository.findByJob(job);
-        return applications.stream()
+        return applicationRepository.findByJob(getJob(jobId)).stream()
                 .map(ApplicationDto::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<ApplicationDto> getApplicationsByEmployer(Long employerId) {
-        User employer = userRepository.findById(employerId)
-                .orElseThrow(() -> new IllegalArgumentException("No Employer Found with ID: " + employerId));
-
-        List<Application> applications = applicationRepository.findByJobEmployer(employer);
-        return applications.stream()
+        return applicationRepository.findByJobEmployer(getEmployer(employerId)).stream()
                 .map(ApplicationDto::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
+
     public boolean deletebyid(Long appId) {
-        User user = userRepository.findById(appId)
-                .orElseThrow(() -> new IllegalArgumentException("No User Found with ID: " + appId));
+        getUser(appId);
         applicationRepository.deleteById(appId);
         return true;
     }
-    public ApplicationDto updateStatus(Long appId, ApplicationStatusType updatedStatus) {
-        Application application = applicationRepository.findById(appId)
-                .orElseThrow(() -> new IllegalArgumentException("No Application Found with ID: " + appId));
 
-        application.setStatus(updatedStatus);
-        Application saved = applicationRepository.save(application);
-        return ApplicationDto.toDto(saved);
+    public ApplicationDto updateStatus(Long appId, ApplicationStatusType updatedStatus) {
+        return saveApplicationStatus(appId, updatedStatus, false);
     }
 
     public ApplicationDto updateStatusForEmployer(Long appId, ApplicationStatusType updatedStatus, Long employerId) {
-        Application application = applicationRepository.findById(appId)
-                .orElseThrow(() -> new IllegalArgumentException("No Application Found with ID: " + appId));
+        Application application = getApplication(appId);
 
         if (application.getJob() == null
                 || application.getJob().getEmployer() == null
@@ -105,46 +79,49 @@ public class ApplicationService {
         }
 
         application.setStatus(updatedStatus);
-        Application saved = applicationRepository.save(application);
-        sendStatusUpdateNotification(saved, updatedStatus);
-        return ApplicationDto.toDto(saved);
+        Application savedApplication = applicationRepository.save(application);
+        sendStatusUpdateNotification(savedApplication, updatedStatus);
+        return ApplicationDto.toDto(savedApplication);
     }
 
     public ApplicationDto updateStatusForAdmin(Long appId, ApplicationStatusType updatedStatus) {
-        Application application = applicationRepository.findById(appId)
-                .orElseThrow(() -> new IllegalArgumentException("No Application Found with ID: " + appId));
-
-        application.setStatus(updatedStatus);
-        Application saved = applicationRepository.save(application);
-        sendStatusUpdateNotification(saved, updatedStatus);
-        return ApplicationDto.toDto(saved);
+        return saveApplicationStatus(appId, updatedStatus, true);
     }
 
-    // Add this method if not exists
     public Application getApplicationById(Long appId) {
-        return applicationRepository.findById(appId)
-                .orElseThrow(() -> new IllegalArgumentException("No Application Found with ID: " + appId));
+        return getApplication(appId);
     }
 
-    private void sendStatusUpdateNotification(Application saved, ApplicationStatusType updatedStatus) {
-        if (saved.getApplicant() == null
-                || saved.getApplicant().getEmail() == null
+    private ApplicationDto saveApplicationStatus(Long appId, ApplicationStatusType status, boolean sendNotification) {
+        Application application = getApplication(appId);
+        application.setStatus(status);
+
+        Application savedApplication = applicationRepository.save(application);
+        if (sendNotification) {
+            sendStatusUpdateNotification(savedApplication, status);
+        }
+        return ApplicationDto.toDto(savedApplication);
+    }
+
+    private void sendStatusUpdateNotification(Application application, ApplicationStatusType updatedStatus) {
+        if (application.getApplicant() == null
+                || application.getApplicant().getEmail() == null
                 || updatedStatus != ApplicationStatusType.ACCEPTED) {
             return;
         }
 
         try {
-            String fullName = saved.getApplicant().getFullName() != null
-                    ? saved.getApplicant().getFullName()
-                    : saved.getApplicant().getUsername();
-            String employerName = saved.getJob() != null
-                    && saved.getJob().getEmployer() != null
-                    ? saved.getJob().getEmployer().getUsername()
+            String fullName = application.getApplicant().getFullName() != null
+                    ? application.getApplicant().getFullName()
+                    : application.getApplicant().getUsername();
+            String employerName = application.getJob() != null
+                    && application.getJob().getEmployer() != null
+                    ? application.getJob().getEmployer().getUsername()
                     : "Employer";
-            String jobTitle = saved.getJob() != null ? saved.getJob().getTitle() : "your application";
+            String jobTitle = application.getJob() != null ? application.getJob().getTitle() : "your application";
 
             emailService.sendApplicationStatusUpdate(
-                    saved.getApplicant().getEmail(),
+                    application.getApplicant().getEmail(),
                     fullName,
                     jobTitle,
                     employerName,
@@ -152,5 +129,25 @@ public class ApplicationService {
             );
         } catch (Exception ignored) {
         }
+    }
+
+    private User getUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("No User Found with ID: " + userId));
+    }
+
+    private User getEmployer(Long employerId) {
+        return userRepository.findById(employerId)
+                .orElseThrow(() -> new IllegalArgumentException("No Employer Found with ID: " + employerId));
+    }
+
+    private Job getJob(Long jobId) {
+        return jobRepository.findById(jobId)
+                .orElseThrow(() -> new IllegalArgumentException("No Job Found with ID: " + jobId));
+    }
+
+    private Application getApplication(Long appId) {
+        return applicationRepository.findById(appId)
+                .orElseThrow(() -> new IllegalArgumentException("No Application Found with ID: " + appId));
     }
 }

@@ -1,4 +1,5 @@
 package com.keyurpandav.jobber.controller;
+
 import com.keyurpandav.jobber.dto.UserDto;
 import com.keyurpandav.jobber.entity.User;
 import com.keyurpandav.jobber.repository.ApplicationRepository;
@@ -6,7 +7,6 @@ import com.keyurpandav.jobber.service.ResumeAnalysisService;
 import com.keyurpandav.jobber.service.ResumeParserService;
 import com.keyurpandav.jobber.service.ResumeStorageService;
 import com.keyurpandav.jobber.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,11 +38,7 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody User user, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            Map<String, String> errors = new HashMap<>();
-            bindingResult.getFieldErrors().forEach(error -> 
-                errors.put(error.getField(), error.getDefaultMessage())
-            );
-            return ResponseEntity.badRequest().body(errors);
+            return ResponseEntity.badRequest().body(getValidationErrors(bindingResult));
         }
         
         try {
@@ -55,29 +50,29 @@ public class UserController {
     }
     
     @GetMapping
-    public ResponseEntity<?> all(){
+    public ResponseEntity<?> all() {
         User currentUser = getAuthenticatedUser();
         if (!isAdmin(currentUser)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Only admin can view all users"));
+            return forbidden("Only admin can view all users");
         }
         return ResponseEntity.ok(userService.getAll());
     }
     
     @GetMapping("/email/{email}")
-    public ResponseEntity<?> byEmail(@PathVariable String email){
+    public ResponseEntity<?> byEmail(@PathVariable String email) {
         User currentUser = getAuthenticatedUser();
         UserDto user = userService.getByEmail(email);
         if (!isAdmin(currentUser) && !email.equalsIgnoreCase(currentUser.getEmail())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
+            return forbidden("Access denied");
         }
         return ResponseEntity.ok(user);
     }
 
     @GetMapping("/username/{username}")
-    public ResponseEntity<?> byUsername(@PathVariable String username){
+    public ResponseEntity<?> byUsername(@PathVariable String username) {
         User currentUser = getAuthenticatedUser();
         if (!isAdmin(currentUser) && !username.equalsIgnoreCase(currentUser.getUsername())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
+            return forbidden("Access denied");
         }
         return ResponseEntity.ok(UserDto.toDto(userService.getUserByUsername(username)));
     }
@@ -86,13 +81,13 @@ public class UserController {
     public ResponseEntity<?> updateProfile(@PathVariable Long id, @RequestBody User updatedUser) {
         try {
             User currentUser = getAuthenticatedUser();
-            if (!isAdmin(currentUser) && !id.equals(currentUser.getId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
-            }
+            requireSelfOrAdmin(currentUser, id);
             UserDto updated = userService.updateUserProfile(id, updatedUser);
             return ResponseEntity.ok(updated);
+        } catch (SecurityException e) {
+            return forbidden(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return badRequest(e);
         }
     }
 
@@ -104,26 +99,13 @@ public class UserController {
     ) {
         try {
             User currentUser = getAuthenticatedUser();
-            if (!isAdmin(currentUser) && !userId.equals(currentUser.getId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
-            }
+            requireSelfOrAdmin(currentUser, userId);
+
             User user = userService.getUserById(userId);
             String resumeText = resumeParserService.extractContent(resumeFile);
             Map<String, Object> analysis = resumeAnalysisService.analyze(resumeText, targetRole, user.getSkills());
-            ResumeStorageService.StoredResume storedResume = resumeStorageService.storeResume(user, resumeFile);
-            String resumeUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
-                    .path("/users/{userId}/resume")
-                    .buildAndExpand(userId)
-                    .toUriString();
-            if (user.getResumeStoragePath() != null && !user.getResumeStoragePath().isBlank()) {
-                resumeStorageService.deleteIfExists(user.getResumeStoragePath());
-            }
-            UserDto updatedUser = userService.updateResumeMetadata(
-                    userId,
-                    resumeUrl,
-                    storedResume.originalFileName(),
-                    storedResume.storagePath()
-            );
+            UserDto updatedUser = saveUploadedResume(user, resumeFile);
+            String resumeUrl = updatedUser.getResumeUrl();
 
             return ResponseEntity.ok(Map.of(
                     "message", "Resume uploaded and analyzed successfully",
@@ -132,6 +114,8 @@ public class UserController {
                     "user", updatedUser,
                     "analysis", analysis
             ));
+        } catch (SecurityException e) {
+            return forbidden(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -144,7 +128,7 @@ public class UserController {
             User applicant = userService.getUserById(id);
 
             if (!canAccessResume(currentUser, applicant)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
+                return forbidden("Access denied");
             }
             if (applicant.getResumeStoragePath() == null || applicant.getResumeStoragePath().isBlank()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Resume not found"));
@@ -162,7 +146,7 @@ public class UserController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
                     .body(resource);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return badRequest(e);
         }
     }
 
@@ -183,5 +167,44 @@ public class UserController {
         return currentUser.getRole() != null
                 && "EMPLOYER".equalsIgnoreCase(currentUser.getRole().getName())
                 && applicationRepository.existsByApplicantIdAndJobEmployerId(applicant.getId(), currentUser.getId());
+    }
+
+    private Map<String, String> getValidationErrors(BindingResult bindingResult) {
+        Map<String, String> errors = new HashMap<>();
+        bindingResult.getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+        return errors;
+    }
+
+    private void requireSelfOrAdmin(User currentUser, Long userId) {
+        if (!isAdmin(currentUser) && !userId.equals(currentUser.getId())) {
+            throw new SecurityException("Access denied");
+        }
+    }
+
+    private UserDto saveUploadedResume(User user, MultipartFile resumeFile) {
+        ResumeStorageService.StoredResume storedResume = resumeStorageService.storeResume(user, resumeFile);
+        String resumeUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/users/{userId}/resume")
+                .buildAndExpand(user.getId())
+                .toUriString();
+
+        if (user.getResumeStoragePath() != null && !user.getResumeStoragePath().isBlank()) {
+            resumeStorageService.deleteIfExists(user.getResumeStoragePath());
+        }
+
+        return userService.updateResumeMetadata(
+                user.getId(),
+                resumeUrl,
+                storedResume.originalFileName(),
+                storedResume.storagePath()
+        );
+    }
+
+    private ResponseEntity<Map<String, String>> forbidden(String message) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", message));
+    }
+
+    private ResponseEntity<Map<String, String>> badRequest(Exception e) {
+        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
     }
 }
