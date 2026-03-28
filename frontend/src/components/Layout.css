@@ -41,6 +41,7 @@
 }
 
 .nav-item {
+  position: relative;
   font-weight: 700;
   font-size: 0.92rem;
   color: var(--text-main);
@@ -52,6 +53,22 @@
 .nav-item:hover {
   color: var(--brand-ink);
   background: #e5f4f8;
+}
+
+.nav-item-active {
+  color: #2f66f4;
+  background: transparent;
+}
+
+.nav-item-active::after {
+  content: '';
+  position: absolute;
+  left: 0.85rem;
+  right: 0.85rem;
+  bottom: -0.95rem;
+  height: 3px;
+  border-radius: 999px;
+  background: #2f66f4;
 }
 
 .auth-actions {

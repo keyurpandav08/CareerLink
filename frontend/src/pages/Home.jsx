@@ -1,388 +1,357 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {TrendingUp,ArrowRight,Search,ShieldCheck,MousePointerClick,BarChart3,Laptop,Briefcase,HeartPulse,Building2,ArrowUp
+import {
+  ArrowRight,
+  ChevronRight,
+  FileUp,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp
 } from 'lucide-react';
 import googleLogo from '../assets/logo/companies/Google.png';
 import amazonLogo from '../assets/logo/companies/Amazon.png';
 import infosysLogo from '../assets/logo/companies/Infosys.png';
 import tcsLogo from '../assets/logo/companies/TCS.png';
 import microsoftLogo from '../assets/logo/companies/Microsoft.png';
-import heroMan from '../assets/job-man-stand.jpeg';
+import sitingmanLogo from '../assets/siting-man-transparent.png';
 import './Home.css';
+
+const platformStats = [
+  { label: 'Active users', value: 10000, suffix: '+' },
+  { label: 'Top companies', value: 500, suffix: '+' },
+  { label: 'Curated jobs', value: 1000, suffix: '+' }
+];
+
+const experienceOptions = [
+  'Experience level',
+  'Internship',
+  'Entry level',
+  '1-3 years',
+  '3-5 years'
+];
+
+const featureCards = [
+  {
+    icon: ShieldCheck,
+    title: 'Verified hiring teams',
+    description: 'Every employer profile is reviewed so candidates spend time on real opportunities.'
+  },
+  {
+    icon: Sparkles,
+    title: 'Cleaner job discovery',
+    description: 'Search by role, skill, company, or city and surface the most relevant openings faster.'
+  },
+  {
+    icon: TrendingUp,
+    title: 'Track momentum',
+    description: 'Keep applications, shortlist movement, and interview progress in one place.'
+  }
+];
+
+const workflowSteps = [
+  {
+    step: '01',
+    title: 'Build your profile once',
+    description: 'Add your skills, projects, resume, and preferred cities to unlock better matches.'
+  },
+  {
+    step: '02',
+    title: 'Apply with confidence',
+    description: 'Use one polished profile to apply to verified roles without repeating the same details.'
+  },
+  {
+    step: '03',
+    title: 'Follow every update',
+    description: 'See when your application is reviewed, shortlisted, or moved into the next stage.'
+  }
+];
+
+const categoryCards = [
+  {
+    title: 'Product & Tech',
+    meta: 'Frontend, backend, AI, QA',
+    hires: '2.8k roles'
+  },
+  {
+    title: 'Operations',
+    meta: 'Analyst, support, strategy',
+    hires: '1.6k roles'
+  },
+  {
+    title: 'Growth & Marketing',
+    meta: 'SEO, social, performance',
+    hires: '1.2k roles'
+  },
+  {
+    title: 'Finance & Admin',
+    meta: 'Accounts, audit, payroll',
+    hires: '900+ roles'
+  }
+];
+
+const companyLogos = [
+  { src: googleLogo, alt: 'Google' },
+  { src: amazonLogo, alt: 'Amazon' },
+  { src: infosysLogo, alt: 'Infosys' },
+  { src: tcsLogo, alt: 'TCS' },
+  { src: microsoftLogo, alt: 'Microsoft' }
+];
 
 const Home = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [experienceLevel, setExperienceLevel] = useState('Experience level');
+  const [animatedStats, setAnimatedStats] = useState(
+    platformStats.map(() => 0)
+  );
   const navigate = useNavigate();
-    // ===== Animated Counters =====
-    const [jobsCount, setJobsCount] = useState(0);
-    const [companyCount, setCompanyCount] = useState(0);
-    const [studentCount, setStudentCount] = useState(0);
-    const [successRate, setSuccessRate] = useState(0);
-    const [showTop, setShowTop] = useState(false);
-    const [activeCategory, setActiveCategory] = useState("IT & Software");
-    const categorySkills = {
-        "IT & Software": [
-          "React.js",
-          "Node.js",
-          "Spring Boot",
-          "Python",
-          "AI / ML"
-        ],
-        Marketing: [
-          "Meta Ads",
-          "Content Marketing",
-          "Email Marketing",
-          "Analytics"
-        ],
-        Finance: [
-          "Tally",
-          "GST Filing",
-          "Financial Accounting"
-        ],
-        Healthcare: [
-          "Radiology",
-          "Pharmacy"
-        ],
-        Engineering: [
-          "AutoCAD",
-          "SolidWorks",
-          "PLC"
-        ]
-      };
 
-    useEffect(() => {
-      const animateCounter = (setState, end, duration = 2000) => {
-        let start = 0;
-        const increment = end / (duration / 16);
+  useEffect(() => {
+    const timers = platformStats.map((stat, index) => {
+      let current = 0;
+      const step = stat.value / 90;
 
-        const counter = setInterval(() => {
-          start += increment;
-          if (start >= end) {
-            setState(end);
-            clearInterval(counter);
-          } else {
-            setState(Math.floor(start));
-          }
-        }, 16);
-      };
+      return window.setInterval(() => {
+        current += step;
 
-      animateCounter(setJobsCount, 10000);
-      animateCounter(setCompanyCount, 5000);
-      animateCounter(setStudentCount, 25000);
-      animateCounter(setSuccessRate, 95);
-    }, []);
+        setAnimatedStats((prev) => {
+          const next = [...prev];
+          next[index] = current >= stat.value ? stat.value : Math.floor(current);
+          return next;
+        });
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchKeyword.trim()) {
-      navigate(`/jobs?search=${encodeURIComponent(searchKeyword.trim())}`);
-      setSearchKeyword('');
+        if (current >= stat.value) {
+          window.clearInterval(timers[index]);
+        }
+      }, 18);
+    });
+
+    return () => timers.forEach((timer) => window.clearInterval(timer));
+  }, []);
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+
+    if (!searchKeyword.trim()) {
+      return;
     }
+
+    const params = new URLSearchParams({
+      search: searchKeyword.trim()
+    });
+
+    if (experienceLevel !== 'Experience level') {
+      params.set('experience', experienceLevel);
+    }
+
+    navigate(`/jobs?${params.toString()}`);
+    setSearchKeyword('');
   };
 
-useEffect(() => {
-  const handleScroll = () => {
-    if (window.scrollY > 300) {
-      setShowTop(true);
-    } else {
-      setShowTop(false);
-    }
-  };
-
-  window.addEventListener("scroll", handleScroll);
-  return () => window.removeEventListener("scroll", handleScroll);
-}, []);
   return (
-    <div className="home-container">
-      {/* Background blobs */}
-      <div className="bg-blob blob-1"></div>
-      <div className="bg-blob blob-2"></div>
+    <div className="home-shell">
+      <section className="home-hero">
+        <div className="container home-hero-grid">
+          <div className="home-hero-copy">
+            <span className="home-kicker">The curator&apos;s choice</span>
 
-      {/* ================= HERO ================= */}
-     <section className="hero-section">
-       <div className="container hero-flex">
+            <h1>
+              Find Your Dream Job with <span>JobLithic</span>
+            </h1>
 
-         {/* LEFT CONTENT */}
-         <div className="hero-left">
+            <p className="home-hero-text">
+              Search thousands of verified jobs, apply instantly, and track your career growth all in one place.
+            </p>
 
-           <h2 className="hero-small-title">
-             Your Next Opportunity Starts Here.
-           </h2>
+            <form onSubmit={handleSearchSubmit} className="home-search">
+              <div className="home-search-panel">
+                <label className="home-search-field" htmlFor="home-search-input">
+                  <Search size={18} />
+                  <input
+                    id="home-search-input"
+                    type="text"
+                    value={searchKeyword}
+                    onChange={(event) => setSearchKeyword(event.target.value)}
+                    placeholder="e.g. Product Designer"
+                  />
+                </label>
 
-           <form onSubmit={handleSearchSubmit} className="hero-search-box">
-             <div className="search-input-group">
-               <Search size={22} style={{ color: 'var(--primary)' }} />
-               <input
-                 type="text"
-                 value={searchKeyword}
-                 onChange={(e) => setSearchKeyword(e.target.value)}
-                 placeholder="Search roles, skills, companies, or cities..."
-               />
-             </div>
-
-             <button type="submit" className="search-btn">
-               Search
-             </button>
-           </form>
-
-           <h1 className="hero-title">
-             Find the <br /> Right Job Faster
-           </h1>
-
-           <p className="hero-subtitle">
-             Discover verified job opportunities tailored to your skills and experience.
-             Apply instantly and move one step closer to your ideal career.
-           </p>
-
-           <div className="hero-buttons">
-             <Link to="/register" className="btn-primary-glow">
-               Get Started
-             </Link>
-             <Link to="/jobs" className="btn-outline">
-               Browse Jobs
-             </Link>
-           </div>
-
-         </div>
-
-         {/* RIGHT SIDE MAN */}
-         <div className="hero-right">
-           <img src={heroMan} alt="Job Seeker" />
-           <div class="icons">
-               <span class="icon i1">💻</span>
-               <span class="icon i5">🧑‍💻</span>
-               <span class="icon i4">📄</span>
-               <span class="icon i2">📊</span>
-               <span class="icon i3">💼</span>
-             </div>
-         </div>
-
-       </div>
-     </section>
-
-
-      {/* ================= FEATURES ================= */}
-      <section className="features-section">
-        <div className="container">
-          <h2 className="section-title">Why Choose JobLithic?</h2>
-
-          <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon">
-                <ShieldCheck size={28} />
+                <label className="home-search-filter" htmlFor="home-experience-select">
+                  <select
+                    id="home-experience-select"
+                    value={experienceLevel}
+                    onChange={(event) => setExperienceLevel(event.target.value)}
+                  >
+                    {experienceOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
-              <h3>Verified Employers</h3>
-              <p>Connect only with trusted and verified companies.</p>
-            </div>
 
-            <div className="feature-card">
-              <div className="feature-icon">
-                <MousePointerClick size={28} />
+              <button type="submit" className="home-search-button">
+                Search
+              </button>
+            </form>
+
+            <div className="home-hero-support">
+              <Link to="/resume-builder" className="home-upload-link">
+                <FileUp size={16} />
+                Upload Resume
+              </Link>
+
+              <div className="home-social-proof">
+                <div className="home-avatar-stack" aria-hidden="true">
+                  <span className="home-avatar home-avatar-a">A</span>
+                  <span className="home-avatar home-avatar-b">N</span>
+                  <span className="home-avatar home-avatar-c">R</span>
+                </div>
+                <span className="home-social-proof-text">Trusted by students and early professionals</span>
               </div>
-              <h3>One-Click Apply</h3>
-              <p>Apply instantly with your saved profile.</p>
             </div>
 
-            <div className="feature-card">
-              <div className="feature-icon">
-                <TrendingUp size={28} />
+            <div className="home-hero-actions">
+              <Link to="/register" className="btn-primary-glow home-primary-action">
+                Create account
+                <ArrowRight size={18} />
+              </Link>
+              <Link to="/jobs" className="btn-outline home-secondary-action">
+                Explore openings
+              </Link>
+            </div>
+          </div>
+
+          <div className="home-hero-visual">
+            <div className="home-hero-illustration">
+              <div className="home-hero-visual-bg" />
+              <div className="home-hero-dot home-hero-dot-one" />
+              <div className="home-hero-dot home-hero-dot-two" />
+              <img className="home-hero-image" src={sitingmanLogo} alt="Person working at a hiring dashboard" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-stats">
+        <div className="container home-stats-grid">
+          {platformStats.map((stat, index) => (
+            <article key={stat.label} className="home-stat-card">
+              <strong>
+                {animatedStats[index].toLocaleString()}
+                {stat.suffix}
+              </strong>
+              <span>{stat.label}</span>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="home-brands">
+        <div className="container home-brands-panel">
+          <div className="home-brands-copy">
+            <p>Trusted by teams hiring across technology, services, and global operations.</p>
+          </div>
+          <div className="home-brands-row">
+            {companyLogos.map((company) => (
+              <div key={company.alt} className="home-brand-chip">
+                <img src={company.src} alt={company.alt} />
               </div>
-              <h3>Career Insights</h3>
-              <p>Get salary insights and skill recommendations.</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ================= HOW IT WORKS ================= */}
-      <section className="how-section">
+      <section className="home-features">
         <div className="container">
-          <h2 className="section-title">How JobLithic Works</h2>
+          <div className="home-section-heading">
+            <span>Why it feels better</span>
+            <h2>A fresher landing page built around clarity, not clutter.</h2>
+          </div>
 
-          <div className="how-grid">
-            <div className="how-card">
-              <div className="how-number">1</div>
-              <h3>Create Your Profile</h3>
-              <p>Build your professional profile in minutes.</p>
-            </div>
-
-            <div className="how-card">
-              <div className="how-number">2</div>
-              <h3>Apply to Verified Jobs</h3>
-              <p>Explore trusted opportunities and apply easily.</p>
-            </div>
-
-            <div className="how-card">
-              <div className="how-number">3</div>
-              <h3>Get Hired Faster</h3>
-              <p>Track applications and connect with employers.</p>
-            </div>
+          <div className="home-feature-grid">
+            {featureCards.map(({ icon: Icon, title, description }) => (
+              <article key={title} className="home-feature-card">
+                <div className="home-feature-icon">
+                  <Icon size={22} />
+                </div>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ================= CTA ================= */}
-      <section className="about-section">
-        <div className="container text-center">
-          <h2 className="cta-title">Start Your Career Journey Today</h2>
-          <p className="cta-subtitle">
-            Create your profile, explore opportunities, and land your dream job faster.
-          </p>
+      <section className="home-showcase">
+        <div className="container home-showcase-grid">
+          <div className="home-showcase-copy">
+            <span>Role discovery</span>
+            <h2>Browse focused categories instead of getting lost in noisy listings.</h2>
+            <p>
+              Each category groups the roles candidates actually search for most, making it easier to move from
+              exploration to application.
+            </p>
+            <Link to="/jobs" className="home-inline-link">
+              View all categories
+              <ChevronRight size={18} />
+            </Link>
+          </div>
 
-          <Link to="/register" className="cta-btn">
-            Create Free Account
-            <ArrowRight size={20} />
-          </Link>
+          <div className="home-category-grid">
+            {categoryCards.map((category) => (
+              <article key={category.title} className="home-category-card">
+                <h3>{category.title}</h3>
+                <p>{category.meta}</p>
+                <span>{category.hires}</span>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ================= TOP COMPANIES ================= */}
-      {/* TOP COMPANIES */}
-      <section className="companies-section">
+      <section className="home-process">
         <div className="container">
-          <h2 className="section-title">Trusted by Leading Companies</h2>
+          <div className="home-section-heading home-section-heading-centered">
+            <span>How it works</span>
+            <h2>Move from profile setup to interview momentum in three simple steps.</h2>
+          </div>
 
-          <div className="companies-grid">
-
-            <div className="company-card">
-              <img src={googleLogo} alt="Google" />
-              <p>Google</p>
-            </div>
-
-            <div className="company-card">
-              <img src={amazonLogo} alt="Amazon" />
-              <p>Amazon</p>
-            </div>
-
-            <div className="company-card">
-              <img src={infosysLogo} alt="Infosys" />
-              <p>Infosys</p>
-            </div>
-
-            <div className="company-card">
-              <img src={tcsLogo} alt="TCS" />
-              <p>TCS</p>
-            </div>
-
-            <div className="company-card">
-              <img src={microsoftLogo} alt="Microsoft" />
-              <p>Microsoft</p>
-            </div>
-
+          <div className="home-process-grid">
+            {workflowSteps.map((item) => (
+              <article key={item.step} className="home-process-card">
+                <span className="home-process-step">{item.step}</span>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-
-      {/* ================= JOB CATEGORIES ================= */}
-      <section style={{ padding: '5rem 0', background: 'var(--surface)' }}>
-        <div className="container text-center">
-          <h2 className="section-title animated-heading">Explore Job Categories</h2>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '2rem',
-            marginTop: '3rem'
-          }}>
-            <Category icon={<Laptop size={28} />} title="IT & Software" />
-            <Category icon={<BarChart3 size={28} />} title="Marketing" />
-            <Category icon={<Briefcase size={28} />} title="Finance" />
-            <Category icon={<HeartPulse size={28} />} title="Healthcare" />
-            <Category icon={<Building2 size={28} />} title="Engineering" />
-          </div>
-        </div>
-      </section>
-      {/* ===== TOP SKILLS IN DEMAND ===== */}
-      <section className="skills-section">
-        <div className="container text-center">
-
-          <h2 className="section-title">🔥 Top Skills in Demand</h2>
-
-          <div className="skills-grid">
-            {Object.values(categorySkills)
-              .flat()
-              .map((skill, index) => (
-                <button
-                  key={index}
-                  className="skill-pill"
-                  onClick={() =>
-                    navigate(`/jobs?skill=${encodeURIComponent(skill)}`)
-                  }
-                >
-                  {skill}
-                </button>
-              ))}
-          </div>
-
-        </div>
-      </section>
-
-
-
-      {/* ===== PLATFORM STATS ===== */}
-      <section className="stats-section">
-        <div className="container stats-grid">
-
-          <div className="stat-box">
-            <h2>💼 {jobsCount.toLocaleString()}+</h2>
-            <p>Active Jobs</p>
-          </div>
-
-          <div className="stat-box">
-            <h2>🏢 {companyCount.toLocaleString()}+</h2>
-            <p>Companies</p>
-          </div>
-
-          <div className="stat-box">
-            <h2>🎓 {studentCount.toLocaleString()}+</h2>
-            <p>Students Hired</p>
-          </div>
-
-          <div className="stat-box">
-            <h2>⭐ {successRate}%</h2>
-            <p>Success Rate</p>
-          </div>
-
-        </div>
-      </section>
-      {showTop && (
-        <button
-          className="back-to-top"
-          onClick={() =>
-            window.scrollTo({ top: 0, behavior: "smooth" })
-          }
-        >
-          <ArrowUp size={18} />
-        </button>
-      )}
-
-<section className="tracking-preview">
-        <div className="container text-center">
-          <h2 className="section-title">Track Your Application Status</h2>
-          <div className="tracking-mock">
-            <div className="status">✔ Applied</div>
-            <div className="status">⏳ Under Review</div>
-            <div className="status">🎯 Shortlisted</div>
-          </div>
-        </div>
-      </section>
-      <div className="verification-note text-center">
-
+      <section className="home-cta">
+        <div className="container">
+          <div className="home-cta-panel">
+            <div>
+              <span>Ready to get started?</span>
+              <h2>Set up your profile and start applying with a sharper first impression.</h2>
             </div>
 
+            <div className="home-cta-actions">
+              <Link to="/register" className="btn-primary-glow home-primary-action">
+                Join JobLithic
+                <ArrowRight size={18} />
+              </Link>
+              <Link to="/jobs" className="btn-outline home-secondary-action">
+                Browse live jobs
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
-
-const Category = ({ icon, title }) => (
-  <div className="category-card">
-    <div className="category-icon">
-      {icon}
-    </div>
-    <h4>{title}</h4>
-  </div>
-);
-
 
 export default Home;

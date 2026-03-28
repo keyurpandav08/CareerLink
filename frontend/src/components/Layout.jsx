@@ -76,6 +76,13 @@ const Layout = () => {
   const candidateConditionalRoutes = new Set(['/applications', '/settings']);
   const useImmersiveShell = candidateImmersiveRoutes.has(location.pathname)
     || (roleName === 'APPLICANT' && candidateConditionalRoutes.has(location.pathname));
+  const isNavActive = (path) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
 
   if (useImmersiveShell) {
     return (
@@ -97,7 +104,11 @@ const Layout = () => {
 
           <nav className="desktop-nav">
             {navItems.map((item) => (
-              <Link key={item.to} to={item.to} className="nav-item">
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`nav-item ${isNavActive(item.to) ? 'nav-item-active' : ''}`.trim()}
+              >
                 {item.label}
               </Link>
             ))}
