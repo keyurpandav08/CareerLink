@@ -13,13 +13,12 @@ const JobList = () => {
   const [error, setError] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchKeyword, setSearchKeyword] = useState(searchParams.get('search') || searchParams.get('skill') || '');
-  const [savedJobIds, setSavedJobIds] = useState([]);
-const [minSalary, setMinSalary] = useState(200000);
-const [maxSalary, setMaxSalary] = useState(1000000);
+const [minSalary, setMinSalary] = useState(0);
+const [maxSalary, setMaxSalary] = useState(5000000);
 const [filteredJobs, setFilteredJobs] = useState([]);
 const [selectedTypes, setSelectedTypes] = useState([]);
 const [selectedExp, setSelectedExp] = useState([]);
-
+const [savedJobIds, setSavedJobIds] = useState([]);
 const getInitials = (value = '') =>
   value
     .split(' ')
@@ -28,9 +27,6 @@ const getInitials = (value = '') =>
     .map((part) => part[0]?.toUpperCase())
     .join('') || 'JL';
 
-useEffect(() => {
-  setFilteredJobs(jobs);
-}, [jobs]);
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('savedJobs') || '[]');
     setSavedJobIds(Array.isArray(stored) ? stored.map((item) => item.id) : []);
@@ -44,7 +40,9 @@ useEffect(() => {
         const searchTerm = searchParams.get('search') || searchParams.get('skill');
         const url = searchTerm ? `/job?search=${encodeURIComponent(searchTerm)}` : '/job';
         const response = await api.get(url);
-        setJobs(Array.isArray(response.data) ? response.data : []);
+        const data = Array.isArray(response.data) ? response.data : [];
+        setJobs(data);
+        setFilteredJobs(data); // ✅ ADD THIS
       } catch (requestError) {
         setError('Failed to load jobs. Please try again later.');
       } finally {
@@ -87,26 +85,46 @@ useEffect(() => {
     setSavedJobIds(updated.map((item) => item.id));
   };
     const handleApply = () => {
-      let result = [...jobs];
+      const normalize = (str) =>
+        str?.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-      // Job Type
-      if (selectedTypes.length > 0) {
-        result = result.filter(job =>
-          selectedTypes.includes(job.jobType)
-        );
-      }
-
-      // Experience
-      if (selectedExp.length > 0) {
-        result = result.filter(job =>
-          selectedExp.includes(job.experienceLevel)
-        );
-      }
-
-      // 🔥 SALARY FILTER
-      result = result.filter(job => {
+      const result = jobs.filter((job) => {
         const salary = Number(job.salary) || 0;
-        return salary >= minSalary && salary <= maxSalary;
+
+        // ✅ TYPE MATCH
+        const normalize = (str) =>
+          str?.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        const matchType =
+          selectedTypes.length === 0 ||
+          selectedTypes.some(
+            (type) => normalize(type) === normalize(job.jobType || "Full-time")
+          );
+
+        // ✅ EXPERIENCE MATCH
+       const parseExp = (exp) => {
+         if (!exp) return [0, 0];
+
+         const numbers = exp.match(/\d+/g);
+         if (!numbers) return [0, 0];
+
+         return [Number(numbers[0]), Number(numbers[1] || numbers[0])];
+       };
+
+       const matchExp =
+         selectedExp.length === 0 ||
+         selectedExp.some((selected) => {
+           const [jobMin, jobMax] = parseExp(job.experienceLevel);
+           const [selMin, selMax] = parseExp(selected);
+
+           return jobMin >= selMin && jobMax <= selMax;
+         });
+
+        // ✅ SALARY MATCH
+        const matchSalary =
+          salary >= minSalary && salary <= maxSalary;
+
+        return matchType && matchExp && matchSalary;
       });
 
       setFilteredJobs(result);
@@ -167,8 +185,9 @@ useEffect(() => {
                     <label className="filter-option">
                       <input
                         type="checkbox"
+                        checked={selectedTypes.includes("Full-time")}
                         onChange={() => {
-                          const value = "Full Time";
+                          const value = "Full-time";
                           setSelectedTypes(prev =>
                             prev.includes(value)
                               ? prev.filter(v => v !== value)
@@ -182,8 +201,9 @@ useEffect(() => {
                     <label className="filter-option">
                       <input
                         type="checkbox"
+                        checked={selectedTypes.includes("Part-time")}
                         onChange={() => {
-                          const value = "Part Time";
+                          const value = "Part-time";
                           setSelectedTypes(prev =>
                             prev.includes(value)
                               ? prev.filter(v => v !== value)
@@ -196,6 +216,7 @@ useEffect(() => {
                     <label className="filter-option">
                       <input
                         type="checkbox"
+                        checked={selectedTypes.includes("Remote")}
                         onChange={() => {
                           const value = "Remote";
                           setSelectedTypes(prev =>
@@ -294,7 +315,7 @@ useEffect(() => {
                      <input
                        type="range"
                        min="0"
-                       max="2000000"
+                       max="5000000"
                        step="50000"
                        value={minSalary}
                        onChange={(e) => setMinSalary(Number(e.target.value))}
@@ -305,7 +326,7 @@ useEffect(() => {
                      <input
                        type="range"
                        min="0"
-                       max="20000000"
+                       max="5000000"
                        step="50000"
                        value={maxSalary}
                        onChange={(e) => setMaxSalary(Number(e.target.value))}
@@ -317,8 +338,8 @@ useEffect(() => {
                      <div
                        className="slider-range"
                        style={{
-                         left: `${(minSalary / 20000000) * 100}%`,
-                         right: `${100 - (maxSalary / 20000000) * 100}%`
+                         left: `${(minSalary / 5000000) * 100}%`,
+                         right: `${100 - (maxSalary / 5000000) * 100}%`
                        }}
                      ></div>
 
@@ -355,7 +376,13 @@ useEffect(() => {
                     Apply
                   </button>
 
-                  <button onClick={() => setFilteredJobs(jobs)} className="reset-btn">
+                  <button onClick={() => {
+                            setSelectedTypes([]);
+                            setSelectedExp([]);
+                            setMinSalary(0);
+                            setMaxSalary(5000000);
+                            setFilteredJobs(jobs);
+                          }} className="reset-btn">
                     Reset
                   </button>
                 </div>

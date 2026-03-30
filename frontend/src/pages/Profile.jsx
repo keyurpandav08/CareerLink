@@ -69,6 +69,23 @@ const Profile = () => {
     }
   };
 
+const handleProfileUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  try {
+    const dataUrl = await resizeImageToDataUrl(file, 420);
+
+    saveProfileMeta(user, { profilePhoto: dataUrl });
+
+    setProfileMeta((prev) => ({
+      ...prev,
+      profilePhoto: dataUrl
+    }));
+  } catch {
+    setError("Failed to update profile photo");
+  }
+};
   if (!profile) {
     return (
       <CandidateWorkspace
@@ -105,11 +122,24 @@ const Profile = () => {
 
           <div className="candidate-profile-identity-card">
             <div className="candidate-profile-identity">
-              <div className="candidate-profile-hero-avatar">
+              <div
+                className="candidate-profile-hero-avatar"
+                onClick={() => document.getElementById("profileUpload").click()}
+              >
                 {profilePhoto
                   ? <img src={profilePhoto} alt={displayName} />
                   : createInitials(displayName)}
+
+                <div className="avatar-overlay">Change</div>
               </div>
+
+              <input
+                type="file"
+                id="profileUpload"
+                accept="image/*"
+                hidden
+                onChange={handleProfileUpload}
+              />
 
               <div className="candidate-profile-copy">
                 <h1>{displayName}</h1>

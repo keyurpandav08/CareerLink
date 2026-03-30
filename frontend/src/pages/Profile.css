@@ -402,3 +402,28 @@
     flex: 1;
   }
 }
+.candidate-profile-hero-avatar {
+  position: relative;
+  cursor: pointer;
+}
+
+/* overlay on hover */
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 14px;
+  opacity: 0;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.candidate-profile-hero-avatar:hover .avatar-overlay {
+  opacity: 1;
+}

@@ -3,6 +3,12 @@ import { useState } from "react";
 import "./Contact.css";
 
 const Contact = () => {
+
+  const navigate = useNavigate();
+
+  // ✅ FIXED (inside component)
+  const [showPopup, setShowPopup] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -16,10 +22,16 @@ const Contact = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("Message Sent Successfully!");
+
+    setShowPopup(true);
+
+    setTimeout(() => {
+      setShowPopup(false);
+      navigate("/");
+    }, 2000);
+
     setFormData({ name:"", email:"", subject:"", message:"" });
   };
-const navigate = useNavigate();
 
   return (
     <div className="contact-page">
@@ -36,73 +48,51 @@ const navigate = useNavigate();
           <div className="contact-methods">
             <div>📧 support@joblithic.com</div>
             <div>📞 +91 0000000000</div>
-            <div>📍 Banglore, India</div>
+            <div>📍 Bangalore, India</div>
           </div>
         </div>
 
         <form className="contact-form" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="name"
-            placeholder="Your Name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
+          <input type="text" name="name" placeholder="Your Name"
+            value={formData.name} onChange={handleChange} required />
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Your Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+          <input type="email" name="email" placeholder="Your Email"
+            value={formData.email} onChange={handleChange} required />
 
-          <select
-            name="subject"
-            value={formData.subject}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select Subject</option>
+          <select name="subject" value={formData.subject}
+            onChange={handleChange} required>
+            <option value="" disabled>Select Subject</option>
             <option value="Job Issue">Job Application Issue</option>
             <option value="Employer Issue">Employer Verification</option>
             <option value="Technical">Technical Support</option>
             <option value="Other">Other</option>
           </select>
 
-          <textarea
-            name="message"
+          <textarea name="message" rows="5"
             placeholder="Your Message"
-            rows="5"
             value={formData.message}
             onChange={handleChange}
-            required
-          ></textarea>
+            required />
 
           <button type="submit">Send Message</button>
         </form>
-       <div style={{ display: "flex", justifyContent: "center", marginTop: "2rem" }}>
-               <button
-                 onClick={() => window.history.back()}
-                 style={{
-                   padding: "0.7rem 1.8rem",
-                   borderRadius: "8px",
-                   border: "none",
-                   background: "linear-gradient(135deg, var(--primary), var(--primary-hover))",
-                   color: "white",
-                   fontWeight: "600",
-                   cursor: "pointer",
-                   boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-                   transition: "0.3s ease",
-                   marginTop: "-50px"
-                 }}
-               >
-                 ← Go Back
-               </button>
-             </div>
+
+        <button onClick={() => navigate(-1)} className="back-btn">
+          ← Back
+        </button>
+
       </div>
+
+      {/* ✅ POPUP */}
+      {showPopup && (
+        <div className="popup-overlay">
+          <div className="popup-box">
+            <div className="checkmark">✔</div>
+            <h3>Message Sent!</h3>
+            <p>Redirecting to home...</p>
+          </div>
+        </div>
+      )}
 
     </div>
   );

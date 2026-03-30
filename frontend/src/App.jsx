@@ -34,6 +34,8 @@ import Pricing from "./pages/Pricing";
 import ForgotPassword from './pages/ForgotPassword';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import ApplicationDetails from "./pages/ApplicationDetails";
+import OfferDetails from "./pages/OfferDetails";
 function App() {
   return (
     <ThemeProvider>
@@ -229,7 +231,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
+              <Route path="/application/:id" element={<ApplicationDetails />} />
+             <Route path="offer-details" element={<OfferDetails />} />
               {/* 404 */}
               <Route path="*" element={<NotFound />} />
 

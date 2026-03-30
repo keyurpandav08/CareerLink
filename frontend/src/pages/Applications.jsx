@@ -293,17 +293,38 @@ const CandidateApplications = () => {
 
                     <div className="candidate-application-actions">
                       {application.status === 'ACCEPTED' ? (
-                        <button type="button" className="candidate-application-btn candidate-application-btn--primary">
+                        <Link
+                          to="/offer-details"
+                          state={{
+                            application: {
+                              jobTitle: application.jobTitle,
+
+                              // 🔥 direct application mathi lai
+                              companyName: application.companyName,
+                              companyLogo: application.companyLogo,
+                              salary: application.salary,
+                              joiningDate: application.joiningDate,
+
+                              candidateName:
+                                application.applicantFullName || application.applicantName
+                            }
+                          }}
+                          className="candidate-application-btn candidate-application-btn--primary"
+                        >
                           {statusMeta.actionLabel}
-                        </button>
+                        </Link>
                       ) : application.status === 'REJECTED' ? (
                         <button type="button" className="candidate-application-btn candidate-application-btn--ghost">
                           {statusMeta.actionLabel}
                         </button>
                       ) : (
-                        <button type="button" className="candidate-application-btn">
+                        <Link
+                          to={`/application/${application.id}`}
+                          state={{ application }}
+                          className="candidate-application-btn"
+                        >
                           {statusMeta.actionLabel}
-                        </button>
+                        </Link>
                       )}
                     </div>
                   </article>
