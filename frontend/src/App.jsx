@@ -14,6 +14,9 @@ import JobDetail from './pages/JobDetail';
 import Dashboard from './pages/Dashboard';
 import EmployerDashboard from './pages/EmployerDashboard';
 import CreateJob from './pages/CreateJob';
+import RecruiterCandidates from './pages/RecruiterCandidates';
+import RecruiterPipeline from './pages/RecruiterPipeline';
+import RecruiterAnalytics from './pages/RecruiterAnalytics';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 import NotFound from './pages/NotFound';
@@ -140,6 +143,38 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="employer-dashboard/jobs"
+                element={
+                  <ProtectedRoute role="EMPLOYER">
+                    <CreateJob />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="employer-dashboard/candidates"
+                element={
+                  <ProtectedRoute role="EMPLOYER">
+                    <RecruiterCandidates />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="employer-dashboard/pipeline"
+                element={
+                  <ProtectedRoute role="EMPLOYER">
+                    <RecruiterPipeline />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="employer-dashboard/analytics"
+                element={
+                  <ProtectedRoute role="EMPLOYER">
+                    <RecruiterAnalytics />
+                  </ProtectedRoute>
+                }
+              />
 
               <Route
                 path="profile"
@@ -190,7 +225,7 @@ function App() {
                 path="post-job"
                 element={
                   <ProtectedRoute role="EMPLOYER">
-                    <CreateJob />
+                    <Navigate to="/employer-dashboard/jobs" replace />
                   </ProtectedRoute>
                 }
               />

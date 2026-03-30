@@ -1,426 +1,263 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Award,
+  ArrowRight,
   Briefcase,
   CheckCircle2,
   ClipboardCheck,
   Clock3,
-  Eye,
-  FileBadge2,
-  FileText,
-  GraduationCap,
-  Languages,
-  Mail,
-  Phone,
+  LineChart,
+  RefreshCw,
   Sparkles,
-  XCircle
+  Users
 } from 'lucide-react';
-import api from '../services/api';
-import './EmployerDashboard.css';
+import RecruiterWorkspace from '../components/RecruiterWorkspace';
+import { useRecruiterSuite } from '../hooks/useRecruiterSuite';
+import {
+  RECRUITER_STAGE_META,
+  buildDailySeries,
+  buildInsight,
+  formatCurrency,
+  formatCompactNumber,
+  getDeltaSummary,
+  getMatchScore,
+  sortApplicationsByMatch
+} from '../utils/recruiterSuite';
+import { createInitials } from '../utils/candidatePortal';
+import './RecruiterSuite.css';
 
 const STAT_ICONS = {
-  totalJobs: Briefcase,
-  openJobs: ClipboardCheck,
-  totalApplications: FileText,
-  pending: Clock3,
-  accepted: CheckCircle2,
-  rejected: XCircle
-};
-
-const hasResume = (resumeUrl) => resumeUrl && resumeUrl !== 'resume_not_uploaded';
-
-const splitCommaList = (value) => (value || '')
-  .split(',')
-  .map((item) => item.trim())
-  .filter(Boolean);
-
-const DetailBlock = ({ icon: Icon, title, value, multiline = false }) => {
-  if (!value) return null;
-
-  return (
-    <section className="profile-modal-section">
-      <small>{title}</small>
-      <div className={multiline ? 'profile-section-copy multiline' : 'profile-section-copy'}>
-        {Icon && <Icon size={15} />}
-        <p>{value}</p>
-      </div>
-    </section>
-  );
+  openJobs: Briefcase,
+  applicants: Users,
+  reviewed: ClipboardCheck,
+  accepted: CheckCircle2
 };
 
 const EmployerDashboard = () => {
-  const [dashboard, setDashboard] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [actionLoading, setActionLoading] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [selectedJobId, setSelectedJobId] = useState(null);
-  const [selectedApplication, setSelectedApplication] = useState(null);
-
-  const loadDashboard = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get('/employer/dashboard');
-      setDashboard(res.data);
-      setError('');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load employer dashboard.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const jobs = dashboard?.jobs || [];
-  const applications = dashboard?.applications || [];
+  const { profile, employer, jobs, applications, loading, error, refresh } = useRecruiterSuite();
 
   const metrics = useMemo(() => ({
-    totalJobs: jobs.length,
     openJobs: jobs.filter((job) => String(job.status).toLowerCase() === 'open').length,
-    totalApplications: applications.length,
-    pending: applications.filter((app) => app.status === 'PENDING').length,
-    accepted: applications.filter((app) => app.status === 'ACCEPTED').length,
-    rejected: applications.filter((app) => app.status === 'REJECTED').length
+    applicants: applications.length,
+    reviewed: applications.filter((app) => app.status === 'REVIEWED').length,
+    accepted: applications.filter((app) => app.status === 'ACCEPTED').length
   }), [applications, jobs]);
 
-  const updateApplicationStatus = async (appId, status) => {
-    const confirmed = window.confirm(`Update this application status to ${status}?`);
-    if (!confirmed) return;
+  const trendSeries = buildDailySeries(applications, 7);
+  const insight = buildInsight(jobs, applications);
 
-    try {
-      setActionLoading(true);
-      await api.put(`/applications/${appId}/status`, { status });
-      await loadDashboard();
-    } catch (err) {
-      window.alert(err.response?.data?.error || 'Failed to update application status');
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const topCandidates = useMemo(() => sortApplicationsByMatch(applications, jobs), [applications, jobs]);
+  const featuredJobs = useMemo(
+    () => jobs
+      .slice()
+      .sort((left, right) => new Date(right.createdAt || 0) - new Date(left.createdAt || 0))
+      .slice(0, 3),
+    [jobs]
+  );
+  const stageColumns = useMemo(
+    () => Object.entries(RECRUITER_STAGE_META).map(([status, meta]) => ({
+      status,
+      meta,
+      items: topCandidates.filter((application) => application.status === status).slice(0, 2)
+    })),
+    [topCandidates]
+  );
 
-  const updateJobStatus = async (jobId, status) => {
-    const label = String(status).toLowerCase() === 'close' ? 'close' : 'reopen';
-    const confirmed = window.confirm(`Are you sure you want to ${label} this job?`);
-    if (!confirmed) return;
+  if (loading) {
+    return <section className="recruiter-page recruiter-empty-state">Loading recruiter overview...</section>;
+  }
 
-    try {
-      setActionLoading(true);
-      await api.put(`/job/${jobId}/status`, { status });
-      await loadDashboard();
-    } catch (err) {
-      window.alert(err.response?.data?.error || 'Failed to update job status');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleDeleteClick = (jobId) => {
-    setSelectedJobId(jobId);
-    setShowConfirm(true);
-  };
-
-  const confirmDelete = async () => {
-    try {
-      setActionLoading(true);
-      await api.delete(`/job/${selectedJobId}`);
-      setShowConfirm(false);
-      await loadDashboard();
-    } catch {
-      window.alert('Delete failed');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  if (loading) return <div className="container employer-page-state">Loading employer dashboard...</div>;
-  if (error) return <div className="container employer-page-state error">{error}</div>;
-
-  const selectedSkills = splitCommaList(selectedApplication?.applicantSkills);
-  const selectedLanguages = splitCommaList(selectedApplication?.applicantLanguages);
+  if (error) {
+    return <section className="recruiter-page recruiter-empty-state">{error}</section>;
+  }
 
   return (
-    <div className="employer-dashboard container">
-      <section className="employer-header">
-        <div>
-          <h1>Employer Control Center</h1>
-          <p>Manage jobs, review applications, and update your hiring pipeline with better candidate visibility.</p>
-        </div>
-        <div className="header-actions">
-          <Link to="/post-job" className="solid-btn">Post New Job</Link>
-          <button className="ghost-btn" onClick={loadDashboard} disabled={actionLoading}>Refresh</button>
-        </div>
-      </section>
-
-      <section className="stats-grid">
+    <RecruiterWorkspace
+      activeKey="overview"
+      profile={profile}
+      employer={employer}
+      title="Performance Overview"
+      subtitle="A live command center for your open roles, candidate flow, and hiring momentum."
+      headerActions={(
+        <button type="button" className="recruiter-secondary-btn" onClick={refresh}>
+          <RefreshCw size={16} />
+          Refresh data
+        </button>
+      )}
+    >
+      <section className="recruiter-suite-stats">
         {Object.entries({
-          totalJobs: 'Total Jobs',
-          openJobs: 'Open Jobs',
-          totalApplications: 'Total Applications',
-          pending: 'Pending',
-          accepted: 'Accepted',
-          rejected: 'Rejected'
+          openJobs: 'Active Jobs',
+          applicants: 'Total Applicants',
+          reviewed: 'Reviewed',
+          accepted: 'Accepted'
         }).map(([key, label]) => {
           const Icon = STAT_ICONS[key] || Briefcase;
+          const previousValue = key === 'accepted' ? 0 : Math.max(0, metrics[key] - 1);
+          const trend = getDeltaSummary(metrics[key], previousValue, '%');
+
           return (
-            <article className="stat-card" key={key}>
-              <Icon size={20} />
+            <article className="recruiter-card recruiter-stat-card" key={key}>
+              <div className="recruiter-stat-top">
+                <div className="recruiter-stat-icon">
+                  <Icon size={18} />
+                </div>
+                <div className={`recruiter-stat-trend ${trend.tone}`}>{trend.label}</div>
+              </div>
               <div>
                 <small>{label}</small>
-                <strong>{metrics[key] ?? 0}</strong>
+                <strong>{formatCompactNumber(metrics[key] ?? 0)}</strong>
+                <span>
+                  {key === 'openJobs' && 'Roles currently visible to candidates'}
+                  {key === 'applicants' && 'Applicants across your posted roles'}
+                  {key === 'reviewed' && 'Profiles moved into recruiter evaluation'}
+                  {key === 'accepted' && 'Positive decisions already made'}
+                </span>
               </div>
             </article>
           );
         })}
       </section>
 
-      <section className="dashboard-section">
-        <div className="section-head">
-          <h2>My Jobs</h2>
-          <span>{jobs.length} listings</span>
-        </div>
-
-        {jobs.length ? (
-          <div className="job-grid">
-            {jobs.map((job) => (
-              <article className="job-card" key={job.id}>
-                <div className="job-top">
-                  <h3>{job.title}</h3>
-                  <span className={`status-chip ${String(job.status).toLowerCase()}`}>{job.status}</span>
-                </div>
-                <p className="job-meta">{job.location} | {job.jobType || 'Full-time'}</p>
-                <p className="job-desc">{job.description}</p>
-                <div className="job-actions">
-                  <button onClick={() => updateJobStatus(job.id, job.status === 'Open' ? 'Close' : 'Open')} disabled={actionLoading}>
-                    {job.status === 'Open' ? 'Close Job' : 'Reopen Job'}
-                  </button>
-                  <button className="danger" onClick={() => handleDeleteClick(job.id)} disabled={actionLoading}>Delete</button>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="empty-panel">
-            <p>No jobs posted yet.</p>
-            <Link to="/post-job">Create first job</Link>
-          </div>
-        )}
-      </section>
-
-      <section className="dashboard-section">
-        <div className="section-head">
-          <h2>Applications Pipeline</h2>
-          <span>{applications.length} candidates</span>
-        </div>
-
-        {showConfirm && (
-          <div className="profile-modal-overlay">
-            <div className="profile-modal-card compact-confirm">
-              <h3>Delete Job</h3>
-              <p>Are you sure you want to delete this job?</p>
-              <div className="profile-modal-actions">
-                <button type="button" className="ghost-btn-inline" onClick={() => setShowConfirm(false)}>Cancel</button>
-                <button type="button" className="solid-btn danger" onClick={confirmDelete}>Delete</button>
-              </div>
+      <section className="recruiter-suite-two-up" style={{ marginTop: '1.3rem' }}>
+        <article className="recruiter-panel recruiter-glass-card">
+          <div className="recruiter-panel-header">
+            <div className="recruiter-panel-title">
+              <h2>Application Trends</h2>
+              <p>Daily candidate movement across your live funnel.</p>
             </div>
+            <span className="recruiter-match-pill">
+              <LineChart size={12} />
+              Last 7 days
+            </span>
           </div>
-        )}
 
-        {applications.length ? (
-          <div className="pipeline-grid">
-            {applications.map((app) => (
-              <article className="pipeline-card" key={app.id}>
-                <div className="pipeline-top">
-                  <div>
-                    <h3>{app.applicantFullName || app.applicantName}</h3>
-                    <p>{app.jobTitle} | {app.jobLocation || 'Location not set'}</p>
+          <div className="recruiter-bar-chart" style={{ marginTop: '1.4rem' }}>
+            {trendSeries.map((point) => {
+              const maxCount = Math.max(...trendSeries.map((item) => item.count), 1);
+              const height = `${Math.max(20, (point.count / maxCount) * 100)}%`;
+
+              return (
+                <div key={point.label} className="recruiter-bar-column">
+                  <div className="recruiter-bar-track">
+                    <div className="recruiter-bar-fill" style={{ height }} />
                   </div>
-                  <span className={`status-chip ${String(app.status).toLowerCase()}`}>{app.status}</span>
+                  <div className="recruiter-bar-value">{point.count}</div>
+                  <div className="recruiter-bar-label">{point.label}</div>
                 </div>
-
-                <div className="pipeline-meta">
-                  <span><Mail size={15} />{app.applicantEmail || 'No email'}</span>
-                  <span><Phone size={15} />{app.applicantPhone || 'No phone'}</span>
-                  <span><Clock3 size={15} />{app.appliedAt || '-'}</span>
-                </div>
-
-                <p className="pipeline-note">{app.applicationNote || 'No screening note shared by the candidate.'}</p>
-
-                <div className="pipeline-actions">
-                  <button type="button" className="outline-action-btn" onClick={() => setSelectedApplication(app)}>
-                    <Eye size={15} />
-                    View profile
-                  </button>
-
-                  {hasResume(app.resumeUrl) ? (
-                    <a href={app.resumeUrl} target="_blank" rel="noreferrer" className="outline-action-btn">
-                      <FileBadge2 size={15} />
-                      View resume
-                    </a>
-                  ) : (
-                    <button type="button" className="outline-action-btn muted" disabled>
-                      <FileBadge2 size={15} />
-                      Resume unavailable
-                    </button>
-                  )}
-
-                  <select
-                    value={app.status}
-                    disabled={actionLoading}
-                    onChange={(event) => updateApplicationStatus(app.id, event.target.value)}
-                  >
-                    <option value="PENDING">PENDING</option>
-                    <option value="REVIEWED">REVIEWED</option>
-                    <option value="ACCEPTED">ACCEPTED</option>
-                    <option value="REJECTED">REJECTED</option>
-                  </select>
-                </div>
-              </article>
-            ))}
+              );
+            })}
           </div>
-        ) : (
-          <div className="empty-panel"><p>No applications yet.</p></div>
-        )}
+        </article>
+
+        <article className="recruiter-panel recruiter-insight-card">
+          <div>
+            <span className="recruiter-kicker">{insight.eyebrow}</span>
+            <strong style={{ marginTop: '0.9rem' }}>{insight.title}</strong>
+            <p style={{ marginTop: '1rem' }}>{insight.body}</p>
+          </div>
+
+          <Link to="/employer-dashboard/analytics" className="recruiter-secondary-btn" style={{ alignSelf: 'flex-start' }}>
+            View detailed report
+            <ArrowRight size={16} />
+          </Link>
+        </article>
       </section>
 
-      {selectedApplication && (
-        <div className="profile-modal-overlay" onClick={() => setSelectedApplication(null)}>
-          <div className="profile-modal-card wide-profile-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="profile-modal-head">
-              <div>
-                <h3>{selectedApplication.applicantFullName || selectedApplication.applicantName}</h3>
-                <p>{selectedApplication.jobTitle}</p>
-              </div>
-              <button type="button" className="ghost-btn-inline" onClick={() => setSelectedApplication(null)}>Close</button>
-            </div>
-
-            <div className="profile-modal-grid">
-              <div>
-                <small>Email</small>
-                <strong>{selectedApplication.applicantEmail || '-'}</strong>
-              </div>
-              <div>
-                <small>Phone</small>
-                <strong>{selectedApplication.applicantPhone || 'Not added'}</strong>
-              </div>
-              <div>
-                <small>Gender</small>
-                <strong>{selectedApplication.applicantGender || 'Not added'}</strong>
-              </div>
-              <div>
-                <small>Location</small>
-                <strong>{selectedApplication.applicantLocation || 'Not added'}</strong>
-              </div>
-              <div>
-                <small>Date of Birth</small>
-                <strong>{selectedApplication.applicantDateOfBirth || 'Not added'}</strong>
-              </div>
-              <div>
-                <small>Experience</small>
-                <strong>{selectedApplication.applicantExperience || 'Not added'}</strong>
-              </div>
-              <div>
-                <small>Applied On</small>
-                <strong>{selectedApplication.appliedAt || '-'}</strong>
-              </div>
-              <div>
-                <small>Resume</small>
-                <strong>{selectedApplication.resumeFileName || (hasResume(selectedApplication.resumeUrl) ? 'Uploaded resume' : 'Unavailable')}</strong>
-              </div>
-            </div>
-
-            {selectedApplication.applicantProfileSummary && (
-              <DetailBlock
-                icon={FileText}
-                title="Profile Summary"
-                value={selectedApplication.applicantProfileSummary}
-                multiline
-              />
-            )}
-
-            {selectedSkills.length > 0 && (
-              <section className="profile-modal-section">
-                <small>Key Skills</small>
-                <div className="profile-tag-list">
-                  {selectedSkills.map((skill) => <span key={skill}>{skill}</span>)}
-                </div>
-              </section>
-            )}
-
-            {selectedLanguages.length > 0 && (
-              <section className="profile-modal-section">
-                <small>Languages</small>
-                <div className="profile-tag-list">
-                  {selectedLanguages.map((language) => (
-                    <span key={language}>
-                      <Languages size={14} />
-                      {language}
-                    </span>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            <div className="profile-detail-grid">
-              <DetailBlock
-                icon={GraduationCap}
-                title="Graduation"
-                value={selectedApplication.applicantGraduation}
-                multiline
-              />
-              <DetailBlock
-                icon={Sparkles}
-                title="10th Marks"
-                value={selectedApplication.applicantTenthMarks}
-              />
-              <DetailBlock
-                icon={Sparkles}
-                title="12th Marks"
-                value={selectedApplication.applicantTwelfthMarks}
-              />
-              <DetailBlock
-                icon={Briefcase}
-                title="Internship"
-                value={selectedApplication.applicantInternships}
-                multiline
-              />
-              <DetailBlock
-                icon={FolderKanban}
-                title="Projects"
-                value={selectedApplication.applicantProjects}
-                multiline
-              />
-              <DetailBlock
-                icon={Award}
-                title="Certifications"
-                value={selectedApplication.applicantCertifications}
-                multiline
-              />
-              <DetailBlock
-                icon={FileText}
-                title="Candidate Note"
-                value={selectedApplication.applicationNote}
-                multiline
-              />
-            </div>
-
-            <div className="profile-modal-actions">
-              {hasResume(selectedApplication.resumeUrl) ? (
-                <a href={selectedApplication.resumeUrl} target="_blank" rel="noreferrer" className="solid-btn">
-                  <FileBadge2 size={15} />
-                  View Resume
-                </a>
-              ) : (
-                <button type="button" className="ghost-btn-inline" disabled>Resume unavailable</button>
-              )}
-            </div>
+      <section className="recruiter-panel recruiter-glass-card" style={{ marginTop: '1.3rem' }}>
+        <div className="recruiter-section-head">
+          <div>
+            <h2>Active Roles</h2>
+            <p>Your newest openings with live compensation and demand context.</p>
           </div>
+          <Link to="/employer-dashboard/jobs" className="recruiter-secondary-btn">
+            Open jobs
+            <ArrowRight size={16} />
+          </Link>
         </div>
-      )}
-    </div>
+
+        <div className="recruiter-suite-three-up" style={{ marginTop: '1.2rem' }}>
+          {featuredJobs.length ? featuredJobs.map((job) => (
+            <article key={job.id} className="recruiter-candidate-card">
+              <div className="recruiter-candidate-top">
+                <div className="recruiter-candidate-avatar">
+                  {createInitials(job.title)}
+                </div>
+                <span className={`recruiter-status-pill ${String(job.status).toLowerCase() === 'open' ? 'accepted' : 'rejected'}`}>
+                  {String(job.status || 'Open')}
+                </span>
+              </div>
+              <h4>{job.title}</h4>
+              <p>{job.location || 'Location not shared'}</p>
+              <div className="recruiter-pill-row">
+                <span className="recruiter-tag-pill">{job.jobType || 'Role type not shared'}</span>
+                <span className="recruiter-tag-pill">{formatCurrency(job.salary)}</span>
+              </div>
+            </article>
+          )) : (
+            <article className="recruiter-candidate-card">
+              <p className="recruiter-inline-muted">Your active roles will appear here after you publish a job.</p>
+            </article>
+          )}
+        </div>
+      </section>
+
+      <section className="recruiter-panel recruiter-glass-card" style={{ marginTop: '1.3rem' }}>
+        <div className="recruiter-section-head">
+          <div>
+            <h2>Pipeline Snapshot</h2>
+            <p>Top live candidates grouped by their current hiring stage.</p>
+          </div>
+          <Link to="/employer-dashboard/pipeline" className="recruiter-secondary-btn">
+            Open pipeline
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+
+        <div className="recruiter-pipeline-columns" style={{ marginTop: '1.2rem' }}>
+          {stageColumns.map(({ status, meta, items }) => (
+            <div key={status} className="recruiter-stage-column">
+              <div className="recruiter-stage-head">
+                <div className="recruiter-stage-title">
+                  <span className="recruiter-stage-dot" style={{ background: meta.accent }} />
+                  <span>{meta.label}</span>
+                </div>
+                <span className="recruiter-stage-count">{items.length}</span>
+              </div>
+
+              <div className="recruiter-stage-stack">
+                {items.length ? items.map((application) => (
+                  <article className="recruiter-candidate-card" key={application.id}>
+                    <div className="recruiter-candidate-top">
+                      <div className="recruiter-candidate-avatar">
+                        {createInitials(application.applicantFullName || application.applicantName)}
+                      </div>
+                      <span className="recruiter-match-pill">
+                        <Sparkles size={12} />
+                        {getMatchScore(application, jobs) ?? 'N/A'}%
+                      </span>
+                    </div>
+                    <h4>{application.applicantFullName || application.applicantName}</h4>
+                    <p>{application.jobTitle}</p>
+                    <div className="recruiter-pill-row">
+                      <span className={`recruiter-status-pill ${meta.tone}`}>{meta.compactLabel}</span>
+                      <span className="recruiter-tag-pill">
+                        <Clock3 size={12} />
+                        {application.appliedAt || 'Recently'}
+                      </span>
+                    </div>
+                  </article>
+                )) : (
+                  <article className="recruiter-candidate-card">
+                    <p className="recruiter-inline-muted">No candidates in this stage.</p>
+                  </article>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </RecruiterWorkspace>
   );
 };
 
