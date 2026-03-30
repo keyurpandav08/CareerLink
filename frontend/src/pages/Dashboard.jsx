@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   ArrowRight,
   CheckCircle2,
@@ -22,7 +22,6 @@ import './Dashboard.css';
 import { getProfilePhoto } from '../utils/candidatePortal';
 
 const RESUME_PLACEHOLDER = 'resume_not_uploaded';
-
 const SIDEBAR_LINKS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, active: true },
   { to: '/profile', label: 'Profile', icon: UserRound },

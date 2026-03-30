@@ -1,4 +1,4 @@
-/* ===== PAGE ===== */
+/* ===== PAGE (WHITE + SOFT GRADIENT ANIMATION) ===== */
 .contact-page {
   min-height: 100vh;
   padding: 60px 20px;
@@ -7,9 +7,9 @@
   justify-content: center;
   align-items: center;
 
-  background: radial-gradient(circle at top left, #1e293b, #0f172a 60%),
-              linear-gradient(135deg, #0f766e, #020617);
-  animation: fadeIn 0.8s ease;
+  background: linear-gradient(270deg, #f8fafc, #e0f2fe, #f0fdfa);
+  background-size: 400% 400%;
+  animation: gradientMove 12s ease infinite;
 }
 
 /* ===== CONTAINER ===== */
@@ -24,143 +24,91 @@
   padding: 50px;
   border-radius: 20px;
 
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(12px);
+  background: white;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
 
-  box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+  animation: fadeUp 0.6s ease;
 }
 
 /* ===== LEFT ===== */
 .contact-left {
-  color: white;
+  color: #0f172a;
 }
 
 .contact-left h1 {
-  font-size: 42px;
+  font-size: 40px;
   margin-bottom: 10px;
 }
 
 .contact-left p {
-  color: #cbd5f5;
+  color: #475569;
   line-height: 1.6;
   margin-bottom: 25px;
 }
 
-/* ===== INFO CARDS ===== */
-.contact-methods {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
+/* ===== CONTACT CARDS ===== */
 .contact-methods div {
   padding: 14px 18px;
-  border-radius: 14px;
+  border-radius: 12px;
 
-  background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
+  background: #f1f5f9;
+  color: #0f172a;
 
-  color: white;
   font-weight: 500;
 
-  transition: 0.3s ease;
+  transition: 0.3s;
 }
 
-/* HOVER EFFECT */
 .contact-methods div:hover {
-  transform: translateY(-5px) scale(1.02);
-  background: rgba(255,255,255,0.2);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  transform: translateY(-5px);
+  background: #e0f2fe;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
 }
 
 /* ===== FORM ===== */
-/* ===== FORM (PREMIUM GLASS) ===== */
 .contact-form {
-  width: 100%;
-  .contact-form {
-    width: 100%;
-  }
-
   padding: 30px;
-  border-radius: 20px;
+  border-radius: 16px;
 
-  background: rgba(255,255,255,0.08); /* 🔥 glass */
-  backdrop-filter: blur(20px);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
 
-  border: 1px solid rgba(255,255,255,0.15);
-
-  box-shadow:
-    0 20px 60px rgba(0,0,0,0.4),
-    inset 0 1px 1px rgba(255,255,255,0.1);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
 
   display: flex;
   flex-direction: column;
   gap: 15px;
-
-  animation: floatUp 0.6s ease;
 }
 
+/* INPUTS */
 .contact-form input,
-.contact-form select {
-  padding: 12px;
-  border-radius: 10px;
-
-  border: 1px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.1);
-
-  color: white;
-  outline: none;
-
- /* 🔥 remove default style */
-}
-.contact-form select {
-  padding: 12px;
-  border-radius: 10px;
-
-  border: 1px solid rgba(255,255,255,0.2);
-
-  background: rgba(255,255,255,0.1);
-  color: white;
-
-  outline: none;
-
-  cursor: pointer;
-}
-.contact-form select option {
-  background: #1e293b;   /* dark background */
-  color: white;
-}
+.contact-form select,
 .contact-form textarea {
   padding: 12px;
   border-radius: 10px;
 
-  border: 1px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.1);
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
 
-  color: white;
-
+  color: #0f172a;
   outline: none;
+
+  transition: 0.25s;
 }
 
-/* placeholder color */
-.contact-form input::placeholder,
-.contact-form textarea::placeholder {
-  color: #cbd5f5;
-}
-
-/* focus */
+/* FOCUS EFFECT */
 .contact-form input:focus,
 .contact-form textarea:focus,
 .contact-form select:focus {
   border-color: #14b8a6;
-  box-shadow: 0 0 0 2px rgba(20,184,166,0.3);
+  box-shadow: 0 0 0 3px rgba(20,184,166,0.2);
+  background: #fff;
 }
-/* FOCUS */
-.contact-form input:focus,
-.contact-form textarea:focus,
-.contact-form select:focus {
-  border-color: #0f766e;
-  box-shadow: 0 0 0 3px rgba(15,118,110,0.15);
+
+/* PLACEHOLDER */
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+  color: #94a3b8;
 }
 
 /* BUTTON */
@@ -179,33 +127,28 @@
 }
 
 .contact-form button:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 15px 40px rgba(20,184,166,0.4);
-}
-/* ===== ANIMATIONS ===== */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(20,184,166,0.35);
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* BACK BUTTON */
+.back-btn {
+  background: transparent;
+  border: 1px solid #14b8a6;
+  color: #14b8a6;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: 0.3s;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  .contact-container {
-    grid-template-columns: 1fr;
-    padding: 30px;
-  }
+.back-btn:hover {
+  background: #14b8a6;
+  color: #fff;
 }
+
+/* ===== POPUP ===== */
 .popup-overlay {
   position: fixed;
   top: 0;
@@ -213,16 +156,13 @@
   width: 100%;
   height: 100%;
 
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.4);
 
   display: flex;
   align-items: center;
   justify-content: center;
-
-  z-index: 9999;
 }
 
-/* POPUP */
 .popup-box {
   background: white;
   padding: 30px 40px;
@@ -232,14 +172,29 @@
   animation: pop 0.3s ease;
 }
 
-/* CHECK ICON */
 .checkmark {
   font-size: 40px;
-  color: #0f766e;
-  margin-bottom: 10px;
+  color: #14b8a6;
 }
 
-/* ANIMATION */
+/* ===== ANIMATIONS ===== */
+@keyframes gradientMove {
+  0% { background-position: 0% }
+  50% { background-position: 100% }
+  100% { background-position: 0% }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes pop {
   from {
     transform: scale(0.8);
@@ -250,18 +205,11 @@
     opacity: 1;
   }
 }
-.back-btn {
-  background: transparent;
-  border: 1px solid #14b8a6;
-  color: #14b8a6;
-  padding: 6px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 20px;
-  transition: 0.3s;
-}
 
-.back-btn:hover {
-  background: #14b8a6;
-  color: #fff;
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .contact-container {
+    grid-template-columns: 1fr;
+    padding: 30px;
+  }
 }
