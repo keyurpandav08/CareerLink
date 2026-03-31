@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -33,7 +33,15 @@ const splitContent = (value) => {
     .map((item) => item.trim())
     .filter(Boolean);
 };
+const handleApply = () => {
 
+  if (!profile.resumeUrl) {
+    alert("❌ Please upload your resume before applying");
+    return;
+  }
+
+  // continue submit
+};
 const createInitials = (value = '') =>
   value
     .split(' ')
@@ -61,7 +69,25 @@ const JobDetail = () => {
   const [applyFeedback, setApplyFeedback] = useState('');
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [saved, setSaved] = useState(false);
+const fileRef = useRef()
+const [popup, setPopup] = useState("");
+const handleResumeUpload = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
+  setApplyData((prev) => ({
+    ...prev,
+    resumeFile: file,
+    resumeFileName: file.name,
+  }));
+
+  // 🔥 POPUP
+  setPopup("Resume uploaded successfully");
+
+  setTimeout(() => {
+    setPopup("");
+  }, 2000);
+};
   useEffect(() => {
     const fetchJob = async () => {
       try {
@@ -96,6 +122,7 @@ const JobDetail = () => {
   const isApplyFormValid = useMemo(() => (
     applyData.expectedSalary.trim() &&
     applyData.experienceSummary.trim().length >= 30 &&
+    applyData.resumeFile &&
     applyData.agreeEligibility &&
     applyData.agreeProfileAccurate &&
     applyData.agreeDataConsent
@@ -325,15 +352,24 @@ const JobDetail = () => {
               <h3>Application Requirements</h3>
               <p>Complete all required fields before submitting.</p>
 
-              <label>Expected Salary (required)</label>
+              <label>Expected Salary (LPA)</label>
               <input
                 type="text"
                 value={applyData.expectedSalary}
-                onChange={(event) => setApplyData((prev) => ({ ...prev, expectedSalary: event.target.value }))}
+                onChange={(event) => {
+                  const value = event.target.value;
+
+                  // Allow only numbers + optional decimal
+                  if (/^\d*\.?\d*$/.test(value)) {
+                    setApplyData((prev) => ({
+                      ...prev,
+                      expectedSalary: value,
+                    }));
+                  }
+                }}
                 placeholder="e.g. 6 LPA"
                 required
               />
-
               <label>Notice Period</label>
               <select
                 value={applyData.noticePeriod}
@@ -345,13 +381,64 @@ const JobDetail = () => {
                 <option value="60+ Days">60+ Days</option>
               </select>
 
-              <label>Resume Link (optional)</label>
+              <label>Upload Resume *</label>
+
+
+
               <input
-                type="url"
-                value={applyData.resumeUrl}
-                onChange={(event) => setApplyData((prev) => ({ ...prev, resumeUrl: event.target.value }))}
-                placeholder="Google Drive / portfolio / resume link"
+                type="file"
+                ref={fileRef}
+                hidden
+                accept=".pdf,.doc,.docx"
+                onChange={handleResumeUpload}
               />
+
+              {!applyData.resumeFile ? (
+                <button
+                  type="button"
+                  className="btn upload"
+                  onClick={() => fileRef.current.click()}
+                >
+                  Upload Resume
+                </button>
+              ) : (
+                <div className="resume-box">
+                  <p>📄 {applyData.resumeFileName}</p>
+
+                  <div className="resume-actions">
+                    <button
+                      type="button"
+                      className="btn view"
+                      onClick={() =>
+                        window.open(URL.createObjectURL(applyData.resumeFile))
+                      }
+                    >
+                      View
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn delete"
+                      onClick={() =>
+                        setApplyData((prev) => ({
+                          ...prev,
+                          resumeFile: null,
+                          resumeFileName: "",
+                        }))
+                      }
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+          {popup && (
+            <div className="popup-overlay">
+              <div className="popup-box">
+                ✓ {popup}
+              </div>
+            </div>
+          )}
               <small className="apply-helper-note">
                 If you leave this blank, your latest uploaded profile resume will be used automatically when available.
               </small>

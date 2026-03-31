@@ -432,6 +432,7 @@ const EditProfile = () => {
               <div className="edit-profile-card-head">
                 <Briefcase size={18} />
                 <h3>Professional Experience</h3>
+
                 <button type="button" className="edit-profile-add-btn" onClick={() => setInternships((prev) => [...prev, createInternship()])}>
                   Add Experience
                 </button>
@@ -452,6 +453,9 @@ const EditProfile = () => {
                         icon={Briefcase}
                         id={`internship-title-${index}`}
                         label="Title"
+
+                          placeholder="e.g. Software Developer"
+
                         value={item.title || ''}
                         onChange={(event) => updateCollectionItem(setInternships, index, 'title', event.target.value)}
                       />
@@ -459,6 +463,7 @@ const EditProfile = () => {
                         icon={Briefcase}
                         id={`internship-company-${index}`}
                         label="Company Name"
+                        placeholder="e.g. TCS / Google"
                         value={item.company || ''}
                         onChange={(event) => updateCollectionItem(setInternships, index, 'company', event.target.value)}
                       />
@@ -466,6 +471,7 @@ const EditProfile = () => {
                         icon={UserRound}
                         id={`internship-role-${index}`}
                         label="Role"
+                        placeholder="e.g. Backend Developer"
                         value={item.role || ''}
                         onChange={(event) => updateCollectionItem(setInternships, index, 'role', event.target.value)}
                       />

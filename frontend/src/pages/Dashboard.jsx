@@ -12,7 +12,8 @@ import {
   Sparkles,
   UserRound,
   X,
-  XCircle
+  XCircle,
+  Home
 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -198,7 +199,7 @@ const createRecommendation = (job, skills, hasExperience) => {
   const matchScore = getRecommendationMatch({ ...job, tags }, skills, hasExperience);
 
   return {
-    id: job.id || job.title,
+    id: job._id || job.id || job.title,
     title: job.title,
     company: job.employerName || 'Confidential employer',
     companyBadge: createInitials(job.employerName || job.title),
@@ -207,7 +208,7 @@ const createRecommendation = (job, skills, hasExperience) => {
     tags: tags.length ? tags.slice(0, 3) : ['Growth', 'Team', 'Hiring'],
     matchScore,
     featured: Boolean(job.featured) || matchScore >= 92,
-    detailPath: job.id ? `/jobs/${job.id}` : '/jobs'
+    detailPath: `/jobs/${job._id || job.id}`
   };
 };
 
@@ -387,7 +388,6 @@ const Dashboard = () => {
   const filteredApplications = useMemo(() => {
     if (!searchTerm.trim()) return recentApplications;
     const query = normalizeText(searchTerm);
-
     return recentApplications.filter((application) =>
       normalizeText([
         application.jobTitle,
@@ -496,6 +496,10 @@ const Dashboard = () => {
             </div>
 
             <div className="candidate-topbar-actions">
+                <Link to="/" className="candidate-home-btn">
+                  <Home size={16} className="home-icon" />
+                  <span>Home</span>
+                </Link>
               <Link to="/profile" className="candidate-avatar-button">
                 <div className="candidate-avatar-badge">
                   {profilePhoto
@@ -587,6 +591,7 @@ const Dashboard = () => {
               </div>
 
               {filteredRecommendations.length === 0 ? (
+
                 <div className="candidate-empty-state">
                   <strong>No matches found for that search yet.</strong>
                   <p>Try a broader search term to see recommended roles and recent activity together.</p>
@@ -616,7 +621,11 @@ const Dashboard = () => {
 
                       <div className="candidate-job-footer">
                         <strong>{job.salary}</strong>
-                        <Link to={job.detailPath}>Details</Link>
+                        {job._id ? (
+                          <Link to={`/jobs/${job._id}`}>Details</Link>
+                        ) : (
+                          <Link to="/jobs">Details</Link>
+                        )}
                       </div>
                     </article>
                   ))}

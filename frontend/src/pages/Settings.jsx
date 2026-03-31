@@ -363,28 +363,7 @@ const Settings = () => {
               </div>
             </section>
 
-            <section className="candidate-settings-card">
-              <h2><KeyRound size={16} />AI Preferences</h2>
 
-              <label className="candidate-settings-field">
-                <span>Gemini API Key</span>
-                <input
-                  type="password"
-                  value={settings.geminiApiKey}
-                  onChange={(event) => setSetting('geminiApiKey', event.target.value)}
-                  placeholder="Optional key stored only in local settings"
-                />
-              </label>
-
-              <div className="candidate-settings-note">
-                The current resume insights page still uses the original backend analysis API. This key is saved locally so the UI is ready for a future Gemini-backed upgrade without changing your existing flow today.
-              </div>
-
-              <div className="candidate-settings-security">
-                <Lock size={16} />
-                <span>Password change API is not implemented yet, so this remains a future integration point.</span>
-              </div>
-            </section>
           </div>
 
           <div className="candidate-settings-save-row">
