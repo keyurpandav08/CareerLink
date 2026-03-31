@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { getRoleName } from '../utils/role';
 import api from '../services/api';
 import { createInitials, parsePossibleDate } from '../utils/candidatePortal';
+import RecruiterCandidates from './RecruiterCandidates';
 import './Applications.css';
 
 const STATUS_FILTERS = ['ALL', 'PENDING', 'REVIEWED', 'ACCEPTED', 'REJECTED'];
@@ -79,7 +80,7 @@ const formatAppliedDate = (value) => {
   });
 };
 
-const Applications = () => {
+const CandidateApplications = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [applications, setApplications] = useState([]);
@@ -507,6 +508,16 @@ const Applications = () => {
       </div>
     </section>
   );
+};
+
+const Applications = () => {
+  const { user } = useAuth();
+
+  if (getRoleName(user) === 'EMPLOYER') {
+    return <RecruiterCandidates />;
+  }
+
+  return <CandidateApplications />;
 };
 
 export default Applications;

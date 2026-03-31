@@ -24,8 +24,8 @@ const applicantNav = [
 
 const employerNav = [
   { to: '/employer-dashboard', label: 'Dashboard' },
-  { to: '/post-job', label: 'Post Job' },
-  { to: '/applications', label: 'Applicants' },
+  { to: '/employer-dashboard/jobs', label: 'Post Job' },
+  { to: '/employer-dashboard/candidates', label: 'Applicants' },
   { to: '/settings', label: 'Settings' },
   { to: '/contact', label: 'Support' }
 ];
@@ -74,8 +74,16 @@ const Layout = () => {
   const profilePath = roleName === 'EMPLOYER' ? '/settings' : roleName === 'ADMIN' ? '/admin/dashboard' : '/profile';
   const candidateImmersiveRoutes = new Set(['/dashboard', '/profile', '/edit-profile', '/resume-builder']);
   const candidateConditionalRoutes = new Set(['/applications', '/settings']);
+  const employerImmersiveRoutes = roleName === 'EMPLOYER'
+    && (location.pathname === '/employer-dashboard'
+      || location.pathname === '/post-job'
+      || location.pathname === '/applications'
+      || location.pathname === '/employer-dashboard/jobs'
+      || location.pathname === '/employer-dashboard/candidates'
+      || location.pathname.startsWith('/employer-dashboard/'));
   const useImmersiveShell = candidateImmersiveRoutes.has(location.pathname)
-    || (roleName === 'APPLICANT' && candidateConditionalRoutes.has(location.pathname));
+    || (roleName === 'APPLICANT' && candidateConditionalRoutes.has(location.pathname))
+    || employerImmersiveRoutes;
   const isNavActive = (path) => {
     if (path === '/') {
       return location.pathname === '/';
@@ -129,7 +137,12 @@ const Layout = () => {
                   <div className="user-menu">
                     <Link to={dashboardPath} onClick={() => setShowUserMenu(false)}>Dashboard</Link>
                     {roleName !== 'ADMIN' && (
-                      <Link to="/applications" onClick={() => setShowUserMenu(false)}>Applications</Link>
+                      <Link
+                        to={roleName === 'EMPLOYER' ? '/employer-dashboard/candidates' : '/applications'}
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        {roleName === 'EMPLOYER' ? 'Candidates' : 'Applications'}
+                      </Link>
                     )}
                     <Link to={profilePath} onClick={() => setShowUserMenu(false)}>
                       {roleName === 'EMPLOYER' ? 'Settings' : roleName === 'ADMIN' ? 'Admin Panel' : 'Profile'}
