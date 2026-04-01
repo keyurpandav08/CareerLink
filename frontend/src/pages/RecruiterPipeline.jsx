@@ -49,19 +49,23 @@ const parseApplicationNote = (value) => {
 };
 
 const RecruiterPipeline = () => {
-  const { profile, employer, jobs, applications, loading, error, refresh } = useRecruiterSuite();
+  const { profile, employer, jobs, applications, aiInsights, loading, error, refresh } = useRecruiterSuite();
   const [jobFilter, setJobFilter] = useState('ALL');
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [pendingStatusChange, setPendingStatusChange] = useState(null);
+  const aiMatches = useMemo(
+    () => Object.fromEntries((aiInsights?.matches || []).map((item) => [item.applicationId, item])),
+    [aiInsights?.matches]
+  );
 
   const visibleApplications = useMemo(() => {
     const filtered = jobFilter === 'ALL'
       ? applications
       : applications.filter((application) => application.jobTitle === jobFilter);
 
-    return sortApplicationsByMatch(filtered, jobs);
-  }, [applications, jobFilter, jobs]);
+    return sortApplicationsByMatch(filtered, jobs, aiMatches);
+  }, [aiMatches, applications, jobFilter, jobs]);
 
   const stageColumns = useMemo(
     () => STATUS_ORDER.map((status) => ({
@@ -172,7 +176,7 @@ const RecruiterPipeline = () => {
                 ) : (
                   items.map((application) => {
                     const noteDetails = parseApplicationNote(application.applicationNote);
-                    const matchScore = getMatchScore(application, jobs);
+                    const matchScore = getMatchScore(application, jobs, aiMatches);
 
                     return (
                     <article key={application.id} className="recruiter-candidate-card">
@@ -210,6 +214,12 @@ const RecruiterPipeline = () => {
                       {(noteDetails.summary || application.applicantProfileSummary) && (
                         <div className="recruiter-note-block">
                           {noteDetails.summary || application.applicantProfileSummary}
+                        </div>
+                      )}
+
+                      {aiMatches[application.id]?.summary && (
+                        <div className="recruiter-note-block">
+                          {aiMatches[application.id].summary}
                         </div>
                       )}
 
@@ -288,7 +298,7 @@ const RecruiterPipeline = () => {
               </div>
               <div className="recruiter-modal-metric">
                 <small>Match Score</small>
-                <strong>{getMatchScore(selectedApplication, jobs) ?? 'Needs skill data'}</strong>
+                <strong>{getMatchScore(selectedApplication, jobs, aiMatches) ?? 'Needs skill data'}</strong>
               </div>
             </div>
 

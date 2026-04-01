@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { getRoleName } from '../utils/role';
 import api from '../services/api';
 import { createInitials, parsePossibleDate } from '../utils/candidatePortal';
+import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 import RecruiterCandidates from './RecruiterCandidates';
 import './Applications.css';
 
@@ -93,23 +94,45 @@ const CandidateApplications = () => {
 
   useEffect(() => {
     const loadApplications = async () => {
-      try {
+      const cacheKey = `candidate-applications:${user.username}`;
+      const cachedState = readCachedValue(cacheKey, null);
+      const hasCachedState = Boolean(cachedState?.profile);
+
+      if (hasCachedState) {
+        setProfile(cachedState.profile || null);
+        setApplications(Array.isArray(cachedState.applications) ? cachedState.applications : []);
+        setLoading(false);
+      } else {
         setLoading(true);
-        const userRes = await api.get(`/users/username/${user.username}`);
+      }
+
+      try {
+        const profilePromise = api.get(`/users/username/${user.username}`);
+        const applicationsPromise = user?.id ? api.get(`/applications/user/${user.id}`) : null;
+        const userRes = await profilePromise;
         const currentProfile = userRes.data;
         setProfile(currentProfile);
 
         const isEmployer = currentProfile.roleName === 'EMPLOYER';
-        const endpoint = isEmployer
-          ? `/applications/employer/${currentProfile.id}`
-          : `/applications/user/${currentProfile.id}`;
-
-        const appsRes = await api.get(endpoint);
-        setApplications(Array.isArray(appsRes.data) ? appsRes.data : []);
+        const appsRes = isEmployer
+          ? await api.get(`/applications/employer/${currentProfile.id}`)
+          : (applicationsPromise
+            ? await applicationsPromise
+            : await api.get(`/applications/user/${currentProfile.id}`));
+        const nextApplications = Array.isArray(appsRes.data) ? appsRes.data : [];
+        setApplications(nextApplications);
+        writeCachedValue(cacheKey, {
+          profile: currentProfile,
+          applications: nextApplications
+        });
       } catch {
-        setError('Failed to load applications.');
+        if (!hasCachedState) {
+          setError('Failed to load applications.');
+        }
       } finally {
-        setLoading(false);
+        if (!hasCachedState) {
+          setLoading(false);
+        }
       }
     };
 

@@ -80,10 +80,10 @@ public class User implements UserDetails {
     @JoinColumn(name = "role_id")
     private Role role;
     
-    @OneToMany(mappedBy = "employer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "employer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Job> jobs;
     
-    @OneToMany(mappedBy = "applicant", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "applicant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Application> applications;
     
     private Timestamp createdAt;

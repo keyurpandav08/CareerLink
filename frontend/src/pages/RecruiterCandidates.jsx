@@ -24,16 +24,20 @@ import './RecruiterSuite.css';
 const STATUS_FILTERS = ['ALL', 'PENDING', 'REVIEWED', 'ACCEPTED', 'REJECTED'];
 
 const RecruiterCandidates = () => {
-  const { profile, employer, jobs, applications, loading, error, refresh } = useRecruiterSuite();
+  const { profile, employer, jobs, applications, aiInsights, loading, error, refresh } = useRecruiterSuite();
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedApplication, setSelectedApplication] = useState(null);
   const deferredSearchValue = useDeferredValue(searchValue);
+  const aiMatches = useMemo(
+    () => Object.fromEntries((aiInsights?.matches || []).map((item) => [item.applicationId, item])),
+    [aiInsights?.matches]
+  );
 
   const candidateRows = useMemo(() => {
     const normalizedSearch = deferredSearchValue.trim().toLowerCase();
 
-    return sortApplicationsByMatch(applications, jobs).filter((application) => {
+    return sortApplicationsByMatch(applications, jobs, aiMatches).filter((application) => {
       const matchesStatus = statusFilter === 'ALL' || application.status === statusFilter;
       if (!matchesStatus) return false;
       if (!normalizedSearch) return true;
@@ -49,16 +53,16 @@ const RecruiterCandidates = () => {
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(normalizedSearch));
     });
-  }, [applications, deferredSearchValue, jobs, statusFilter]);
+  }, [aiMatches, applications, deferredSearchValue, jobs, statusFilter]);
 
   const topCandidates = useMemo(
-    () => sortApplicationsByMatch(applications, jobs).slice(0, 2),
-    [applications, jobs]
+    () => sortApplicationsByMatch(applications, jobs, aiMatches).slice(0, 2),
+    [aiMatches, applications, jobs]
   );
 
   const stats = useMemo(() => {
     const scoredCandidates = applications
-      .map((application) => getMatchScore(application, jobs))
+      .map((application) => getMatchScore(application, jobs, aiMatches))
       .filter((score) => score !== null);
 
     const topMatches = scoredCandidates.filter((score) => score >= 90).length;
@@ -69,9 +73,11 @@ const RecruiterCandidates = () => {
       topMatches,
       pendingReviews
     };
-  }, [applications, jobs]);
+  }, [aiMatches, applications, jobs]);
 
-  const insight = buildInsight(jobs, applications);
+  const insight = aiInsights?.headline
+    ? { ...buildInsight(jobs, applications), body: aiInsights.summary }
+    : buildInsight(jobs, applications);
 
   if (loading) {
     return <section className="recruiter-page recruiter-empty-state">Loading candidate pool...</section>;
@@ -183,7 +189,7 @@ const RecruiterCandidates = () => {
               </thead>
               <tbody>
                 {candidateRows.map((application) => {
-                  const matchScore = getMatchScore(application, jobs);
+                  const matchScore = getMatchScore(application, jobs, aiMatches);
                   const stageMeta = RECRUITER_STAGE_META[application.status] || RECRUITER_STAGE_META.PENDING;
 
                   return (
@@ -246,7 +252,7 @@ const RecruiterCandidates = () => {
         <article className="recruiter-panel recruiter-highlight">
           <div className="recruiter-panel-title">
             <h2>Smart Match Intelligence</h2>
-            <p>{insight.body}</p>
+            <p>{aiInsights?.summary || insight.body}</p>
           </div>
 
           <p style={{ marginTop: '1rem' }}>
@@ -261,6 +267,7 @@ const RecruiterCandidates = () => {
                     </>
                   )}
                   {' '}based on live skill overlap and role alignment.
+                  {aiInsights?.headline ? ' AI-reviewed for your current openings.' : ''}
                 </>
               )
               : 'Top recommendations will appear here once applicants start arriving.'}
@@ -336,7 +343,7 @@ const RecruiterCandidates = () => {
               </div>
               <div className="recruiter-modal-metric">
                 <small>Match Score</small>
-                <strong>{getMatchScore(selectedApplication, jobs) ?? 'N/A'}%</strong>
+                <strong>{getMatchScore(selectedApplication, jobs, aiMatches) ?? 'N/A'}%</strong>
               </div>
             </div>
 
@@ -347,6 +354,17 @@ const RecruiterCandidates = () => {
                 </div>
                 <p className="recruiter-muted-copy" style={{ marginTop: '0.8rem' }}>
                   {selectedApplication.applicantProfileSummary}
+                </p>
+              </article>
+            )}
+
+            {aiMatches[selectedApplication.id]?.summary && (
+              <article className="recruiter-panel" style={{ marginBottom: '1rem' }}>
+                <div className="recruiter-panel-title">
+                  <h3>AI Match Notes</h3>
+                </div>
+                <p className="recruiter-muted-copy" style={{ marginTop: '0.8rem' }}>
+                  {aiMatches[selectedApplication.id].summary}
                 </p>
               </article>
             )}

@@ -101,9 +101,9 @@ const RecruiterWorkspace = ({
             <button type="button" className="recruiter-icon-btn" aria-label="Notifications">
               <Bell size={18} />
             </button>
-            <button type="button" className="recruiter-icon-btn" aria-label="Settings">
+            <Link to="/employer-dashboard?panel=settings" className="recruiter-icon-btn" aria-label="Settings">
               <Settings size={18} />
-            </button>
+            </Link>
             {topActions || (
               <Link to="/employer-dashboard/jobs" className="recruiter-primary-btn">
                 Post a Job

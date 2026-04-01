@@ -462,6 +462,13 @@
   font-weight: 600;
 }
 
+.candidate-insight-copy {
+  margin-bottom: 1rem;
+  color: #64748b;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
 .candidate-insight-list {
   display: grid;
   gap: 0.9rem;
@@ -592,6 +599,14 @@
   margin-top: 0.35rem;
   color: #6b7280;
   font-size: 0.86rem;
+}
+
+.candidate-job-reason {
+  display: block;
+  margin-top: 0.5rem;
+  color: #475569;
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
 
 .candidate-job-tags {

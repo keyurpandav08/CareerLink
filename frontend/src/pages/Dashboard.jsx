@@ -21,6 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './Dashboard.css';
 import { getProfilePhoto } from '../utils/candidatePortal';
+import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 
 const RESUME_PLACEHOLDER = 'resume_not_uploaded';
 const SIDEBAR_LINKS = [
@@ -29,42 +30,6 @@ const SIDEBAR_LINKS = [
   { to: '/applications', label: 'My Applications', icon: FileText },
   { to: '/resume-builder', label: 'AI Resume Insights', icon: Sparkles },
   { to: '/settings', label: 'Settings', icon: Settings }
-];
-
-const RECOMMENDATION_TEMPLATES = [
-  {
-    id: 'fallback-frontend',
-    title: 'Senior Frontend Engineer',
-    employerName: 'Stellar Cloud Systems',
-    location: 'Remote',
-    salary: '$140k - $180k',
-    tags: ['React', 'TypeScript', 'Tailwind']
-  },
-  {
-    id: 'fallback-designer',
-    title: 'Product UI Designer',
-    employerName: 'Linearity HQ',
-    location: 'San Francisco, CA',
-    salary: '$120k - $160k',
-    tags: ['Figma', 'Design Ops', 'Research']
-  },
-  {
-    id: 'fallback-fullstack',
-    title: 'Full Stack Developer',
-    employerName: 'Velocity AI',
-    location: 'Austin, TX',
-    salary: '$150k - $200k',
-    tags: ['Node.js', 'Next.js', 'APIs'],
-    featured: true
-  },
-  {
-    id: 'fallback-data',
-    title: 'Platform Engineer',
-    employerName: 'Northstar Compute',
-    location: 'Bengaluru, India',
-    salary: 'INR 24 - 36 LPA',
-    tags: ['Java', 'Spring', 'AWS']
-  }
 ];
 
 const PROFILE_FIELDS = [
@@ -180,86 +145,12 @@ const formatSalary = (salary) => {
   return `INR ${numericSalary}`;
 };
 
-const getRecommendationMatch = (job, skills, hasExperience) => {
-  const haystack = normalizeText([
-    job.title,
-    job.employerName,
-    job.location,
-    job.description,
-    ...(job.tags || [])
-  ].join(' '));
-
-  const overlap = skills.filter((skill) => haystack.includes(normalizeText(skill))).length;
-  const baseScore = job.featured ? 86 : 80;
-  return clamp(baseScore + overlap * 5 + (hasExperience ? 3 : 0), 78, 97);
-};
-
-const createRecommendation = (job, skills, hasExperience) => {
-  const tags = job.tags?.length ? job.tags : skills.slice(0, 3);
-  const matchScore = getRecommendationMatch({ ...job, tags }, skills, hasExperience);
-
-  return {
-    id: job._id || job.id || job.title,
-    title: job.title,
-    company: job.employerName || 'Confidential employer',
-    companyBadge: createInitials(job.employerName || job.title),
-    location: job.location || 'Location not shared',
-    salary: formatSalary(job.salary),
-    tags: tags.length ? tags.slice(0, 3) : ['Growth', 'Team', 'Hiring'],
-    matchScore,
-    featured: Boolean(job.featured) || matchScore >= 92,
-    detailPath: `/jobs/${job._id || job.id}`
-  };
-};
-
-const getInsightItems = (profile, profileCompletion, skills, applications) => {
-  const insightScore = clamp(
-    Math.round(
-      profileCompletion * 0.62 +
-        Math.min(skills.length, 6) * 4 +
-        (hasResume(profile?.resumeUrl) ? 12 : 0) +
-        (profile?.profileSummary ? 6 : 0) +
-        (profile?.projects ? 6 : 0) +
-        (applications.length ? 4 : 0)
-    ),
-    48,
-    96
-  );
-
-  const positives = [];
-  const improvements = [];
-
-  if (skills.length >= 3) {
-    positives.push(`Strong keyword coverage across ${skills.slice(0, 3).join(', ')}.`);
-  } else if (profile?.profileSummary) {
-    positives.push('Your profile summary already gives recruiters useful context.');
-  } else {
-    positives.push('You already have a live candidate profile in the platform.');
-  }
-
-  if (!hasResume(profile?.resumeUrl)) {
-    improvements.push('Upload your latest resume so every application stays one-click ready.');
-  } else if (!profile?.projects) {
-    improvements.push('Add project highlights to improve technical credibility with hiring teams.');
-  } else if (!profile?.certifications) {
-    improvements.push('Certifications can strengthen niche or tool-specific role matching.');
-  } else {
-    improvements.push('Refresh role-specific keywords as you target more specialized openings.');
-  }
-
-  return {
-    score: insightScore,
-    items: [
-      { tone: 'positive', text: positives[0] },
-      { tone: 'warning', text: improvements[0] }
-    ]
-  };
-};
-
 const Dashboard = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [applications, setApplications] = useState([]);
+  const [aiDashboard, setAiDashboard] = useState(null);
+  const [aiError, setAiError] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -285,19 +176,76 @@ const Dashboard = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      try {
+      const cacheKey = `candidate-dashboard:${user.username}`;
+      const cachedState = readCachedValue(cacheKey, null);
+      const hasCachedState = Boolean(cachedState?.profile);
+
+      if (hasCachedState) {
+        setProfile(cachedState.profile || null);
+        setApplications(Array.isArray(cachedState.applications) ? cachedState.applications : []);
+        setAiDashboard(cachedState.aiDashboard || null);
+        setAiError(cachedState.aiError || '');
+        setLoading(false);
+      } else {
         setLoading(true);
+      }
+
+      try {
         setError('');
-        const profileRes = await api.get(`/users/username/${user.username}`);
+        const profilePromise = api.get(`/users/username/${user.username}`);
+        const applicationsPromise = user?.id
+          ? api.get(`/applications/user/${user.id}`)
+          : null;
+
+        const profileRes = await profilePromise;
         const currentProfile = profileRes.data;
         setProfile(currentProfile);
 
-        const applicationsRes = await api.get(`/applications/user/${currentProfile.id}`);
-        setApplications(Array.isArray(applicationsRes.data) ? applicationsRes.data : []);
-      } catch {
-        setError('Failed to load dashboard.');
-      } finally {
+        const applicationsRes = applicationsPromise
+          ? await applicationsPromise
+          : await api.get(`/applications/user/${currentProfile.id}`);
+        const resolvedApplications = Array.isArray(applicationsRes.data) ? applicationsRes.data : [];
+        setApplications(resolvedApplications);
         setLoading(false);
+        writeCachedValue(cacheKey, {
+          profile: currentProfile,
+          applications: resolvedApplications,
+          aiDashboard: cachedState?.aiDashboard || null,
+          aiError: cachedState?.aiError || ''
+        });
+
+        api.get(`/api/ai/candidate/${currentProfile.id}/dashboard`, {
+          timeout: 8000
+        })
+          .then((aiRes) => {
+            setAiDashboard(aiRes.data);
+            setAiError('');
+            writeCachedValue(cacheKey, {
+              profile: currentProfile,
+              applications: resolvedApplications,
+              aiDashboard: aiRes.data,
+              aiError: ''
+            });
+          })
+          .catch((aiRequestError) => {
+            const nextAiError = aiRequestError.response?.data?.error || 'Add your Gemini key in application.properties to enable live AI insights.';
+            setAiDashboard(null);
+            setAiError(nextAiError);
+            writeCachedValue(cacheKey, {
+              profile: currentProfile,
+              applications: resolvedApplications,
+              aiDashboard: null,
+              aiError: nextAiError
+            });
+          });
+      } catch {
+        if (!hasCachedState) {
+          setError('Failed to load dashboard.');
+        }
+      } finally {
+        if (!hasCachedState) {
+          setLoading(false);
+        }
       }
     };
 
@@ -330,20 +278,21 @@ const Dashboard = () => {
     return { total, pending, reviewed, accepted };
   }, [applications]);
 
-  const recommendedJobs = useMemo(() => {
-    const savedJobRecommendations = savedJobs.slice(0, 3).map((job) => ({
-      ...job,
-      tags: parseSkills(job.skills || '').length ? parseSkills(job.skills) : skills.slice(0, 3)
-    }));
-
-    const fallbackRecommendations = RECOMMENDATION_TEMPLATES.filter(
-      (template) => !savedJobRecommendations.some((savedJob) => savedJob.title === template.title)
-    );
-
-    return [...savedJobRecommendations, ...fallbackRecommendations]
-      .slice(0, 3)
-      .map((job) => createRecommendation(job, skills, profile?.experience && profile.experience !== 'Fresher'));
-  }, [profile?.experience, savedJobs, skills]);
+  const recommendedJobs = useMemo(() => (
+    (aiDashboard?.recommendations || []).map((job) => ({
+      id: job.jobId,
+      title: job.title,
+      company: job.company || 'Confidential employer',
+      companyBadge: createInitials(job.company || job.title),
+      location: job.location || 'Location not shared',
+      salary: formatSalary(job.salary),
+      tags: Array.isArray(job.tags) && job.tags.length ? job.tags.slice(0, 3) : ['Growth', 'Team', 'Hiring'],
+      matchScore: Number(job.matchScore) || 0,
+      featured: Boolean(job.featured),
+      reason: job.reason || 'AI-selected based on your profile and live openings.',
+      detailPath: `/jobs/${job.jobId}`
+    }))
+  ), [aiDashboard?.recommendations]);
 
   const recentApplications = useMemo(() => {
     const list = [...applications];
@@ -357,10 +306,16 @@ const Dashboard = () => {
     return list.slice(0, 5);
   }, [applications]);
 
-  const resumeInsight = useMemo(
-    () => getInsightItems(profile, profileCompletion, skills, applications),
-    [applications, profile, profileCompletion, skills]
-  );
+  const resumeInsight = useMemo(() => ({
+    score: aiDashboard?.score ?? clamp(Math.round(profileCompletion * 0.72), 48, 92),
+    items: Array.isArray(aiDashboard?.highlights) && aiDashboard.highlights.length
+      ? aiDashboard.highlights
+      : [
+        { tone: 'positive', text: 'Complete your profile to unlock live AI guidance.' },
+        { tone: 'warning', text: aiError || 'Add your Gemini key to enable live AI analysis.' }
+      ],
+    focusNote: aiDashboard?.focusNote || aiError || 'Live AI guidance appears here after configuration.'
+  }), [aiDashboard, aiError, profileCompletion]);
 
   const welcomeNudge = useMemo(() => {
     if (!profile) return '';
@@ -568,6 +523,8 @@ const Dashboard = () => {
                   <span>/100 Score</span>
                 </div>
 
+                <p className="candidate-insight-copy">{resumeInsight.focusNote}</p>
+
                 <ul className="candidate-insight-list">
                   {resumeInsight.items.map((item) => (
                     <li key={item.text} className={item.tone}>
@@ -613,6 +570,7 @@ const Dashboard = () => {
                       <div className="candidate-job-copy">
                         <h3>{job.title}</h3>
                         <p>{job.company} - {job.location}</p>
+                        <span className="candidate-job-reason">{job.reason}</span>
                       </div>
 
                       <div className="candidate-job-tags">
@@ -621,11 +579,7 @@ const Dashboard = () => {
 
                       <div className="candidate-job-footer">
                         <strong>{job.salary}</strong>
-                        {job._id ? (
-                          <Link to={`/jobs/${job._id}`}>Details</Link>
-                        ) : (
-                          <Link to="/jobs">Details</Link>
-                        )}
+                        <Link to={job.detailPath || '/jobs'}>Details</Link>
                       </div>
                     </article>
                   ))}

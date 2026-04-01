@@ -59,7 +59,7 @@ public class Job {
     @JoinColumn(name = "employer_id") 
     private User employer;
     
-    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL) 
+    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true) 
     private List<Application> applications;
     
     @PrePersist

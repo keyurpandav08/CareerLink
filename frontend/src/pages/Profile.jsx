@@ -17,6 +17,7 @@ import {
   resizeImageToDataUrl,
   saveProfileMeta,
 } from '../utils/candidatePortal';
+import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 import './Profile.css';
 
 const Profile = () => {
@@ -28,11 +29,21 @@ const Profile = () => {
     const [popup, setPopup] = useState("");
   useEffect(() => {
     const loadProfile = async () => {
+      const cacheKey = `candidate-profile:${user.username}`;
+      const cachedProfile = readCachedValue(cacheKey, null);
+
+      if (cachedProfile) {
+        setProfile(cachedProfile);
+      }
+
       try {
         const response = await api.get(`/users/username/${user.username}`);
         setProfile(response.data);
+        writeCachedValue(cacheKey, response.data);
       } catch {
-        setError('Unable to load profile.');
+        if (!cachedProfile) {
+          setError('Unable to load profile.');
+        }
       }
     };
 

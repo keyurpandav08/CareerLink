@@ -26,7 +26,6 @@ const employerNav = [
   { to: '/employer-dashboard', label: 'Dashboard' },
   { to: '/employer-dashboard/jobs', label: 'Post Job' },
   { to: '/employer-dashboard/candidates', label: 'Applicants' },
-  { to: '/settings', label: 'Settings' },
   { to: '/contact', label: 'Support' }
 ];
 
@@ -71,7 +70,7 @@ const Layout = () => {
   };
 
   const dashboardPath = getDashboardPathForUser(user);
-  const profilePath = roleName === 'EMPLOYER' ? '/settings' : roleName === 'ADMIN' ? '/admin/dashboard' : '/profile';
+  const profilePath = roleName === 'EMPLOYER' ? '/employer-dashboard?panel=settings' : roleName === 'ADMIN' ? '/admin/dashboard' : '/profile';
   const candidateImmersiveRoutes = new Set(['/dashboard', '/profile', '/edit-profile', '/resume-builder']);
   const candidateConditionalRoutes = new Set(['/applications', '/settings']);
   const employerImmersiveRoutes = roleName === 'EMPLOYER'

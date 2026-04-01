@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   ArrowRight,
   Briefcase,
@@ -11,6 +11,7 @@ import {
   Sparkles,
   Users
 } from 'lucide-react';
+import EmployerSettingsPanel from '../components/EmployerSettingsPanel';
 import RecruiterWorkspace from '../components/RecruiterWorkspace';
 import { useRecruiterSuite } from '../hooks/useRecruiterSuite';
 import {
@@ -34,7 +35,13 @@ const STAT_ICONS = {
 };
 
 const EmployerDashboard = () => {
-  const { profile, employer, jobs, applications, loading, error, refresh } = useRecruiterSuite();
+  const { profile, employer, jobs, applications, aiInsights, loading, error, refresh } = useRecruiterSuite();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const settingsOpen = searchParams.get('panel') === 'settings';
+  const aiMatches = useMemo(
+    () => Object.fromEntries((aiInsights?.matches || []).map((item) => [item.applicationId, item])),
+    [aiInsights?.matches]
+  );
 
   const metrics = useMemo(() => ({
     openJobs: jobs.filter((job) => String(job.status).toLowerCase() === 'open').length,
@@ -44,9 +51,18 @@ const EmployerDashboard = () => {
   }), [applications, jobs]);
 
   const trendSeries = buildDailySeries(applications, 7);
-  const insight = buildInsight(jobs, applications);
+  const insight = aiInsights?.headline
+    ? {
+      eyebrow: aiInsights.error ? 'Setup' : 'AI Signal',
+      title: aiInsights.headline,
+      body: aiInsights.summary
+    }
+    : buildInsight(jobs, applications);
 
-  const topCandidates = useMemo(() => sortApplicationsByMatch(applications, jobs), [applications, jobs]);
+  const topCandidates = useMemo(
+    () => sortApplicationsByMatch(applications, jobs, aiMatches),
+    [aiMatches, applications, jobs]
+  );
   const featuredJobs = useMemo(
     () => jobs
       .slice()
@@ -234,7 +250,7 @@ const EmployerDashboard = () => {
                       </div>
                       <span className="recruiter-match-pill">
                         <Sparkles size={12} />
-                        {getMatchScore(application, jobs) ?? 'N/A'}%
+                        {getMatchScore(application, jobs, aiMatches) ?? 'N/A'}%
                       </span>
                     </div>
                     <h4>{application.applicantFullName || application.applicantName}</h4>
@@ -246,6 +262,9 @@ const EmployerDashboard = () => {
                         {application.appliedAt || 'Recently'}
                       </span>
                     </div>
+                    {aiMatches[application.id]?.summary && (
+                      <p className="recruiter-note-block">{aiMatches[application.id].summary}</p>
+                    )}
                   </article>
                 )) : (
                   <article className="recruiter-candidate-card">
@@ -257,6 +276,13 @@ const EmployerDashboard = () => {
           ))}
         </div>
       </section>
+
+      <EmployerSettingsPanel
+        open={settingsOpen}
+        profile={profile}
+        onClose={() => setSearchParams({})}
+        onSaved={refresh}
+      />
     </RecruiterWorkspace>
   );
 };
