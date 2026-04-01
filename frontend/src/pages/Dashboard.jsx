@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   ArrowRight,
+  BriefcaseBusiness,
   CheckCircle2,
   Clock3,
   FileText,
@@ -12,8 +13,7 @@ import {
   Sparkles,
   UserRound,
   X,
-  XCircle,
-  Home
+  XCircle
 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -45,12 +45,6 @@ const PROFILE_FIELDS = [
   'certifications',
   'resumeUrl'
 ];
-
-const parseSkills = (value) =>
-  String(value || '')
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
 
 const normalizeText = (value) => String(value || '').trim().toLowerCase();
 
@@ -155,7 +149,7 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const profilePhoto = getProfilePhoto(user);
+  const profilePhoto = useMemo(() => getProfilePhoto(user, profile), [profile, user]);
 
   useEffect(() => {
     applications.forEach((application) => {
@@ -255,8 +249,6 @@ const Dashboard = () => {
   }, [user]);
 
   const savedJobs = useMemo(() => loadSavedJobs(), []);
-
-  const skills = useMemo(() => parseSkills(profile?.skills), [profile?.skills]);
 
   const profileCompletion = useMemo(() => {
     if (!profile) return 0;
@@ -436,7 +428,10 @@ const Dashboard = () => {
                 <Menu size={18} />
               </button>
 
-              <div className="candidate-product-name">Job Lithic</div>
+              <Link to="/dashboard" className="candidate-product-name">
+                <span className="candidate-product-mark">JL</span>
+                <span>Job Lithic</span>
+              </Link>
 
               <label className="candidate-searchbar" htmlFor="candidateDashboardSearch">
                 <Search size={16} />
@@ -451,15 +446,23 @@ const Dashboard = () => {
             </div>
 
             <div className="candidate-topbar-actions">
-                <Link to="/" className="candidate-home-btn">
-                  <Home size={16} className="home-icon" />
-                  <span>Home</span>
-                </Link>
+              <Link to="/jobs" className="candidate-icon-btn" aria-label="Browse jobs">
+                <BriefcaseBusiness size={18} />
+              </Link>
+
+              <Link to="/settings" className="candidate-icon-btn" aria-label="Open settings">
+                <Settings size={18} />
+              </Link>
+
               <Link to="/profile" className="candidate-avatar-button">
                 <div className="candidate-avatar-badge">
                   {profilePhoto
                     ? <img src={profilePhoto} alt={firstName} />
                     : createInitials(profile.fullName || user?.username)}
+                </div>
+                <div className="candidate-avatar-copy">
+                  <strong>{firstName}</strong>
+                  <span>Candidate profile</span>
                 </div>
               </Link>
             </div>
@@ -545,7 +548,7 @@ const Dashboard = () => {
                   <p>AI-powered matches based on your profile, saved roles, and recent activity.</p>
                 </div>
                 <Link to="/jobs" className="candidate-section-link">View All Matches</Link>
-              </div>
+                </div>
 
               {filteredRecommendations.length === 0 ? (
 
@@ -674,16 +677,21 @@ const Dashboard = () => {
             </section>
 
             <footer className="candidate-dashboard-footer">
-              <div className="candidate-footer-brand">Job Lithic</div>
+              <div className="candidate-dashboard-footer-card">
+                <div className="candidate-footer-copy">
+                  <span className="candidate-footer-kicker">Candidate system</span>
+                  <strong>Stay application-ready with a sharper profile, resume, and recruiter-facing story.</strong>
+                </div>
 
-              <div className="candidate-footer-links">
-                <Link to="/terms">Terms</Link>
-                <Link to="/privacy-policy">Privacy</Link>
-                <Link to="/pricing">Pricing</Link>
-                <Link to="/contact">Contact</Link>
+                <div className="candidate-footer-links">
+                  <Link to="/terms">Terms</Link>
+                  <Link to="/privacy-policy">Privacy</Link>
+                  <Link to="/pricing">Pricing</Link>
+                  <Link to="/contact">Contact</Link>
               </div>
 
               <p>{`© ${new Date().getFullYear()} Job Lithic. Architectural career curation.`}</p>
+              </div>
             </footer>
           </div>
         </main>

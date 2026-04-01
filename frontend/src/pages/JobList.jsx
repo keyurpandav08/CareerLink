@@ -353,22 +353,6 @@ const JobList = () => {
                   })}
                 </div>
               )}
-
-              <section className="jobs-insight-grid">
-                <article className="jobs-insight-panel">
-                  <span>Featured Insight</span>
-                  <h2>Architecture of the Future: The AI Pivot</h2>
-                  <p>See how hiring teams are prioritizing adaptable engineering talent with strong system thinking and role-specific depth.</p>
-                  <Link to="/career-advice">Read the report</Link>
-                </article>
-
-                <article className="jobs-booster-panel">
-                  <Heart size={22} />
-                  <h3>Resume Booster</h3>
-                  <p>Run live AI analysis on your resume and apply with stronger role alignment.</p>
-                  <Link to="/resume-builder">Try it now</Link>
-                </article>
-              </section>
             </>
           )}
         </div>

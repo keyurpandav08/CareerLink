@@ -150,7 +150,7 @@ const EditProfile = () => {
     });
   };
 
-  const profilePhoto = profileMeta.profilePhoto || getProfilePhoto(user);
+  const profilePhoto = profileMeta.profilePhoto || getProfilePhoto(user, formData);
   const displayName = useMemo(() => getDisplayName(formData, user), [formData, user]);
 
   const handlePhotoUpload = async (event) => {
@@ -393,6 +393,18 @@ const EditProfile = () => {
                   value={formData.dateOfBirth || ''}
                   onChange={(event) => updateField('dateOfBirth', event.target.value)}
                 />
+                <SelectField
+                  icon={UserRound}
+                  id="gender"
+                  label="Gender"
+                  value={formData.gender || ''}
+                  onChange={(event) => updateField('gender', event.target.value)}
+                >
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </SelectField>
                 <InputField
                   icon={AtSign}
                   id="portfolioUrl"

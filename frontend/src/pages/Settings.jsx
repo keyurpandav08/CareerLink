@@ -2,11 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bell,
-  Building2,
-  Globe2,
-  ImageUp,
-  KeyRound,
-  Lock,
   Shield,
   UserRound
 } from 'lucide-react';
@@ -35,43 +30,27 @@ const defaultProfile = {
   fullName: '',
   email: '',
   phone: '',
+  gender: '',
+  location: '',
+  dateOfBirth: '',
   skills: '',
   experience: '',
+  tenthMarks: '',
+  twelfthMarks: '',
+  graduation: '',
+  profileSummary: '',
+  languages: '',
+  internships: '',
+  projects: '',
+  certifications: '',
+  resumeUrl: '',
+  resumeFileName: '',
   companyName: '',
   companyLogoUrl: '',
   companyOverview: '',
   companyReviewSummary: '',
   companyReviewCount: 250
 };
-
-const resizeImageToDataUrl = (file) => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.onload = () => {
-    const image = new Image();
-    image.onload = () => {
-      const maxSize = 220;
-      const scale = Math.min(maxSize / image.width, maxSize / image.height, 1);
-      const width = Math.round(image.width * scale);
-      const height = Math.round(image.height * scale);
-
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const context = canvas.getContext('2d');
-      if (!context) {
-        reject(new Error('Canvas unavailable'));
-        return;
-      }
-
-      context.drawImage(image, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', 0.86));
-    };
-    image.onerror = () => reject(new Error('Invalid image file'));
-    image.src = String(reader.result);
-  };
-  reader.onerror = () => reject(new Error('Failed to read image'));
-  reader.readAsDataURL(file);
-});
 
 const Settings = () => {
   const { user, login } = useAuth();
@@ -84,7 +63,6 @@ const Settings = () => {
   const [saving, setSaving] = useState(false);
   const [banner, setBanner] = useState('');
   const [error, setError] = useState('');
-  const [logoInput, setLogoInput] = useState('');
   const [workspaceSearch, setWorkspaceSearch] = useState('');
 
   useEffect(() => {
@@ -107,7 +85,6 @@ const Settings = () => {
       if (cachedProfile) {
         const nextProfile = { ...defaultProfile, ...cachedProfile };
         setProfile(nextProfile);
-        setLogoInput(nextProfile.companyLogoUrl?.startsWith('data:image') ? '' : (nextProfile.companyLogoUrl || ''));
         setLoading(false);
       }
 
@@ -115,7 +92,6 @@ const Settings = () => {
         const response = await api.get(`/users/username/${user.username}`);
         const nextProfile = { ...defaultProfile, ...response.data };
         setProfile(nextProfile);
-        setLogoInput(nextProfile.companyLogoUrl?.startsWith('data:image') ? '' : (nextProfile.companyLogoUrl || ''));
         writeCachedValue(cacheKey, response.data);
       } catch {
         if (!cachedProfile) {
@@ -128,18 +104,6 @@ const Settings = () => {
 
     loadData();
   }, [user?.username]);
-
-  const companyCompletion = useMemo(() => {
-    const checkpoints = [
-      profile.companyName,
-      profile.companyLogoUrl,
-      profile.companyOverview,
-      profile.companyReviewSummary,
-      profile.phone
-    ];
-    const filled = checkpoints.filter((item) => String(item || '').trim()).length;
-    return Math.round((filled / checkpoints.length) * 100);
-  }, [profile]);
 
   const candidateStrength = useMemo(
     () => getProfileStrength(profile),
@@ -154,21 +118,6 @@ const Settings = () => {
     setSettings((prev) => ({ ...prev, [name]: value }));
   };
 
-  const uploadLogo = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const resizedDataUrl = await resizeImageToDataUrl(file);
-      setField('companyLogoUrl', resizedDataUrl);
-      setLogoInput('');
-      setBanner('Logo uploaded and optimized successfully.');
-      setTimeout(() => setBanner(''), 1600);
-    } catch {
-      setError('Failed to process logo image. Try a smaller PNG or JPG file.');
-    }
-  };
-
   const saveProfile = async () => {
     if (!profile.id) return;
 
@@ -179,8 +128,21 @@ const Settings = () => {
         fullName: profile.fullName,
         email: profile.email,
         phone: profile.phone,
+        gender: profile.gender,
+        location: profile.location,
+        dateOfBirth: profile.dateOfBirth,
         skills: profile.skills,
         experience: profile.experience,
+        tenthMarks: profile.tenthMarks,
+        twelfthMarks: profile.twelfthMarks,
+        graduation: profile.graduation,
+        profileSummary: profile.profileSummary,
+        languages: profile.languages,
+        internships: profile.internships,
+        projects: profile.projects,
+        certifications: profile.certifications,
+        resumeUrl: profile.resumeUrl,
+        resumeFileName: profile.resumeFileName,
         companyName: profile.companyName,
         companyLogoUrl: profile.companyLogoUrl,
         companyOverview: profile.companyOverview,

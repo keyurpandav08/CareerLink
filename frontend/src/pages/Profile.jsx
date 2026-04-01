@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import {
   createInitials,
-  formatRelativeDate,
   getDisplayName,
   getProfileMeta,
   getProfessionalTitle,
@@ -56,8 +55,8 @@ const Profile = () => {
   const displayName = useMemo(() => getDisplayName(profile, user), [profile, user]);
   const professionalTitle = useMemo(() => getProfessionalTitle(profile, user), [profile, user]);
   const profilePhoto = useMemo(
-    () => profileMeta.profilePhoto || getProfilePhoto(user),
-    [profileMeta.profilePhoto, user]
+    () => profileMeta.profilePhoto || getProfilePhoto(user, profile),
+    [profile, profileMeta.profilePhoto, user]
   );
   const coverImage = profileMeta.coverImage || '';
   const skills = useMemo(() => parseTagList(profile?.skills), [profile?.skills]);

@@ -332,11 +332,7 @@
   background: #fff1f2;
 }
 
-.jobs-insight-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.8fr);
-  gap: 1rem;
-}
+
 
 .jobs-insight-panel,
 .jobs-booster-panel {
@@ -400,10 +396,6 @@
 
   .jobs-filter-card {
     position: static;
-  }
-
-  .jobs-insight-grid {
-    grid-template-columns: 1fr;
   }
 }
 

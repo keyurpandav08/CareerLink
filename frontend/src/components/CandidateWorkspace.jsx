@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import {
+  BriefcaseBusiness,
   FileText,
   LayoutDashboard,
   Menu,
@@ -41,7 +42,7 @@ const CandidateWorkspace = ({
 
   const displayName = useMemo(() => getDisplayName(profile, user), [profile, user]);
   const headline = useMemo(() => getProfessionalTitle(profile, user), [profile, user]);
-  const profilePhoto = useMemo(() => getProfilePhoto(user), [user]);
+  const profilePhoto = useMemo(() => getProfilePhoto(user, profile), [profile, user]);
 
   return (
     <section className="candidate-workspace">
@@ -113,7 +114,10 @@ const CandidateWorkspace = ({
                 <Menu size={18} />
               </button>
 
-              <Link to="/dashboard" className="candidate-workspace-product-name">Job Lithic</Link>
+              <Link to="/dashboard" className="candidate-workspace-product-name">
+                <span className="candidate-workspace-product-mark">JL</span>
+                <span>Job Lithic</span>
+              </Link>
 
               <label className="candidate-workspace-search" htmlFor="candidateWorkspaceSearch">
                 <Search size={16} />
@@ -128,11 +132,23 @@ const CandidateWorkspace = ({
             </div>
 
             <div className="candidate-workspace-topbar-actions">
+              <Link to="/jobs" className="candidate-workspace-icon-btn" aria-label="Browse jobs">
+                <BriefcaseBusiness size={18} />
+              </Link>
+
+              <Link to="/settings" className="candidate-workspace-icon-btn" aria-label="Open settings">
+                <Settings size={18} />
+              </Link>
+
               <Link to="/profile" className="candidate-workspace-avatar-link">
                 <div className="candidate-workspace-avatar-badge">
                   {profilePhoto
                     ? <img src={profilePhoto} alt={displayName} />
                     : createInitials(displayName)}
+                </div>
+                <div className="candidate-workspace-avatar-copy">
+                  <strong>{displayName}</strong>
+                  <span>Candidate profile</span>
                 </div>
               </Link>
             </div>
@@ -143,14 +159,19 @@ const CandidateWorkspace = ({
           </main>
 
           <footer className="candidate-workspace-footer">
-            <div className="candidate-workspace-footer-brand">Job Lithic</div>
-            <div className="candidate-workspace-footer-links">
-              <Link to="/terms">Terms</Link>
-              <Link to="/privacy-policy">Privacy</Link>
-              <Link to="/pricing">Pricing</Link>
-              <Link to="/contact">Contact</Link>
+            <div className="candidate-workspace-footer-card">
+              <div className="candidate-workspace-footer-copy">
+                <span className="candidate-workspace-footer-kicker">Candidate system</span>
+                <strong>Stay application-ready with a sharper profile, resume, and recruiter-facing story.</strong>
+              </div>
+
+              <div className="candidate-workspace-footer-links">
+                <Link to="/terms">Terms</Link>
+                <Link to="/privacy-policy">Privacy</Link>
+                <Link to="/pricing">Pricing</Link>
+                <Link to="/contact">Contact</Link>
+              </div>
             </div>
-            <p>© {new Date().getFullYear()} Job Lithic. Architectural career curation.</p>
           </footer>
         </div>
       </div>
