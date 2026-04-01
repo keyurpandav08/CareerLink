@@ -3,22 +3,35 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+  background: #f1f5f9; /* clean dashboard grey */
 }
 
 .details-card {
   width: 420px;
   padding: 35px;
-  border-radius: 20px;
-  background: white;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
   text-align: center;
-  animation: fadeInUp 0.6s ease;
+  animation: cardEntry 0.5s ease;
+}
+
+@keyframes cardEntry {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .details-card h2 {
-  font-size: 26px;
-  margin-bottom: 10px;
+  font-size: 24px;
+  font-weight: 600;
+  color: #0f172a;
 }
 
 .status-badge {
@@ -35,74 +48,100 @@
 .rejected { background: #f8d7da; color: #721c24; }
 
 .progress-bar {
-  height: 8px;
-  border-radius: 10px;
-  background: #eee;
+  height: 10px;
+  border-radius: 20px;
+  background: #e2e8f0;
   overflow: hidden;
   margin: 20px 0;
+  position: relative;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4f46e5, #22c55e);
-  width: 30%;
-  animation: loadBar 1s ease forwards;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #6366f1, #22c55e);
+  animation: progressAnim 1.2s ease;
 }
 
-@keyframes loadBar {
+/* glowing animation */
+.progress-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -40px;
+  width: 40px;
+  height: 100%;
+  background: rgba(255,255,255,0.4);
+  filter: blur(8px);
+  animation: shine 2s infinite;
+}
+
+@keyframes progressAnim {
   from { width: 0; }
 }
 
+@keyframes shine {
+  0% { right: -40px; }
+  100% { right: 100%; }
+}
+
 .timeline {
+  margin-top: 25px;
   text-align: left;
-  margin-top: 20px;
 }
 
-.timeline p {
-  margin: 8px 0;
+.timeline h3 {
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: #334155;
+}
+
+/* item */
+.timeline-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  font-weight: 500;
+  transform: translateX(-20px);
   opacity: 0;
-  animation: fadeIn 0.5s forwards;
+  animation: slideIn 0.4s forwards;
 }
 
-.timeline p:nth-child(1) { animation-delay: 0.2s; }
-.timeline p:nth-child(2) { animation-delay: 0.4s; }
-.timeline p:nth-child(3) { animation-delay: 0.6s; }
+.timeline-item:nth-child(2) { animation-delay: 0.2s; }
+.timeline-item:nth-child(3) { animation-delay: 0.4s; }
+.timeline-item:nth-child(4) { animation-delay: 0.6s; }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
+@keyframes slideIn {
   to {
+    transform: translateX(0);
     opacity: 1;
-    transform: translateY(0);
   }
-}
-
-@keyframes fadeIn {
-  to { opacity: 1; }
 }
 .back-btn {
-  margin-top: 20px;
-  padding: 10px 22px;
-  border-radius: 12px;
-  border: 2px solid #06b6d4;
-  background: transparent;
-  color: #06b6d4;
+  margin-top: 25px;
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: none;
+  background: #6366f1;
+  color: white;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: 0.3s;
 }
 
-/* hover effect */
 .back-btn:hover {
-  background: #06b6d4;
-  color: white;
+  background: #4f46e5;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(6, 182, 212, 0.3);
+  box-shadow: 0 10px 20px rgba(99,102,241,0.3);
 }
 
+.back-btn:active {
+  transform: scale(0.95);
+}
 /* click effect */
 .back-btn:active {
   transform: scale(0.95);
@@ -129,18 +168,23 @@
 
 /* icon circle */
 .timeline-item .icon {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  font-size: 12px;
+  font-size: 13px;
+  animation: pop 0.3s ease;
 }
 
+@keyframes pop {
+  0% { transform: scale(0.6); }
+  100% { transform: scale(1); }
+}
 /* states */
 .timeline-item.done {
-  background: #e6f9ed;
+  background: rgba(34,197,94,0.12);
   color: #16a34a;
 }
 
@@ -150,21 +194,27 @@
 }
 
 .timeline-item.active {
-  background: #eef2ff;
-  color: #4f46e5;
+  background: rgba(99,102,241,0.12);
+  color: #6366f1;
 }
 
 .timeline-item.active .icon {
   background: #6366f1;
   color: white;
+  animation: pulse 1.5s infinite;
 }
 
 .timeline-item.rejected {
-  background: #fde2e2;
+  background: rgba(239,68,68,0.12);
   color: #dc2626;
 }
 
 .timeline-item.rejected .icon {
   background: #ef4444;
   color: white;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(99,102,241,0.5); }
+  70% { box-shadow: 0 0 0 10px rgba(99,102,241,0); }
+  100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
 }

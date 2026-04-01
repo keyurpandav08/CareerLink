@@ -24,6 +24,7 @@ import { getProfilePhoto } from '../utils/candidatePortal';
 
 const RESUME_PLACEHOLDER = 'resume_not_uploaded';
 const SIDEBAR_LINKS = [
+    { to: '/', label: 'Home', icon: Home },
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, active: true },
   { to: '/profile', label: 'Profile', icon: UserRound },
   { to: '/applications', label: 'My Applications', icon: FileText },
@@ -31,41 +32,6 @@ const SIDEBAR_LINKS = [
   { to: '/settings', label: 'Settings', icon: Settings }
 ];
 
-const RECOMMENDATION_TEMPLATES = [
-  {
-    id: 'fallback-frontend',
-    title: 'Senior Frontend Engineer',
-    employerName: 'Stellar Cloud Systems',
-    location: 'Remote',
-    salary: '$140k - $180k',
-    tags: ['React', 'TypeScript', 'Tailwind']
-  },
-  {
-    id: 'fallback-designer',
-    title: 'Product UI Designer',
-    employerName: 'Linearity HQ',
-    location: 'San Francisco, CA',
-    salary: '$120k - $160k',
-    tags: ['Figma', 'Design Ops', 'Research']
-  },
-  {
-    id: 'fallback-fullstack',
-    title: 'Full Stack Developer',
-    employerName: 'Velocity AI',
-    location: 'Austin, TX',
-    salary: '$150k - $200k',
-    tags: ['Node.js', 'Next.js', 'APIs'],
-    featured: true
-  },
-  {
-    id: 'fallback-data',
-    title: 'Platform Engineer',
-    employerName: 'Northstar Compute',
-    location: 'Bengaluru, India',
-    salary: 'INR 24 - 36 LPA',
-    tags: ['Java', 'Spring', 'AWS']
-  }
-];
 
 const PROFILE_FIELDS = [
   'fullName',
@@ -202,6 +168,7 @@ const createRecommendation = (job, skills, hasExperience) => {
     id: job._id || job.id || job.title,
     title: job.title,
     company: job.employerName || 'Confidential employer',
+    companyLogo: job.companyLogoUrl || null,
     companyBadge: createInitials(job.employerName || job.title),
     location: job.location || 'Location not shared',
     salary: formatSalary(job.salary),
@@ -265,6 +232,23 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const profilePhoto = getProfilePhoto(user);
+const [jobs, setJobs] = useState([]);
+
+useEffect(() => {
+  const loadJobs = async () => {
+    try {
+      const res = await api.get("/job");
+
+      console.log(res.data); // check this once
+
+      setJobs(Array.isArray(res.data) ? res.data : res.data.data);
+    } catch (err) {
+      console.error("Jobs fetch failed", err);
+    }
+  };
+
+  loadJobs();
+}, []);
 
   useEffect(() => {
     applications.forEach((application) => {
@@ -330,20 +314,21 @@ const Dashboard = () => {
     return { total, pending, reviewed, accepted };
   }, [applications]);
 
-  const recommendedJobs = useMemo(() => {
-    const savedJobRecommendations = savedJobs.slice(0, 3).map((job) => ({
-      ...job,
-      tags: parseSkills(job.skills || '').length ? parseSkills(job.skills) : skills.slice(0, 3)
-    }));
 
-    const fallbackRecommendations = RECOMMENDATION_TEMPLATES.filter(
-      (template) => !savedJobRecommendations.some((savedJob) => savedJob.title === template.title)
-    );
 
-    return [...savedJobRecommendations, ...fallbackRecommendations]
-      .slice(0, 3)
-      .map((job) => createRecommendation(job, skills, profile?.experience && profile.experience !== 'Fresher'));
-  }, [profile?.experience, savedJobs, skills]);
+    const recommendedJobs = useMemo(() => {
+      if (!jobs || jobs.length === 0) return []; // no fake fallback
+
+      return jobs
+        .slice(0, 3)
+        .map((job) =>
+          createRecommendation(
+            job,
+            skills,
+            profile?.experience && profile.experience !== "Fresher"
+          )
+        );
+    }, [jobs, skills, profile?.experience]);
 
   const recentApplications = useMemo(() => {
     const list = [...applications];
@@ -462,11 +447,6 @@ const Dashboard = () => {
             })}
           </nav>
 
-          <div className="candidate-pro-plan">
-            <span>Pro Plan</span>
-            <p>Get unlimited AI resume critiques and priority job matching.</p>
-            <Link to="/pricing" className="candidate-pro-plan-btn">Upgrade Now</Link>
-          </div>
         </aside>
 
         <main className="candidate-main">
@@ -496,10 +476,7 @@ const Dashboard = () => {
             </div>
 
             <div className="candidate-topbar-actions">
-                <Link to="/" className="candidate-home-btn">
-                  <Home size={16} className="home-icon" />
-                  <span>Home</span>
-                </Link>
+
               <Link to="/profile" className="candidate-avatar-button">
                 <div className="candidate-avatar-badge">
                   {profilePhoto
@@ -604,7 +581,13 @@ const Dashboard = () => {
                       className={`candidate-job-card ${job.featured ? 'is-featured' : ''}`}
                     >
                       <div className="candidate-job-card-top">
-                        <div className="candidate-job-logo">{job.companyBadge}</div>
+                        <div className="candidate-job-logo">
+                          {job.companyLogo ? (
+                            <img src={job.companyLogo} alt={job.company} />
+                          ) : (
+                            job.companyBadge
+                          )}
+                        </div>
                         <span className={`candidate-job-badge ${job.featured ? 'is-featured' : ''}`}>
                           {job.featured ? 'Featured Match' : `${job.matchScore}% Match`}
                         </span>
@@ -649,20 +632,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {hasResume(profile.resumeUrl) && (
-                <div className="candidate-resume-strip">
-                  <div className="candidate-resume-strip-copy">
-                    <strong>{profile.resumeFileName || 'Uploaded profile resume'}</strong>
-                    <span>Your latest resume is attached to your candidate profile.</span>
-                  </div>
 
-                  <div className="candidate-resume-strip-actions">
-                    <a href={profile.resumeUrl} target="_blank" rel="noreferrer">
-                      Open current resume
-                    </a>
-                  </div>
-                </div>
-              )}
 
               {filteredApplications.length === 0 ? (
                 <div className="candidate-empty-state candidate-empty-state--table">

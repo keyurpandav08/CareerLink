@@ -315,7 +315,9 @@ const Settings = () => {
             </section>
 
             <section className="candidate-settings-card">
-              <h2><Bell size={16} />Notifications</h2>
+              <h2><Bell size={16} />Notifications
+
+              </h2>
 
               <div className="candidate-settings-switch">
                 <div>

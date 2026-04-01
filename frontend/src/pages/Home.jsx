@@ -155,8 +155,12 @@ const Home = () => {
           <div className="home-hero-copy">
             <span className="home-kicker">The curator&apos;s choice</span>
 
-            <h1>
-              Find Your Dream Job with <span>JobLithic</span>
+            <h1 className="hero-title">
+              <span className="hero-line">Find Your Dream Job</span>
+              <br />
+              <span className="hero-line delay">with</span>
+              <br />
+              <span className="hero-brand">JobLithic</span>
             </h1>
 
             <p className="home-hero-text">

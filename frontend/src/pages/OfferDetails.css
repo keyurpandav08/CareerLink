@@ -1,66 +1,228 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
 .offer-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: #f4f7fb;
+  background: linear-gradient(135deg, #eef2f7, #f8fafc);
+  font-family: 'Inter', sans-serif;
 }
 
+/* Card */
 .offer-card {
-  background: white;
-  padding: 40px;
+  width: 540px;
+  background: #ffffff;
+  padding: 45px;
   border-radius: 16px;
-  width: 450px;
-  text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  box-shadow:
+    0 25px 60px rgba(0,0,0,0.08),
+    0 8px 20px rgba(0,0,0,0.05);
+  animation: cardEntry 0.6s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Title */
-.offer-title {
-  font-size: 28px;
-  margin-bottom: 20px;
+/* subtle top glow */
+.offer-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
 }
 
-/* Text */
-.offer-text {
-  margin: 10px 0;
-  color: #555;
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 12px;
+  margin-bottom: 25px;
 }
 
-/* Center box */
-.offer-highlight {
-  margin: 25px 0;
-  padding: 20px;
-  background: #eef3ff;
-  border-radius: 12px;
+.header h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.company {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-top: 3px;
+}
+
+.date {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* Content */
+.content {
+  animation: fadeUp 0.8s ease;
+}
+
+.content p {
+  font-size: 15.5px;
+  color: #374151;
+  line-height: 1.8;
+  margin: 14px 0;
+}
+
+/* Highlights */
+.content strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.highlight {
+  color: #2563eb;
+  font-weight: 500;
+  position: relative;
+}
+
+/* underline animation */
+.highlight::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0%;
+  height: 2px;
+  background: #2563eb;
+  animation: underlineGrow 1s ease forwards;
+}
+
+/* Signature */
+.signature {
+  margin-top: 30px;
+  animation: fadeUp 1s ease;
+}
+
+.signature p {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.signature strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Footer */
+.footer {
+  margin-top: 35px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* Button */
-.back-btn {
-  margin-top: 20px;
-  padding: 10px 20px;
-  border: none;
-  background: #1e90ff;
+.footer button {
+  padding: 10px 22px;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
   color: white;
+  border: none;
   border-radius: 8px;
   cursor: pointer;
+  font-weight: 500;
+  transition: all 0.25s ease;
 }
 
-/* 🔥 Animations */
-.animate-pop {
-  animation: pop 0.6s ease;
+.footer button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37,99,235,0.35);
 }
 
-.animate-fade {
-  animation: fade 1s ease;
+/* Animations */
+
+@keyframes cardEntry {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-@keyframes pop {
-  0% { transform: scale(0.5); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes fade {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
+@keyframes underlineGrow {
+  to {
+    width: 100%;
+  }
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #f3f4f6;
+  padding: 4px;
+}
+/* Footer layout */
+.footer {
+  margin-top: 40px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Base button */
+.btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+}
+
+/* 🔵 Primary (Download) */
+.btn.primary {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: white;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.25);
+}
+
+.btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37,99,235,0.35);
+}
+
+/* ⚪ Secondary (Back) */
+.btn.secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.btn.secondary:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+.pdf-content {
+  color: #000 !important;
+  opacity: 1 !important;
 }

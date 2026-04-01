@@ -30,7 +30,6 @@ import CareerAdvice from "./pages/CareerAdvice";
 import ResumeBuilder from "./pages/ResumeBuilder";
 import InterviewTips from "./pages/InterviewTips";
 import TalentSearch from "./pages/TalentSearch";
-import Pricing from "./pages/Pricing";
 import ForgotPassword from './pages/ForgotPassword';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -118,7 +117,6 @@ function App() {
               />
               <Route path="interview-tips" element={<InterviewTips />} />
               <Route path="talent-search" element={<TalentSearch />} />
-              <Route path="pricing" element={<Pricing />} />
               <Route
                 path="forgot-password"
                 element={
