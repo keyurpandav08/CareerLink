@@ -1,3 +1,7 @@
+import defaultCandidateMalePhoto from '../assets/2.jpeg';
+import defaultCandidateFemalePhoto from '../assets/default-candidate-female.svg';
+import { getRoleName } from './role';
+
 export const RESUME_PLACEHOLDER = 'resume_not_uploaded';
 const PROFILE_META_STORAGE_KEY = 'joblithic_candidate_profile_meta';
 
@@ -83,7 +87,25 @@ export const getProfessionalTitle = (profile, user) => {
   return getCandidateHeadline(profile);
 };
 
-export const getProfilePhoto = (user) => getProfileMeta(user).profilePhoto || '';
+const normalizeGender = (value = '') => String(value || '').trim().toLowerCase();
+
+export const getCandidateDefaultPhoto = (user, profile = null) => {
+  if (getRoleName(user) !== 'APPLICANT') return '';
+
+  const gender = normalizeGender(profile?.gender || user?.gender);
+  if (gender === 'female' || gender === 'woman' || gender === 'girl') {
+    return defaultCandidateFemalePhoto;
+  }
+
+  if (gender === 'male' || gender === 'man' || gender === 'boy') {
+    return defaultCandidateMalePhoto;
+  }
+
+  return '';
+};
+
+export const getProfilePhoto = (user, profile = null) =>
+  getProfileMeta(user).profilePhoto || getCandidateDefaultPhoto(user, profile);
 
 export const resizeImageToDataUrl = (file, maxSize = 320) => new Promise((resolve, reject) => {
   const reader = new FileReader();

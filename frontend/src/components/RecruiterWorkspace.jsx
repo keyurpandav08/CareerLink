@@ -5,7 +5,6 @@ import {
   BriefcaseBusiness,
   LayoutGrid,
   Search,
-  Settings,
   Users,
   Workflow,
   Home
@@ -54,17 +53,17 @@ const RecruiterWorkspace = ({
         </div>
 
         <nav className="recruiter-sidebar-nav">
-          {NAV_ITEMS.map(({ key, to, label, icon: Icon }) => {
-            const isActive = activeKey === key || location.pathname === to;
+          {NAV_ITEMS.map((item) => {
+            const isActive = activeKey === item.key || location.pathname === item.to;
 
             return (
               <Link
-                key={key}
-                to={to}
+                key={item.key}
+                to={item.to}
                 className={`recruiter-nav-link${isActive ? ' is-active' : ''}`}
               >
-                <Icon size={18} />
-                <span>{label}</span>
+                <item.icon size={18} />
+                <span>{item.label}</span>
               </Link>
             );
           })}
@@ -86,7 +85,10 @@ const RecruiterWorkspace = ({
 
       <div className="recruiter-main">
         <header className="recruiter-topbar">
-          <div className="recruiter-topbar-brand">Job Lithic</div>
+          <Link to="/employer-dashboard" className="recruiter-topbar-brand">
+            <span className="recruiter-topbar-mark">JL</span>
+            <span>Job Lithic</span>
+          </Link>
 
           <div className="recruiter-topbar-search">
             <Search size={16} />
@@ -99,9 +101,29 @@ const RecruiterWorkspace = ({
           </div>
 
           <div className="recruiter-topbar-actions">
+<<<<<<< HEAD
             <button type="button" className="recruiter-icon-btn" aria-label="Settings">
               <Settings size={18} />
             </button>
+=======
+            <button type="button" className="recruiter-icon-btn" aria-label="Notifications">
+              <Bell size={18} />
+            </button>
+            <Link to="/employer-dashboard/analytics" className="recruiter-icon-btn" aria-label="Open analytics">
+              <BarChart3 size={18} />
+            </Link>
+            <Link to="/employer-dashboard?panel=settings" className="recruiter-avatar-pill" aria-label="Open company settings">
+              <div className="recruiter-avatar-pill-media">
+                {profile?.companyLogoUrl
+                  ? <img src={profile.companyLogoUrl} alt={companyName} />
+                  : <span>{avatarLabel}</span>}
+              </div>
+              <div className="recruiter-avatar-pill-copy">
+                <strong>{companyName}</strong>
+                <span>{recruiterName}</span>
+              </div>
+            </Link>
+>>>>>>> 98c4fc460197534d796450d9ce1719b14f89147f
             {topActions || (
               <Link to="/employer-dashboard/jobs" className="recruiter-primary-btn">
                 Post a Job
@@ -140,6 +162,21 @@ const RecruiterWorkspace = ({
 
           {children}
         </main>
+
+        <footer className="recruiter-footer">
+          <div className="recruiter-footer-card">
+            <div className="recruiter-footer-copy">
+              <span className="recruiter-footer-kicker">Recruiter system</span>
+              <strong>Track open roles, move candidates faster, and keep every hiring touchpoint in one flow.</strong>
+            </div>
+
+            <div className="recruiter-footer-links">
+              <Link to="/terms">Terms</Link>
+              <Link to="/privacy-policy">Privacy</Link>
+              <Link to="/contact">Support</Link>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );

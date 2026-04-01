@@ -1,13 +1,21 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Globe, BookOpen, Briefcase, Send, Shield, Star, X } from 'lucide-react';
+import {
+  BookOpen,
+  Briefcase,
+  Globe,
+  Send,
+  Shield,
+  Star,
+  X
+} from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
-const [showSuccess, setShowSuccess] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const currentYear = new Date().getFullYear();
 
   const submitFeedback = () => {
@@ -25,42 +33,68 @@ const [showSuccess, setShowSuccess] = useState(false);
 
   return (
     <footer className="footer-shell">
-      <div className="container footer-grid">
-        <section>
-          <div className="footer-brand">
-            <span className="footer-brand-icon"><Globe size={15} /></span>
-            <h3>JobLithic</h3>
+      <div className="container">
+        <div className="footer-hero">
+          <div className="footer-hero-copy">
+            <span className="footer-kicker">Career system</span>
+            <h2>Built for candidates, recruiters, and fast-moving hiring teams.</h2>
+            <p>
+              Explore roles, shape your profile, and move from discovery to interview inside one polished workflow.
+            </p>
           </div>
-          <p className="footer-brand-copy">
-            Role-based job platform with practical hiring workflows for students and growing teams.
-          </p>
-        </section>
 
-        <section className="footer-col">
-          <h4>Platform</h4>
-          <Link to="/jobs"><Briefcase size={14} />Browse Jobs</Link>
-          <Link to="/post-job"><Briefcase size={14} />Post Job</Link>
-          <Link to="/pricing"><Briefcase size={14} />Pricing</Link>
-        </section>
+          <div className="footer-hero-actions">
+            <Link to="/jobs" className="footer-hero-primary">Browse Jobs</Link>
+            <button type="button" className="footer-hero-secondary" onClick={() => setShowFeedback(true)}>
+              Share Feedback
+            </button>
+          </div>
+        </div>
 
-        <section className="footer-col">
-          <h4>Resources</h4>
-          <Link to="/resume-builder"><BookOpen size={14} />Resume AI</Link>
-          <Link to="/career-advice"><BookOpen size={14} />Career Advice</Link>
-          <Link to="/interview-tips"><BookOpen size={14} />Interview Tips</Link>
-        </section>
+        <div className="footer-grid">
+          <section>
+            <div className="footer-brand">
+              <span className="footer-brand-icon"><Globe size={16} /></span>
+              <div>
+                <h3>JobLithic</h3>
+                <p>Systematic hiring, cleaner candidate journeys, stronger decisions.</p>
+              </div>
+            </div>
+          </section>
 
-        <section className="footer-col">
-          <h4>Legal</h4>
-          <Link to="/privacy-policy"><Shield size={14} />Privacy Policy</Link>
-          <Link to="/terms"><Shield size={14} />Terms of Use</Link>
-          <button type="button" className="feedback-trigger" onClick={() => setShowFeedback(true)}>
-            Share Feedback
-          </button>
-        </section>
+          <section className="footer-col">
+            <h4>Explore</h4>
+            <Link to="/jobs"><Briefcase size={14} />Browse Jobs</Link>
+            <Link to="/pricing"><Briefcase size={14} />Pricing</Link>
+            <Link to="/contact"><Briefcase size={14} />Contact</Link>
+          </section>
+
+          <section className="footer-col">
+            <h4>Candidate Tools</h4>
+            <Link to="/resume-builder"><BookOpen size={14} />Resume AI</Link>
+            <Link to="/career-advice"><BookOpen size={14} />Career Advice</Link>
+            <Link to="/interview-tips"><BookOpen size={14} />Interview Tips</Link>
+          </section>
+
+          <section className="footer-col">
+            <h4>Trust</h4>
+            <Link to="/privacy-policy"><Shield size={14} />Privacy Policy</Link>
+            <Link to="/terms"><Shield size={14} />Terms of Use</Link>
+            <button type="button" className="feedback-trigger" onClick={() => setShowFeedback(true)}>
+              Leave a Review
+            </button>
+          </section>
+        </div>
+
+        <div className="footer-bottom">
+          <span>{`Copyright ${currentYear} JobLithic`}</span>
+          <div className="footer-bottom-links">
+            <Link to="/privacy-policy">Privacy</Link>
+            <Link to="/terms">Terms</Link>
+            <Link to="/contact">Support</Link>
+          </div>
+        </div>
       </div>
-
-      <div className="footer-bottom">© {currentYear} JobLithic. All rights reserved.</div>
 
       {showFeedback && (
         <div className="feedback-backdrop">
@@ -95,15 +129,15 @@ const [showSuccess, setShowSuccess] = useState(false);
               <Send size={14} />
               Send Feedback
             </button>
+
             {showSuccess && (
               <div className="success-overlay">
                 <div className="success-box">
-                  <div className="tick">✔</div>
-                  <h3>Feedback Submitted Successfully!</h3>
+                  <div className="tick">OK</div>
+                  <h3>Feedback submitted successfully.</h3>
                 </div>
               </div>
             )}
-
           </div>
         </div>
       )}

@@ -1,31 +1,84 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Bookmark, BookmarkCheck, MapPin, Search, IndianRupee } from 'lucide-react';
+import {
+  Bookmark,
+  BookmarkCheck,
+  ChevronDown,
+  Heart,
+  IndianRupee,
+  MapPin,
+  Search
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 import './JobList.css';
 
-const JobList = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [searchKeyword, setSearchKeyword] = useState(searchParams.get('search') || searchParams.get('skill') || '');
-const [minSalary, setMinSalary] = useState(0);
-const [maxSalary, setMaxSalary] = useState(5000000);
-const [filteredJobs, setFilteredJobs] = useState([]);
-const [selectedTypes, setSelectedTypes] = useState([]);
-const [selectedExp, setSelectedExp] = useState([]);
-const [savedJobIds, setSavedJobIds] = useState([]);
-const getInitials = (value = '') =>
+const EXPERIENCE_FILTERS = [
+  { label: 'Entry Level', min: 0, max: 1 },
+  { label: 'Mid-Level', min: 2, max: 5 },
+  { label: 'Senior Level', min: 6, max: 9 },
+  { label: 'Director +', min: 10, max: 99 }
+];
+
+const JOB_TYPE_FILTERS = ['Remote', 'Full-time', 'Contract', 'Part-time', 'Internship'];
+
+const parseYears = (value) => {
+  const numbers = String(value || '').match(/\d+/g)?.map(Number) || [];
+  if (!numbers.length) return null;
+  return numbers.length === 1 ? numbers[0] : Math.max(...numbers);
+};
+
+const formatSalary = (salary) => {
+  const numeric = Number(salary);
+  if (!Number.isFinite(numeric) || numeric <= 0) return 'Compensation not listed';
+  if (numeric >= 100000) return `INR ${(numeric / 100000).toFixed(0)} LPA`;
+  return `INR ${numeric.toLocaleString('en-IN')}`;
+};
+
+const formatPostedDate = (createdAt) => {
+  if (!createdAt) return 'Recently posted';
+  const posted = new Date(createdAt);
+  const today = new Date();
+  const diffDays = Math.max(0, Math.floor((today - posted) / 86400000));
+  if (diffDays === 0) return 'Posted today';
+  if (diffDays === 1) return 'Posted yesterday';
+  return `Posted ${diffDays} days ago`;
+};
+
+const createInitials = (value = '') =>
   value
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join('') || 'JL';
+
+const buildTags = (job) => {
+  const skills = String(job.keySkills || '')
+    .split(/[,\n|]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+
+  return [job.jobType || 'Full-time', ...skills].slice(0, 3);
+};
+
+const JobList = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState(searchParams.get('search') || searchParams.get('skill') || '');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [salaryCap, setSalaryCap] = useState(2500000);
+  const [selectedTypes, setSelectedTypes] = useState(['Remote']);
+  const [selectedExperience, setSelectedExperience] = useState(['Mid-Level', 'Senior Level']);
+  const [sortBy, setSortBy] = useState('recent');
+  const [savedJobIds, setSavedJobIds] = useState([]);
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('savedJobs') || '[]');
@@ -34,29 +87,66 @@ const getInitials = (value = '') =>
 
   useEffect(() => {
     const fetchJobs = async () => {
-      setLoading(true);
+      const searchTerm = searchParams.get('search') || searchParams.get('skill');
+      const url = searchTerm ? `/job?search=${encodeURIComponent(searchTerm)}` : '/job';
+      const cacheKey = `jobs:${url}`;
+      const cachedJobs = readCachedValue(cacheKey, []);
+      const hasCachedJobs = Array.isArray(cachedJobs) && cachedJobs.length > 0;
+
+      if (hasCachedJobs) {
+        setJobs(cachedJobs);
+        setLoading(false);
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
       setError('');
       try {
-        const searchTerm = searchParams.get('search') || searchParams.get('skill');
-        const url = searchTerm ? `/job?search=${encodeURIComponent(searchTerm)}` : '/job';
         const response = await api.get(url);
-        const data = Array.isArray(response.data) ? response.data : [];
-        setJobs(data);
-        setFilteredJobs(data); // ✅ ADD THIS
+        const nextJobs = Array.isArray(response.data) ? response.data : [];
+        setJobs(nextJobs);
+        writeCachedValue(cacheKey, nextJobs);
       } catch (requestError) {
-        setError('Failed to load jobs. Please try again later.');
+        if (!hasCachedJobs) {
+          setError(requestError.response?.data?.error || 'Failed to load jobs. Please try again later.');
+        }
       } finally {
         setLoading(false);
+        setRefreshing(false);
       }
     };
 
     fetchJobs();
   }, [searchParams]);
 
-  const headline = useMemo(() => {
-    const searchTerm = searchParams.get('search') || searchParams.get('skill');
-    return searchTerm ? `Results for "${searchTerm}"` : 'Latest Job Openings';
-  }, [searchParams]);
+  const filteredJobs = useMemo(() => {
+    const normalizedLocation = locationFilter.trim().toLowerCase();
+
+    const filtered = jobs.filter((job) => {
+      const salary = Number(job.salary) || 0;
+      const experienceYears = parseYears(job.experienceLevel);
+      const normalizedType = String(job.jobType || '').toLowerCase();
+      const jobLocation = String(job.location || '').toLowerCase();
+
+      const matchesLocation = !normalizedLocation || jobLocation.includes(normalizedLocation);
+      const matchesSalary = salary <= salaryCap;
+      const matchesType = !selectedTypes.length || selectedTypes.some((type) => normalizedType.includes(type.toLowerCase()));
+      const matchesExperience = !selectedExperience.length || selectedExperience.some((selected) => {
+        const match = EXPERIENCE_FILTERS.find((item) => item.label === selected);
+        if (!match || experienceYears === null) return false;
+        return experienceYears >= match.min && experienceYears <= match.max;
+      });
+
+      return matchesLocation && matchesSalary && matchesType && matchesExperience;
+    });
+
+    return filtered.sort((left, right) => {
+      if (sortBy === 'salary-high') return (Number(right.salary) || 0) - (Number(left.salary) || 0);
+      if (sortBy === 'salary-low') return (Number(left.salary) || 0) - (Number(right.salary) || 0);
+      return new Date(right.createdAt || 0) - new Date(left.createdAt || 0);
+    });
+  }, [jobs, locationFilter, salaryCap, selectedTypes, selectedExperience, sortBy]);
 
   const submitSearch = (event) => {
     event.preventDefault();
@@ -75,413 +165,197 @@ const getInitials = (value = '') =>
     }
 
     const stored = JSON.parse(localStorage.getItem('savedJobs') || '[]');
-    const jobsList = Array.isArray(stored) ? stored : [];
-    const exists = jobsList.some((item) => item.id === job.id);
+    const savedJobs = Array.isArray(stored) ? stored : [];
+    const exists = savedJobs.some((item) => item.id === job.id);
     const updated = exists
-      ? jobsList.filter((item) => item.id !== job.id)
-      : [...jobsList, job];
+      ? savedJobs.filter((item) => item.id !== job.id)
+      : [...savedJobs, job];
 
     localStorage.setItem('savedJobs', JSON.stringify(updated));
     setSavedJobIds(updated.map((item) => item.id));
   };
-    const handleApply = () => {
-      const normalize = (str) =>
-        str?.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-      const result = jobs.filter((job) => {
-        const salary = Number(job.salary) || 0;
+  const toggleFilterValue = (value, current, setter) => {
+    setter(current.includes(value)
+      ? current.filter((item) => item !== value)
+      : [...current, value]);
+  };
 
-        // ✅ TYPE MATCH
-        const normalize = (str) =>
-          str?.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const clearFilters = () => {
+    setLocationFilter('');
+    setSalaryCap(2500000);
+    setSelectedTypes([]);
+    setSelectedExperience([]);
+    setSortBy('recent');
+  };
 
-        const matchType =
-          selectedTypes.length === 0 ||
-          selectedTypes.some(
-            (type) => normalize(type) === normalize(job.jobType || "Full-time")
-          );
-
-        // ✅ EXPERIENCE MATCH
-       const parseExp = (exp) => {
-         if (!exp) return [0, 0];
-
-         const numbers = exp.match(/\d+/g);
-         if (!numbers) return [0, 0];
-
-         return [Number(numbers[0]), Number(numbers[1] || numbers[0])];
-       };
-
-       const matchExp =
-         selectedExp.length === 0 ||
-         selectedExp.some((selected) => {
-           const [jobMin, jobMax] = parseExp(job.experienceLevel);
-           const [selMin, selMax] = parseExp(selected);
-
-           return jobMin >= selMin && jobMax <= selMax;
-         });
-
-        // ✅ SALARY MATCH
-        const matchSalary =
-          salary >= minSalary && salary <= maxSalary;
-
-        return matchType && matchExp && matchSalary;
-      });
-
-      setFilteredJobs(result);
-    };
   return (
-    <section className="job-list-wrap">
-      <div className="container">
+    <section className="jobs-page">
+      <div className="container jobs-shell">
+        <aside className="jobs-filter-card">
+          <div className="jobs-filter-head">
+            <div>
+              <span className="jobs-filter-eyebrow">Filters</span>
+              <h2>Refine Roles</h2>
+            </div>
+            <button type="button" onClick={clearFilters}>Clear All</button>
+          </div>
 
-        <header className="jobs-head">
-          <h1>{headline}</h1>
-          <p>Search by title, location, or tech stack. Save jobs to review later.</p>
-        </header>
+          <div className="jobs-filter-group">
+            <label htmlFor="jobsLocation">Location</label>
+            <div className="jobs-filter-input">
+              <MapPin size={15} />
+              <input
+                id="jobsLocation"
+                type="text"
+                value={locationFilter}
+                onChange={(event) => setLocationFilter(event.target.value)}
+                placeholder="City, state, or country"
+              />
+            </div>
+          </div>
 
-        <form onSubmit={submitSearch} className="jobs-search-form">
-          <div className="jobs-search-input">
-            <Search size={18} />
+          <div className="jobs-filter-group">
+            <div className="jobs-salary-head">
+              <label htmlFor="jobsSalaryRange">Salary Range</label>
+              <span>{formatSalary(salaryCap)}</span>
+            </div>
             <input
-              type="text"
-              value={searchKeyword}
-              onChange={(event) => setSearchKeyword(event.target.value)}
-              placeholder="Search jobs, companies, skills..."
+              id="jobsSalaryRange"
+              type="range"
+              min="200000"
+              max="5000000"
+              step="50000"
+              value={salaryCap}
+              onChange={(event) => setSalaryCap(Number(event.target.value))}
             />
           </div>
-          <button type="submit">Search</button>
 
-          {(searchParams.get('search') || searchParams.get('skill')) && (
-            <button
-              type="button"
-              className="clear-btn"
-              onClick={() => {
-                setSearchKeyword('');
-                setSearchParams({});
-              }}
-            >
-              Clear
-            </button>
-          )}
-        </form>
+          <div className="jobs-filter-group">
+            <label>Experience Level</label>
+            <div className="jobs-checkbox-stack">
+              {EXPERIENCE_FILTERS.map((item) => (
+                <label key={item.label} className="jobs-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={selectedExperience.includes(item.label)}
+                    onChange={() => toggleFilterValue(item.label, selectedExperience, setSelectedExperience)}
+                  />
+                  <span>{item.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
-        {loading && <div className="jobs-state">Loading jobs...</div>}
-        {error && <div className="jobs-state error">{error}</div>}
+          <div className="jobs-filter-group">
+            <label>Job Type</label>
+            <div className="jobs-chip-row">
+              {JOB_TYPE_FILTERS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={`jobs-chip ${selectedTypes.includes(item) ? 'is-active' : ''}`}
+                  onClick={() => toggleFilterValue(item, selectedTypes, setSelectedTypes)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+        </aside>
 
-        {!loading && !error && (
-          <>
-            {jobs.length === 0 ? (
-              <div className="jobs-state">No jobs found for current search.</div>
-            ) : (
+        <div className="jobs-main">
+          <header className="jobs-hero-card">
+            <span className="jobs-kicker">Live Opportunities</span>
+            <h1>Explore Open Roles</h1>
+            <p>Curated opportunities powered by your live data, employer activity, and the refreshed JobLithic UI.</p>
+          </header>
 
-              // 🔥 NEW LAYOUT START
-              <div className="jobs-layout">
+          <form onSubmit={submitSearch} className="jobs-search-strip">
+            <label className="jobs-search-input" htmlFor="jobsSearch">
+              <Search size={18} />
+              <input
+                id="jobsSearch"
+                type="search"
+                value={searchKeyword}
+                onChange={(event) => setSearchKeyword(event.target.value)}
+                placeholder="Search for roles, companies, or skills..."
+              />
+            </label>
+            <button type="submit" className="jobs-search-btn">Search</button>
+          </form>
 
-                {/* SIDEBAR */}
-                <aside className="jobs-sidebar">
-                  <h3>Filters</h3>
+          <div className="jobs-toolbar">
+            <div>
+              <strong>{filteredJobs.length}</strong>
+              <span>matching jobs</span>
+            </div>
 
-                  <div className="filter-group">
-                    <h4>Job Type</h4>
-                    <label className="filter-option">
-                      <input
-                        type="checkbox"
-                        checked={selectedTypes.includes("Full-time")}
-                        onChange={() => {
-                          const value = "Full-time";
-                          setSelectedTypes(prev =>
-                            prev.includes(value)
-                              ? prev.filter(v => v !== value)
-                              : [...prev, value]
-                          );
-                        }}
-                      />
-                      <span>Full Time</span>
-                    </label>
-
-                    <label className="filter-option">
-                      <input
-                        type="checkbox"
-                        checked={selectedTypes.includes("Part-time")}
-                        onChange={() => {
-                          const value = "Part-time";
-                          setSelectedTypes(prev =>
-                            prev.includes(value)
-                              ? prev.filter(v => v !== value)
-                              : [...prev, value]
-                          );
-                        }}
-                      />
-                      <span>Part Time</span>
-                    </label>
-                    <label className="filter-option">
-                      <input
-                        type="checkbox"
-                        checked={selectedTypes.includes("Remote")}
-                        onChange={() => {
-                          const value = "Remote";
-                          setSelectedTypes(prev =>
-                            prev.includes(value)
-                              ? prev.filter(v => v !== value)
-                              : [...prev, value]
-                          );
-                        }}
-                      />
-                      <span>Remote</span>
-                    </label>
-                  </div>
-
-                  <div className="filter-group">
-                    <h4>Experience</h4>
-
-                   <label className="filter-option">
-                     <input
-                       type="checkbox"
-                       onChange={() => {
-                         const value = "0-2 years";
-                         setSelectedExp(prev =>
-                           prev.includes(value)
-                             ? prev.filter(v => v !== value)
-                             : [...prev, value]
-                         );
-                       }}
-                     />
-                     <span>0-2 years</span>
-                   </label>
-
-                   <label className="filter-option">
-                     <input
-                       type="checkbox"
-                       onChange={() => {
-                         const value = "2-4 years";
-                         setSelectedExp(prev =>
-                           prev.includes(value)
-                             ? prev.filter(v => v !== value)
-                             : [...prev, value]
-                         );
-                       }}
-                     />
-                     <span>2-4 years</span>
-                   </label>
-                   <label className="filter-option">
-                     <input
-                       type="checkbox"
-                       onChange={() => {
-                         const value = "4-6 years";
-                         setSelectedExp(prev =>
-                           prev.includes(value)
-                             ? prev.filter(v => v !== value)
-                             : [...prev, value]
-                         );
-                       }}
-                     />
-                     <span>4-6 years</span>
-                   </label>
-                   <label className="filter-option">
-                     <input
-                       type="checkbox"
-                       onChange={() => {
-                         const value = "6-8 years";
-                         setSelectedExp(prev =>
-                           prev.includes(value)
-                             ? prev.filter(v => v !== value)
-                             : [...prev, value]
-                         );
-                       }}
-                     />
-                     <span>6-8 years</span>
-                   </label>
-                   <label className="filter-option">
-                     <input
-                       type="checkbox"
-                       onChange={() => {
-                         const value = "8+ years";
-                         setSelectedExp(prev =>
-                           prev.includes(value)
-                             ? prev.filter(v => v !== value)
-                             : [...prev, value]
-                         );
-                       }}
-                     />
-                     <span>8+ years</span>
-                   </label>
-
-                  </div>
-                 <div className="filter-group salary-group">
-                   <h4>Salary Range</h4>
-
-                   <div className="range-slider">
-
-                     {/* MIN */}
-                     <input
-                       type="range"
-                       min="0"
-                       max="5000000"
-                       step="50000"
-                       value={minSalary}
-                       onChange={(e) => setMinSalary(Number(e.target.value))}
-                       className="thumb thumb-left"
-                     />
-
-                     {/* MAX */}
-                     <input
-                       type="range"
-                       min="0"
-                       max="5000000"
-                       step="50000"
-                       value={maxSalary}
-                       onChange={(e) => setMaxSalary(Number(e.target.value))}
-                       className="thumb thumb-right"
-                     />
-
-                     {/* TRACK */}
-                     <div className="slider-track"></div>
-                     <div
-                       className="slider-range"
-                       style={{
-                         left: `${(minSalary / 5000000) * 100}%`,
-                         right: `${100 - (maxSalary / 5000000) * 100}%`
-                       }}
-                     ></div>
-
-                   </div>
-
-                   {/* INPUT BOXES */}
-                   <div className="salary-inputs">
-
-                     <div className="input-box">
-                       <input
-                         type="number"
-                         value={minSalary}
-                         onChange={(e) => setMinSalary(Number(e.target.value))}
-                       />
-                       <span className="label">Min</span>
-                     </div>
-
-                     <span className="dash">—</span>
-
-                     <div className="input-box">
-                       <input
-                         type="number"
-                         value={maxSalary}
-                         onChange={(e) => setMaxSalary(Number(e.target.value))}
-                       />
-                       <span className="label">Max</span>
-                     </div>
-
-                   </div>
-
-                 </div>
-                <div className="filter-actions">
-                  <button onClick={handleApply} className="apply-btn">
-                    Apply
-                  </button>
-
-                  <button onClick={() => {
-                            setSelectedTypes([]);
-                            setSelectedExp([]);
-                            setMinSalary(0);
-                            setMaxSalary(5000000);
-                            setFilteredJobs(jobs);
-                          }} className="reset-btn">
-                    Reset
-                  </button>
-                </div>
-                </aside>
-
-                {/* JOBS */}
-                <div className="jobs-content">
-                  <div className="jobs-grid">
-
-                    {filteredJobs.map((job) => {
-                      const isSaved = savedJobIds.includes(job.id);
-
-                      return (
-                        <article key={job.id} className="job-card-modern">
-
-                          {/* TOP SECTION */}
-                          <div className="job-top">
-
-                            <div className="job-left">
-                              <div className="job-logo">
-                                {job.companyLogoUrl ? (
-                                  <img src={job.companyLogoUrl} alt={job.employerName} />
-                                ) : (
-                                  getInitials(job.employerName)
-                                )}
-                              </div>
-
-                              <div className="job-main">
-                                <h3>{job.title}</h3>
-                                <p className="company">{job.employerName || 'Confidential'}</p>
-                              </div>
-                            </div>
-
-                            <span className={`job-pill ${String(job.status).toLowerCase()}`}>
-                              {job.status}
-                            </span>
-
-                          </div>
-
-                          {/* META */}
-                          <div className="job-meta">
-                            <span><MapPin size={14} /> {job.location}</span>
-                            <span><IndianRupee size={14} /> {Math.round(job.salary / 100000)} LPA</span>
-                          </div>
-
-                          {/* TAGS */}
-                          <div className="job-tags">
-                            <span>{job.jobType || "Full-time"}</span>
-                            <span>{job.experienceLevel || "0-2 years"}</span>
-                          </div>
-
-                          {/* DESCRIPTION */}
-                          <p className="job-desc">
-                            {(job.jobHighlights || job.description || '').slice(0, 120)}...
-                          </p>
-
-                          {/* FOOTER */}
-                          <div className="job-footer">
-
-                            {/* POSTED DATE */}
-                           <span className="posted">
-                             {job.createdAt
-                               ? new Date(job.createdAt).toLocaleDateString("en-GB", {
-                                   day: "2-digit",
-                                   month: "short",
-                                   year: "numeric"
-                                 })
-                               : "No Date"}
-                           </span>
-
-                            {/* ACTIONS */}
-                            <div className="actions">
-
-                               <div className="job-card-actions">
-                                   <Link to={`/jobs/${job.id}`}>View Details</Link>
-
-                                   <button type="button" onClick={() => toggleSave(job)} className={isSaved ? 'saved' : ''}>
-                                       {isSaved ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
-                                       {isSaved ? 'Saved' : 'Save'}
-                                       </button>
-                                   </div>
-
-                            </div>
-
-                          </div>
-
-                        </article>
-                      );
-                    })}
-
-                  </div>
-                </div>
-
+            <label className="jobs-sort">
+              <span>Sort by</span>
+              <div>
+                <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+                  <option value="recent">Most Recent</option>
+                  <option value="salary-high">Highest Salary</option>
+                  <option value="salary-low">Lowest Salary</option>
+                </select>
+                <ChevronDown size={16} />
               </div>
-              // 🔥 NEW LAYOUT END
+            </label>
+          </div>
 
-            )}
-          </>
-        )}
+          {loading && !jobs.length && <div className="jobs-state-card">Loading jobs...</div>}
+          {refreshing && jobs.length > 0 && <div className="jobs-state-card">Refreshing jobs...</div>}
+          {error && !jobs.length && <div className="jobs-state-card jobs-state-card-error">{error}</div>}
+
+          {(!loading || jobs.length > 0) && !error && (
+            <>
+              {filteredJobs.length === 0 ? (
+                <div className="jobs-state-card">No jobs match the current filters.</div>
+              ) : (
+                <div className="jobs-results">
+                  {filteredJobs.map((job) => {
+                    const isSaved = savedJobIds.includes(job.id);
+
+                    return (
+                      <article key={job.id} className="jobs-role-card">
+                        <div className="jobs-role-brand">
+                          <div className="jobs-role-logo">
+                            {job.companyLogoUrl ? (
+                              <img src={job.companyLogoUrl} alt={job.employerName} />
+                            ) : (
+                              <span>{createInitials(job.employerName)}</span>
+                            )}
+                          </div>
+
+                          <div className="jobs-role-copy">
+                            <h3>{job.title}</h3>
+                            <div className="jobs-role-meta">
+                              <span>{job.employerName || 'Confidential employer'}</span>
+                              <span><MapPin size={14} />{job.location || 'Location not shared'}</span>
+                              <span><IndianRupee size={14} />{formatSalary(job.salary)}</span>
+                              <span>{formatPostedDate(job.createdAt)}</span>
+                            </div>
+                            <div className="jobs-role-tags">
+                              {buildTags(job).map((tag) => <span key={`${job.id}-${tag}`}>{tag}</span>)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="jobs-role-actions">
+                          <Link to={`/jobs/${job.id}`} className="jobs-apply-btn">Apply Now</Link>
+                          <button type="button" className={`jobs-save-btn ${isSaved ? 'is-saved' : ''}`} onClick={() => toggleSave(job)}>
+                            {isSaved ? <BookmarkCheck size={17} /> : <Bookmark size={17} />}
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </section>
   );

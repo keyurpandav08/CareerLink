@@ -206,7 +206,7 @@ function App() {
               <Route
                 path="settings"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute role="APPLICANT">
                     <Settings />
                   </ProtectedRoute>
                 }

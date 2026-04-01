@@ -15,6 +15,7 @@ import com.keyurpandav.jobber.repository.RoleRepository;
 import com.keyurpandav.jobber.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -80,6 +81,7 @@ public class AdminService {
         return AdminUserDto.toDto(userRepository.save(user));
     }
 
+    @Transactional
     public void deleteUser(Long userId, Long currentAdminId) {
         User user = getUser(userId);
         if (user.getId().equals(currentAdminId)) {
@@ -106,6 +108,7 @@ public class AdminService {
         return AdminJobDto.toDto(jobRepository.save(job));
     }
 
+    @Transactional
     public void deleteJob(Long jobId) {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Job not found with id: " + jobId));

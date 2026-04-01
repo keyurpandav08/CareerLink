@@ -60,7 +60,7 @@ public class ApplicationService {
     }
 
     public boolean deletebyid(Long appId) {
-        getUser(appId);
+        getApplication(appId);
         applicationRepository.deleteById(appId);
         return true;
     }

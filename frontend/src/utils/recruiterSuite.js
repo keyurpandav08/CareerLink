@@ -106,7 +106,12 @@ const getSkillAlignment = (candidateSkillsValue, jobSkillsValue) => {
   return overlap / jobSkills.length;
 };
 
-export const getMatchScore = (application, jobs = []) => {
+export const getMatchScore = (application, jobs = [], aiMatches = {}) => {
+  const aiMatch = aiMatches?.[application?.id];
+  if (aiMatch?.matchScore !== undefined && aiMatch?.matchScore !== null) {
+    return Number(aiMatch.matchScore);
+  }
+
   const job = getRelatedJob(application, jobs);
   if (!job) return null;
 
@@ -236,10 +241,10 @@ export const buildJobTypeDistribution = (jobs) =>
 export const getStatusCount = (applications, status) =>
   applications.filter((application) => application.status === status).length;
 
-export const sortApplicationsByMatch = (applications, jobs) =>
+export const sortApplicationsByMatch = (applications, jobs, aiMatches = {}) =>
   [...applications].sort((left, right) => {
-    const rightScore = getMatchScore(right, jobs) ?? -1;
-    const leftScore = getMatchScore(left, jobs) ?? -1;
+    const rightScore = getMatchScore(right, jobs, aiMatches) ?? -1;
+    const leftScore = getMatchScore(left, jobs, aiMatches) ?? -1;
     if (rightScore !== leftScore) return rightScore - leftScore;
 
     const rightDate = getApplicationDate(right)?.getTime() || 0;

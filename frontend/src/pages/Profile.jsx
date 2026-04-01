@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import {
   createInitials,
-  formatRelativeDate,
   getDisplayName,
   getProfileMeta,
   getProfessionalTitle,
@@ -17,6 +16,7 @@ import {
   resizeImageToDataUrl,
   saveProfileMeta,
 } from '../utils/candidatePortal';
+import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 import './Profile.css';
 
 const Profile = () => {
@@ -28,11 +28,21 @@ const Profile = () => {
     const [popup, setPopup] = useState("");
   useEffect(() => {
     const loadProfile = async () => {
+      const cacheKey = `candidate-profile:${user.username}`;
+      const cachedProfile = readCachedValue(cacheKey, null);
+
+      if (cachedProfile) {
+        setProfile(cachedProfile);
+      }
+
       try {
         const response = await api.get(`/users/username/${user.username}`);
         setProfile(response.data);
+        writeCachedValue(cacheKey, response.data);
       } catch {
-        setError('Unable to load profile.');
+        if (!cachedProfile) {
+          setError('Unable to load profile.');
+        }
       }
     };
 
@@ -45,8 +55,8 @@ const Profile = () => {
   const displayName = useMemo(() => getDisplayName(profile, user), [profile, user]);
   const professionalTitle = useMemo(() => getProfessionalTitle(profile, user), [profile, user]);
   const profilePhoto = useMemo(
-    () => profileMeta.profilePhoto || getProfilePhoto(user),
-    [profileMeta.profilePhoto, user]
+    () => profileMeta.profilePhoto || getProfilePhoto(user, profile),
+    [profile, profileMeta.profilePhoto, user]
   );
   const coverImage = profileMeta.coverImage || '';
   const skills = useMemo(() => parseTagList(profile?.skills), [profile?.skills]);

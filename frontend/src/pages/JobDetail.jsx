@@ -1,47 +1,44 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Bookmark,
   BookmarkCheck,
   Briefcase,
-  DollarSign,
   MapPin,
   Share2,
-  Sparkles,
-  Star
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getRoleName } from '../utils/role';
 import api from '../services/api';
+import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 import './JobDetail.css';
 
 const defaultApplyData = {
   expectedSalary: '',
   noticePeriod: 'Immediate',
-  resumeUrl: '',
   experienceSummary: '',
   agreeEligibility: false,
   agreeProfileAccurate: false,
-  agreeDataConsent: false
+  agreeDataConsent: false,
+  resumeFile: null,
+  resumeFileName: ''
 };
 
-const splitContent = (value) => {
-  if (!value) return [];
-  return value
+const splitContent = (value) =>
+  String(value || '')
     .split(/\r?\n|[|,]/)
     .map((item) => item.trim())
     .filter(Boolean);
-};
-const handleApply = () => {
 
-  if (!profile.resumeUrl) {
-    alert("❌ Please upload your resume before applying");
-    return;
-  }
-
-  // continue submit
+const formatSalary = (salary) => {
+  const numeric = Number(salary);
+  if (!Number.isFinite(numeric) || numeric <= 0) return 'Compensation not listed';
+  if (numeric >= 100000) return `INR ${(numeric / 100000).toFixed(0)} LPA`;
+  return `INR ${numeric.toLocaleString('en-IN')}`;
 };
+
 const createInitials = (value = '') =>
   value
     .split(' ')
@@ -50,10 +47,20 @@ const createInitials = (value = '') =>
     .map((part) => part[0]?.toUpperCase())
     .join('') || 'JL';
 
-const formatSalary = (salary) => {
-  if (!salary) return 'Salary not disclosed';
-  if (salary >= 100000) return `INR ${(salary / 100000).toFixed(1).replace('.0', '')} LPA`;
-  return `INR ${salary}`;
+const formatPostedDate = (createdAt) => {
+  if (!createdAt) return 'Recently posted';
+  const posted = new Date(createdAt);
+  const today = new Date();
+  const diffDays = Math.max(0, Math.floor((today - posted) / 86400000));
+  if (diffDays === 0) return 'Posted today';
+  if (diffDays === 1) return 'Posted yesterday';
+  return `Posted ${diffDays} days ago`;
+};
+
+const computeSimilarity = (job, currentJob) => {
+  const currentSkills = new Set(splitContent(currentJob.keySkills).map((item) => item.toLowerCase()));
+  const nextSkills = splitContent(job.keySkills).map((item) => item.toLowerCase());
+  return nextSkills.filter((item) => currentSkills.has(item)).length;
 };
 
 const JobDetail = () => {
@@ -61,6 +68,10 @@ const JobDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [job, setJob] = useState(null);
+  const [candidateProfile, setCandidateProfile] = useState(null);
+  const [relatedJobs, setRelatedJobs] = useState([]);
+  const [aiInsight, setAiInsight] = useState(null);
+  const [aiError, setAiError] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [applyOpen, setApplyOpen] = useState(false);
@@ -69,40 +80,152 @@ const JobDetail = () => {
   const [applyFeedback, setApplyFeedback] = useState('');
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [saved, setSaved] = useState(false);
-const fileRef = useRef()
-const [popup, setPopup] = useState("");
-const handleResumeUpload = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const fileRef = useRef(null);
 
-  setApplyData((prev) => ({
-    ...prev,
-    resumeFile: file,
-    resumeFileName: file.name,
-  }));
+  const roleName = getRoleName(user);
+  const isApplicant = roleName === 'APPLICANT';
 
-  // 🔥 POPUP
-  setPopup("Resume uploaded successfully");
-
-  setTimeout(() => {
-    setPopup("");
-  }, 2000);
-};
   useEffect(() => {
-    const fetchJob = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get(`/job/${id}`);
-        setJob(response.data);
-      } catch {
-        setError('Failed to load job details.');
-      } finally {
+    const fetchPageData = async () => {
+      const cacheKey = `job-detail:${id}:${user?.username || 'guest'}`;
+      const cachedState = readCachedValue(cacheKey, null);
+      const hasCachedJob = Boolean(cachedState?.job);
+
+      if (hasCachedJob) {
+        setJob(cachedState.job || null);
+        setRelatedJobs(Array.isArray(cachedState.relatedJobs) ? cachedState.relatedJobs : []);
+        setCandidateProfile(cachedState.candidateProfile || null);
+        setAiInsight(cachedState.aiInsight || null);
+        setAiError(cachedState.aiError || '');
         setLoading(false);
+      } else {
+        setLoading(true);
+      }
+
+      try {
+        const [jobResponse, relatedResponse] = await Promise.all([
+          api.get(`/job/${id}`),
+          api.get('/job')
+        ]);
+        const nextJob = jobResponse.data;
+        setJob(nextJob);
+
+        const relatedList = Array.isArray(relatedResponse.data) ? relatedResponse.data : [];
+        const nextRelatedJobs = relatedList
+          .filter((item) => String(item.id) !== String(id))
+          .sort((left, right) => computeSimilarity(right, nextJob) - computeSimilarity(left, nextJob))
+          .slice(0, 3);
+
+        setRelatedJobs(nextRelatedJobs);
+        setError('');
+        setLoading(false);
+        writeCachedValue(cacheKey, {
+          job: nextJob,
+          relatedJobs: nextRelatedJobs,
+          candidateProfile: cachedState?.candidateProfile || null,
+          aiInsight: cachedState?.aiInsight || null,
+          aiError: cachedState?.aiError || ''
+        });
+
+        if (user?.username && isApplicant) {
+          const candidateId = user?.id;
+
+          setAiError(cachedState?.aiInsight ? '' : 'Refreshing live AI match insights...');
+
+          if (candidateId) {
+            Promise.allSettled([
+              api.get(`/users/username/${user.username}`),
+              api.get(`/api/ai/candidate/${candidateId}/job/${id}`, { timeout: 8000 })
+            ]).then(([profileResult, aiResult]) => {
+              let nextProfile = cachedState?.candidateProfile || null;
+              let nextAiInsight = cachedState?.aiInsight || null;
+              let nextAiError = '';
+
+              if (profileResult.status === 'fulfilled') {
+                nextProfile = profileResult.value.data;
+                setCandidateProfile(nextProfile);
+              }
+
+              if (aiResult.status === 'fulfilled') {
+                nextAiInsight = aiResult.value.data;
+                nextAiError = '';
+                setAiInsight(nextAiInsight);
+                setAiError('');
+              } else {
+                nextAiInsight = null;
+                nextAiError = aiResult.reason?.response?.data?.error || 'Add your Gemini key in application.properties to unlock live AI match insights.';
+                setAiInsight(null);
+                setAiError(nextAiError);
+              }
+
+              writeCachedValue(cacheKey, {
+                job: nextJob,
+                relatedJobs: nextRelatedJobs,
+                candidateProfile: nextProfile,
+                aiInsight: nextAiInsight,
+                aiError: nextAiError
+              });
+            });
+          } else {
+            api.get(`/users/username/${user.username}`)
+              .then(async (profileRes) => {
+                setCandidateProfile(profileRes.data);
+
+                try {
+                  const insightRes = await api.get(`/api/ai/candidate/${profileRes.data.id}/job/${id}`, {
+                    timeout: 8000
+                  });
+                  setAiInsight(insightRes.data);
+                  setAiError('');
+                  writeCachedValue(cacheKey, {
+                    job: nextJob,
+                    relatedJobs: nextRelatedJobs,
+                    candidateProfile: profileRes.data,
+                    aiInsight: insightRes.data,
+                    aiError: ''
+                  });
+                } catch (aiRequestError) {
+                  const nextAiError = aiRequestError.response?.data?.error || 'Add your Gemini key in application.properties to unlock live AI match insights.';
+                  setAiInsight(null);
+                  setAiError(nextAiError);
+                  writeCachedValue(cacheKey, {
+                    job: nextJob,
+                    relatedJobs: nextRelatedJobs,
+                    candidateProfile: profileRes.data,
+                    aiInsight: null,
+                    aiError: nextAiError
+                  });
+                }
+              })
+              .catch(() => {
+                setCandidateProfile(null);
+              });
+          }
+        } else {
+          setCandidateProfile(null);
+          setAiInsight(null);
+          setAiError(user ? 'Switch to an applicant account to see AI match insights.' : 'Log in as a candidate to unlock AI match insights.');
+          writeCachedValue(cacheKey, {
+            job: nextJob,
+            relatedJobs: nextRelatedJobs,
+            candidateProfile: null,
+            aiInsight: null,
+            aiError: user ? 'Switch to an applicant account to see AI match insights.' : 'Log in as a candidate to unlock AI match insights.'
+          });
+        }
+      } catch (requestError) {
+        if (!hasCachedJob) {
+          setError(requestError.response?.data?.error || 'Failed to load job details.');
+        }
+      } finally {
+        if (!hasCachedJob) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchJob();
-  }, [id]);
+    fetchPageData();
+  }, [id, isApplicant, user, user?.username]);
 
   useEffect(() => {
     if (!job) return;
@@ -111,22 +234,20 @@ const handleResumeUpload = (e) => {
     setSaved(savedJobs.some((item) => item.id === job.id));
   }, [job]);
 
-  const roleName = getRoleName(user);
-  const isApplicant = roleName === 'APPLICANT';
-  const canApply = Boolean(user) && isApplicant && job?.status === 'Open';
-
   const highlights = useMemo(() => splitContent(job?.jobHighlights), [job?.jobHighlights]);
   const skills = useMemo(() => splitContent(job?.keySkills), [job?.keySkills]);
   const requirements = useMemo(() => splitContent(job?.jobRequirements), [job?.jobRequirements]);
+  const hasProfileResume = Boolean(candidateProfile?.resumeUrl && candidateProfile.resumeUrl !== 'resume_not_uploaded');
 
+  const canApply = Boolean(user) && isApplicant && String(job?.status).toLowerCase() === 'open';
   const isApplyFormValid = useMemo(() => (
     applyData.expectedSalary.trim() &&
     applyData.experienceSummary.trim().length >= 30 &&
-    applyData.resumeFile &&
+    (applyData.resumeFile || hasProfileResume) &&
     applyData.agreeEligibility &&
     applyData.agreeProfileAccurate &&
     applyData.agreeDataConsent
-  ), [applyData]);
+  ), [applyData, hasProfileResume]);
 
   const toggleSave = () => {
     if (!user) {
@@ -175,7 +296,7 @@ const handleResumeUpload = (e) => {
       return;
     }
 
-    if (roleName !== 'APPLICANT') {
+    if (!isApplicant) {
       setApplyFeedback('Only candidate accounts can apply.');
       return;
     }
@@ -202,257 +323,276 @@ const handleResumeUpload = (e) => {
 
     try {
       setApplying(true);
-      await api.post('/applications/apply-json', {
-        userId: user.id,
-        jobId: job.id,
-        applicationNote: note,
-        resumeUrl: applyData.resumeUrl.trim() || undefined
-      });
+
+      if (applyData.resumeFile) {
+        const formData = new FormData();
+        formData.append('userId', user.id);
+        formData.append('jobId', job.id);
+        formData.append('applicationNote', note);
+        formData.append('resume', applyData.resumeFile);
+
+        await api.post('/applications/apply', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        await api.post('/applications/apply-json', {
+          userId: user.id,
+          jobId: job.id,
+          applicationNote: note,
+          resumeUrl: candidateProfile?.resumeUrl
+        });
+      }
+
       setApplyFeedback('');
       setApplyOpen(false);
       setApplyData(defaultApplyData);
       setSuccessModalOpen(true);
     } catch (requestError) {
-      const message = requestError.response?.data?.error || 'Failed to submit application.';
-      setApplyFeedback(message);
+      setApplyFeedback(requestError.response?.data?.error || 'Failed to submit application.');
     } finally {
       setApplying(false);
     }
   };
 
-  if (loading) return <div className="job-detail-wrap container">Loading job details...</div>;
-  if (error) return <div className="job-detail-wrap container">{error}</div>;
-  if (!job) return <div className="job-detail-wrap container">Job not found.</div>;
+  if (loading) return <div className="job-detail-page container">Loading job details...</div>;
+  if (error) return <div className="job-detail-page container">{error}</div>;
+  if (!job) return <div className="job-detail-page container">Job not found.</div>;
 
   return (
-    <section className="job-detail-wrap">
+    <section className="job-detail-page">
       <div className="container job-detail-shell">
-        <Link to="/jobs" className="back-link"><ArrowLeft size={16} />Back to jobs</Link>
+        <Link to="/jobs" className="job-back-link"><ArrowLeft size={16} />Back to jobs</Link>
 
         <div className="job-detail-grid">
-          <article className="job-hero-card">
-            <header className="job-company-head">
-              <div className="job-company-brand">
-                {job.companyLogoUrl ? (
-                  <img src={job.companyLogoUrl} alt={job.employerName} className="company-logo" />
-                ) : (
-                  <div className="company-logo company-logo-fallback">{createInitials(job.employerName)}</div>
-                )}
+          <div className="job-detail-main">
+            <article className="job-hero-panel">
+              <div className="job-hero-brand">
+                <div className="job-hero-logo">
+                  {job.companyLogoUrl ? (
+                    <img src={job.companyLogoUrl} alt={job.employerName} />
+                  ) : (
+                    <span>{createInitials(job.employerName)}</span>
+                  )}
+                </div>
 
                 <div>
-                  <span className="company-kicker">Featured opportunity</span>
                   <h1>{job.title}</h1>
-                  <div className="company-name-row">
-                    <strong>{job.employerName || 'Confidential company'}</strong>
-                    <span className={`job-status ${String(job.status).toLowerCase()}`}>{job.status}</span>
-                  </div>
-                  <div className="company-review-row">
-                    <span><Star size={14} />{job.companyReviewSummary || 'Trusted employer profile'}</span>
-                    <span>{job.companyReviewCount || 0}+ reviews</span>
+                  <div className="job-hero-meta">
+                    <span><Briefcase size={15} />{job.employerName || 'Confidential employer'}</span>
+                    <span><MapPin size={15} />{job.location || 'Location not shared'}</span>
+                    <span>{formatPostedDate(job.createdAt)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="job-meta-badges">
-                <span><Briefcase size={15} />{job.jobType || 'Full-time'}</span>
-                <span><MapPin size={15} />{job.location}</span>
-                <span><DollarSign size={15} />{formatSalary(job.salary)}</span>
-                <span><Sparkles size={15} />{job.experienceLevel || '0-2 years'}</span>
+              <div className="job-hero-actions">
+                <button type="button" className="job-primary-btn" onClick={openApplyModal} disabled={!canApply}>
+                  {canApply ? 'Apply Now' : (isApplicant ? 'Application unavailable' : 'Candidate account required')}
+                </button>
+                <button type="button" className={`job-secondary-btn ${saved ? 'is-saved' : ''}`} onClick={toggleSave}>
+                  {saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+                  {saved ? 'Saved' : 'Save Job'}
+                </button>
+                <button type="button" className="job-icon-btn" onClick={shareJob}>
+                  <Share2 size={16} />
+                </button>
               </div>
-            </header>
+            </article>
 
-            <section className="job-section-card">
-              <div className="section-title-row">
-                <h2>Job details</h2>
-                <span>Quick overview</span>
-              </div>
+            <section className="job-content-section">
+              <h2>The Role</h2>
+              <p>{job.description || 'Role description is not available yet.'}</p>
+            </section>
 
-              <div className="detail-grid">
-                <div>
-                  <h3>Job highlights</h3>
-                  <ul>
-                    {(highlights.length ? highlights : [
-                      'Structured hiring process',
-                      'Role aligned to current skill demand',
-                      'Fast-response employer dashboard'
-                    ]).map((item) => <li key={item}>{item}</li>)}
-                  </ul>
-                </div>
+            <section className="job-content-section">
+              <h2>Key Responsibilities</h2>
+              <ul>
+                {(highlights.length ? highlights : ['Lead execution across the core responsibilities of this role.']).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
 
-                <div>
-                  <h3>Key skills</h3>
-                  <div className="skill-chip-row">
-                    {(skills.length ? skills : ['Communication', 'Problem Solving']).map((item) => (
-                      <span key={item} className="skill-chip">{item}</span>
-                    ))}
-                  </div>
-                </div>
+            <section className="job-content-section">
+              <h2>Qualifications</h2>
+              <div className="job-qualification-grid">
+                <article className="job-qualification-card">
+                  <strong>Technical Proficiency</strong>
+                  <p>{skills.length ? skills.join(', ') : 'Role-specific skills will be shared during screening.'}</p>
+                </article>
 
-                <div>
-                  <h3>Location</h3>
-                  <p>{job.location}</p>
-                </div>
+                <article className="job-qualification-card">
+                  <strong>Experience Alignment</strong>
+                  <p>{job.experienceLevel || 'Experience expectations will be shared by the employer.'}</p>
+                </article>
 
-                <div>
-                  <h3>Salary</h3>
-                  <p>{formatSalary(job.salary)}</p>
-                </div>
+                <article className="job-qualification-card">
+                  <strong>Requirements Snapshot</strong>
+                  <p>{requirements.length ? requirements.slice(0, 4).join(', ') : 'General role requirements will be clarified by the hiring team.'}</p>
+                </article>
               </div>
             </section>
 
-            <section className="job-section-card">
-              <div className="section-title-row">
-                <h2>Description</h2>
-                <span>Role and company context</span>
-              </div>
+            <section className="job-company-panel">
+              <span>Inside {job.employerName || 'the company'}</span>
+              <h2>{`${job.employerName || 'This employer'}: Building with intention.`}</h2>
+              <p>{job.aboutCompany || `${job.employerName || 'This employer'} is actively hiring and looking for candidates who can contribute from day one.`}</p>
 
-              <div className="description-block">
-                <h3>Role overview</h3>
-                <p>{job.description}</p>
-              </div>
-
-              <div className="description-block">
-                <h3>About company</h3>
-                <p>{job.aboutCompany || `${job.employerName} is actively hiring and looking for candidates who can contribute from day one.`}</p>
-              </div>
-
-              <div className="description-block">
-                <h3>Job requirements</h3>
-                <ul>
-                  {(requirements.length ? requirements : ['Relevant technical foundation', 'Ability to work in team environments', 'Strong learning mindset']).map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+              <div className="job-company-metrics">
+                <div>
+                  <strong>{formatSalary(job.salary)}</strong>
+                  <span>Comp range</span>
+                </div>
+                <div>
+                  <strong>{job.companyReviewCount || 0}+</strong>
+                  <span>Employee reviews</span>
+                </div>
               </div>
             </section>
-          </article>
+          </div>
 
-          <aside className="job-side-card">
-            <div className="job-side-actions">
-              <button type="button" className="apply-main-btn" onClick={openApplyModal} disabled={!canApply}>
-                {canApply ? 'Apply now' : (roleName === 'EMPLOYER' ? 'Employer account cannot apply' : 'Application unavailable')}
-              </button>
-              <button type="button" className={`side-action-btn ${saved ? 'saved' : ''}`} onClick={toggleSave}>
-                {saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
-                {saved ? 'Saved' : 'Save job'}
-              </button>
-              <button type="button" className="side-action-btn" onClick={shareJob}>
-                <Share2 size={16} />
-                Share job
-              </button>
-            </div>
+          <aside className="job-detail-side">
+            <article className="job-ai-panel">
+              <div className="job-ai-head">
+                <h3>AI Match Insights</h3>
+                <Sparkles size={18} />
+              </div>
 
-            {applyFeedback && <div className="apply-feedback">{applyFeedback}</div>}
+              {aiInsight ? (
+                <>
+                  <div className="job-ai-score">
+                    <strong>{aiInsight.matchScore}%</strong>
+                    <span>Live match score</span>
+                  </div>
+                  <h4>{aiInsight.headline}</h4>
+                  <p>{aiInsight.summary}</p>
+
+                  <div className="job-ai-list">
+                    <small>Top Matches</small>
+                    <div className="job-ai-tags">
+                      {(aiInsight.topMatches || []).map((item) => <span key={item}>{item}</span>)}
+                    </div>
+                  </div>
+
+                  {(aiInsight.potentialGaps || []).length > 0 && (
+                    <div className="job-ai-list">
+                      <small>Potential Gaps</small>
+                      <div className="job-ai-tags is-gap">
+                        {aiInsight.potentialGaps.map((item) => <span key={item}>{item}</span>)}
+                      </div>
+                    </div>
+                  )}
+
+                  <button type="button" className="job-ai-cta" onClick={openApplyModal}>
+                    {canApply ? aiInsight.action || 'Apply with this profile' : 'Unlock with candidate account'}
+                  </button>
+                </>
+              ) : (
+                <div className="job-ai-empty">
+                  <p>{aiError}</p>
+                </div>
+              )}
+            </article>
+
+            <article className="job-similar-panel">
+              <h3>Similar Jobs</h3>
+              <div className="job-similar-list">
+                {relatedJobs.length ? relatedJobs.map((item) => (
+                  <Link key={item.id} to={`/jobs/${item.id}`} className="job-similar-card">
+                    <div className="job-similar-logo">
+                      {item.companyLogoUrl ? (
+                        <img src={item.companyLogoUrl} alt={item.employerName} />
+                      ) : (
+                        <span>{createInitials(item.employerName)}</span>
+                      )}
+                    </div>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <span>{item.employerName}</span>
+                      <small>{formatSalary(item.salary)}</small>
+                    </div>
+                  </Link>
+                )) : (
+                  <p className="job-similar-empty">More related roles will appear here as soon as matching data is available.</p>
+                )}
+              </div>
+            </article>
           </aside>
         </div>
 
+        {applyFeedback && <div className="job-apply-feedback">{applyFeedback}</div>}
+
         {applyOpen && (
-          <div className="apply-modal-overlay">
-            <form className="apply-modal" onSubmit={submitApplication}>
-              <h3>Application Requirements</h3>
-              <p>Complete all required fields before submitting.</p>
+          <div className="job-apply-overlay" onClick={closeApplyModal}>
+            <form className="job-apply-modal" onSubmit={submitApplication} onClick={(event) => event.stopPropagation()}>
+              <h3>Apply for {job.title}</h3>
+              <p>Complete the quick screening details below before submitting your application.</p>
 
-              <label>Expected Salary (LPA)</label>
-              <input
-                type="text"
-                value={applyData.expectedSalary}
-                onChange={(event) => {
-                  const value = event.target.value;
+              <label>
+                <span>Expected Salary</span>
+                <input
+                  type="text"
+                  value={applyData.expectedSalary}
+                  onChange={(event) => setApplyData((prev) => ({ ...prev, expectedSalary: event.target.value }))}
+                  placeholder="e.g. 12 LPA"
+                  required
+                />
+              </label>
 
-                  // Allow only numbers + optional decimal
-                  if (/^\d*\.?\d*$/.test(value)) {
-                    setApplyData((prev) => ({
-                      ...prev,
-                      expectedSalary: value,
-                    }));
-                  }
-                }}
-                placeholder="e.g. 6 LPA"
-                required
-              />
-              <label>Notice Period</label>
-              <select
-                value={applyData.noticePeriod}
-                onChange={(event) => setApplyData((prev) => ({ ...prev, noticePeriod: event.target.value }))}
-              >
-                <option value="Immediate">Immediate</option>
-                <option value="15 Days">15 Days</option>
-                <option value="30 Days">30 Days</option>
-                <option value="60+ Days">60+ Days</option>
-              </select>
-
-              <label>Upload Resume *</label>
-
-
-
-              <input
-                type="file"
-                ref={fileRef}
-                hidden
-                accept=".pdf,.doc,.docx"
-                onChange={handleResumeUpload}
-              />
-
-              {!applyData.resumeFile ? (
-                <button
-                  type="button"
-                  className="btn upload"
-                  onClick={() => fileRef.current.click()}
+              <label>
+                <span>Notice Period</span>
+                <select
+                  value={applyData.noticePeriod}
+                  onChange={(event) => setApplyData((prev) => ({ ...prev, noticePeriod: event.target.value }))}
                 >
-                  Upload Resume
-                </button>
-              ) : (
-                <div className="resume-box">
-                  <p>📄 {applyData.resumeFileName}</p>
+                  <option value="Immediate">Immediate</option>
+                  <option value="15 Days">15 Days</option>
+                  <option value="30 Days">30 Days</option>
+                  <option value="60+ Days">60+ Days</option>
+                </select>
+              </label>
 
-                  <div className="resume-actions">
-                    <button
-                      type="button"
-                      className="btn view"
-                      onClick={() =>
-                        window.open(URL.createObjectURL(applyData.resumeFile))
-                      }
-                    >
-                      View
-                    </button>
-
-                    <button
-                      type="button"
-                      className="btn delete"
-                      onClick={() =>
-                        setApplyData((prev) => ({
-                          ...prev,
-                          resumeFile: null,
-                          resumeFileName: "",
-                        }))
-                      }
-                    >
-                      Delete
-                    </button>
-                  </div>
+              <div className="job-resume-block">
+                <div>
+                  <strong>Resume</strong>
+                  <p>{hasProfileResume ? 'Your profile resume is ready, or upload a fresher one for this application.' : 'Upload a resume to continue with this application.'}</p>
                 </div>
-              )}
-          {popup && (
-            <div className="popup-overlay">
-              <div className="popup-box">
-                ✓ {popup}
+
+                <input
+                  type="file"
+                  ref={fileRef}
+                  hidden
+                  accept=".pdf,.doc,.docx"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (!file) return;
+                    setApplyData((prev) => ({ ...prev, resumeFile: file, resumeFileName: file.name }));
+                  }}
+                />
+
+                <button type="button" className="job-secondary-btn" onClick={() => fileRef.current?.click()}>
+                  {applyData.resumeFile ? 'Replace Resume' : 'Upload Resume'}
+                </button>
+
+                {(applyData.resumeFileName || candidateProfile?.resumeFileName) && (
+                  <div className="job-resume-chip">
+                    {applyData.resumeFileName || candidateProfile?.resumeFileName}
+                  </div>
+                )}
               </div>
-            </div>
-          )}
-              <small className="apply-helper-note">
-                If you leave this blank, your latest uploaded profile resume will be used automatically when available.
-              </small>
 
-              <label>Screening Summary (required, min 30 chars)</label>
-              <textarea
-                value={applyData.experienceSummary}
-                onChange={(event) => setApplyData((prev) => ({ ...prev, experienceSummary: event.target.value }))}
-                placeholder="Briefly explain relevant skills and project experience."
-                minLength={30}
-                required
-              />
+              <label>
+                <span>Screening Summary</span>
+                <textarea
+                  value={applyData.experienceSummary}
+                  onChange={(event) => setApplyData((prev) => ({ ...prev, experienceSummary: event.target.value }))}
+                  placeholder="Briefly explain your relevant skills, projects, and why you are a strong fit."
+                  minLength={30}
+                  required
+                />
+              </label>
 
-              <label className="check-row">
+              <label className="job-check-row">
                 <input
                   type="checkbox"
                   checked={applyData.agreeEligibility}
@@ -461,16 +601,16 @@ const handleResumeUpload = (e) => {
                 <span>I confirm I am eligible for this role.</span>
               </label>
 
-              <label className="check-row">
+              <label className="job-check-row">
                 <input
                   type="checkbox"
                   checked={applyData.agreeProfileAccurate}
                   onChange={(event) => setApplyData((prev) => ({ ...prev, agreeProfileAccurate: event.target.checked }))}
                 />
-                <span>I confirm profile details are accurate.</span>
+                <span>I confirm my profile details are accurate.</span>
               </label>
 
-              <label className="check-row">
+              <label className="job-check-row">
                 <input
                   type="checkbox"
                   checked={applyData.agreeDataConsent}
@@ -479,9 +619,9 @@ const handleResumeUpload = (e) => {
                 <span>I consent to share this information with the employer.</span>
               </label>
 
-              <div className="apply-modal-actions">
-                <button type="button" className="ghost-btn-inline" onClick={closeApplyModal}>Cancel</button>
-                <button type="submit" className="apply-main-btn" disabled={!isApplyFormValid || applying}>
+              <div className="job-apply-actions">
+                <button type="button" className="job-secondary-btn" onClick={closeApplyModal}>Cancel</button>
+                <button type="submit" className="job-primary-btn" disabled={!isApplyFormValid || applying}>
                   {applying ? 'Submitting...' : 'Submit Application'}
                 </button>
               </div>
@@ -490,18 +630,14 @@ const handleResumeUpload = (e) => {
         )}
 
         {successModalOpen && (
-          <div className="apply-modal-overlay">
-            <div className="apply-success-modal">
-              <div className="success-mark">✓</div>
+          <div className="job-apply-overlay" onClick={() => setSuccessModalOpen(false)}>
+            <div className="job-success-modal" onClick={(event) => event.stopPropagation()}>
+              <div className="job-success-mark">✓</div>
               <h3>Application submitted successfully</h3>
-              <p>
-                Your profile has been shared with the employer. You can track the status from the applications section.
-              </p>
-              <div className="apply-modal-actions">
-                <Link to="/applications" className="apply-main-btn">View applications</Link>
-                <button type="button" className="ghost-btn-inline" onClick={() => setSuccessModalOpen(false)}>
-                  Close
-                </button>
+              <p>Your profile has been shared with the employer. You can track the latest stage from the applications section.</p>
+              <div className="job-apply-actions">
+                <Link to="/applications" className="job-primary-btn">View applications</Link>
+                <button type="button" className="job-secondary-btn" onClick={() => setSuccessModalOpen(false)}>Close</button>
               </div>
             </div>
           </div>

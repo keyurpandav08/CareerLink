@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   BookOpenCheck,
-  KeyRound,
   Sparkles,
   Target,
   Upload
@@ -11,8 +10,6 @@ import {
 import CandidateWorkspace from '../components/CandidateWorkspace';
 import api from '../services/api';
 import './ResumeBuilder.css';
-
-const GEMINI_KEY_STORAGE = 'joblithic_gemini_api_key';
 
 const ROLE_OPTIONS = {
   JAVA_DEVELOPER: {
@@ -43,6 +40,7 @@ const ROLE_OPTIONS = {
 
 const calculateScore = (analysis, targetRole) => {
   if (!analysis) return ROLE_OPTIONS[targetRole]?.previewScore || 84;
+  if (analysis.score) return analysis.score;
 
   const detectedSkills = analysis.detectedSkills?.length || 0;
   const missingSkills = analysis.missingSkills?.length || 0;
@@ -53,24 +51,16 @@ const ResumeBuilder = () => {
   const [resumeFile, setResumeFile] = useState(null);
   const [targetRole, setTargetRole] = useState('JAVA_DEVELOPER');
   const [additionalSkills, setAdditionalSkills] = useState('');
-  const [geminiApiKey, setGeminiApiKey] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [feedback, setFeedback] = useState('');
   const [result, setResult] = useState(null);
-
-  useEffect(() => {
-    setGeminiApiKey(localStorage.getItem(GEMINI_KEY_STORAGE) || '');
-  }, []);
-
-  const persistGeminiKey = (value) => {
-    setGeminiApiKey(value);
-    localStorage.setItem(GEMINI_KEY_STORAGE, value);
-  };
 
   const handleAnalyze = async (event) => {
     event.preventDefault();
     setError('');
+    setFeedback('');
 
     if (!resumeFile) {
       setError('Please upload your resume first.');
@@ -89,10 +79,26 @@ const ResumeBuilder = () => {
       });
 
       setResult(response.data.analysis);
+      setFeedback('Live AI analysis completed successfully.');
     } catch (requestError) {
       setError(requestError.response?.data?.error || 'Resume analysis failed.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAutoUpdate = async () => {
+    if (!result?.resumeRewrite) {
+      setError('Run the AI analysis first to unlock an updated resume summary.');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(result.resumeRewrite);
+      setFeedback('AI-updated resume summary copied to clipboard.');
+      setTimeout(() => setFeedback(''), 2200);
+    } catch {
+      setError('Could not copy the AI resume summary. Please try again.');
     }
   };
 
@@ -168,7 +174,8 @@ const ResumeBuilder = () => {
               <span>Architecturally Analyzed.</span>
             </h1>
             <p>
-              Our existing resume analysis API is still powering this page. Add a Gemini API key below if you want it saved locally for future AI upgrades, but the current analysis flow remains unchanged.
+              Live Gemini-powered analysis now reviews your resume against the role you want, highlights missing skills,
+              and surfaces matching jobs from the actual platform data.
             </p>
           </div>
 
@@ -205,16 +212,6 @@ const ResumeBuilder = () => {
               </label>
             </div>
 
-            <label className="resume-insights-key">
-              <KeyRound size={16} />
-              <input
-                type="password"
-                value={geminiApiKey}
-                onChange={(event) => persistGeminiKey(event.target.value)}
-                placeholder="Optional Gemini API key"
-              />
-            </label>
-
             <button type="submit" disabled={loading}>
               {loading ? 'Analyzing...' : 'Analyze Resume'}
             </button>
@@ -222,6 +219,7 @@ const ResumeBuilder = () => {
         </section>
 
         {error && <div className="resume-insights-error">{error}</div>}
+        {feedback && <div className="resume-insights-error resume-insights-success">{feedback}</div>}
 
         <div className="resume-insights-bento">
           <section className="resume-score-card">
@@ -257,7 +255,7 @@ const ResumeBuilder = () => {
             </div>
 
             <blockquote>
-              Insight: closing your top missing skills could materially improve visibility for the next hiring stage.
+              Insight: {result?.insight || 'Closing your top missing skills could materially improve visibility for the next hiring stage.'}
             </blockquote>
           </section>
 
@@ -271,14 +269,14 @@ const ResumeBuilder = () => {
               ))}
             </div>
 
-            <button type="button">Update Resume Automatically</button>
+            <button type="button" onClick={handleAutoUpdate}>Update Resume Automatically</button>
           </section>
 
           <section className="resume-growth-card">
             <h2>Growth Paths</h2>
             <div className="resume-growth-list">
               {growthPaths.map((item) => (
-                <article key={item}>
+                <Link key={item} to={`/jobs?search=${encodeURIComponent(item)}`} className="resume-growth-link">
                   <div className="resume-growth-icon">
                     <BookOpenCheck size={18} />
                   </div>
@@ -287,7 +285,7 @@ const ResumeBuilder = () => {
                     <span>Recommended next learning milestone</span>
                   </div>
                   <ArrowRight size={16} />
-                </article>
+                </Link>
               ))}
             </div>
           </section>
@@ -314,7 +312,7 @@ const ResumeBuilder = () => {
                 <Link key={`${job.id}-${job.title}`} to={job.id ? `/jobs/${job.id}` : '/jobs'} className="resume-market-job">
                   <div className="resume-market-job-copy">
                     <strong>{job.title}</strong>
-                    <span>{job.company} • {job.location}</span>
+                    <span>{`${job.company} • ${job.location}`}</span>
                   </div>
                   <Target size={16} />
                 </Link>
