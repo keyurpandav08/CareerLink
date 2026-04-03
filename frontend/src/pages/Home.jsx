@@ -15,6 +15,7 @@ import infosysLogo from '../assets/logo/companies/Infosys.png';
 import tcsLogo from '../assets/logo/companies/TCS.png';
 import microsoftLogo from '../assets/logo/companies/Microsoft.png';
 import sitingmanLogo from '../assets/siting-man-transparent.png';
+import { useAuthModal } from '../context/AuthModalContext';
 import './Home.css';
 
 const platformStats = [
@@ -99,6 +100,7 @@ const companyLogos = [
 ];
 
 const Home = () => {
+  const { openAuthModal } = useAuthModal();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [experienceLevel, setExperienceLevel] = useState('Experience level');
   const [animatedStats, setAnimatedStats] = useState(
@@ -153,14 +155,14 @@ const Home = () => {
       <section className="home-hero">
         <div className="container home-hero-grid">
           <div className="home-hero-copy">
-            <span className="home-kicker">The curator&apos;s choice</span>
+            <span className="home-kicker">Career search, refined</span>
 
             <h1>
-              Find Your Dream Job with <span>JobLithic</span>
+              Remote careers for curious people, from anywhere.
             </h1>
 
             <p className="home-hero-text">
-              Search thousands of verified jobs, apply instantly, and track your career growth all in one place.
+              Find verified roles, create a stronger profile, and manage the full application journey in one soft, focused workspace.
             </p>
 
             <form onSubmit={handleSearchSubmit} className="home-search">
@@ -213,10 +215,10 @@ const Home = () => {
             </div>
 
             <div className="home-hero-actions">
-              <Link to="/register" className="btn-primary-glow home-primary-action">
-                Create account
+              <button type="button" className="btn-primary-glow home-primary-action" onClick={() => openAuthModal('register')}>
+                Get Started
                 <ArrowRight size={18} />
-              </Link>
+              </button>
               <Link to="/jobs" className="btn-outline home-secondary-action">
                 Explore openings
               </Link>
@@ -267,7 +269,7 @@ const Home = () => {
         <div className="container">
           <div className="home-section-heading">
             <span>Why it feels better</span>
-            <h2>A fresher landing page built around clarity, not clutter.</h2>
+            <h2>A softer job-search experience built around focus, not noise.</h2>
           </div>
 
           <div className="home-feature-grid">
@@ -288,7 +290,7 @@ const Home = () => {
         <div className="container home-showcase-grid">
           <div className="home-showcase-copy">
             <span>Role discovery</span>
-            <h2>Browse focused categories instead of getting lost in noisy listings.</h2>
+            <h2>Browse focused categories instead of getting lost in crowded listings.</h2>
             <p>
               Each category groups the roles candidates actually search for most, making it easier to move from
               exploration to application.
@@ -335,14 +337,14 @@ const Home = () => {
           <div className="home-cta-panel">
             <div>
               <span>Ready to get started?</span>
-              <h2>Set up your profile and start applying with a sharper first impression.</h2>
+              <h2>Set up your profile and start applying with a polished first impression.</h2>
             </div>
 
             <div className="home-cta-actions">
-              <Link to="/register" className="btn-primary-glow home-primary-action">
-                Join JobLithic
+              <button type="button" className="btn-primary-glow home-primary-action" onClick={() => openAuthModal('register')}>
+                Join CareerLink
                 <ArrowRight size={18} />
-              </Link>
+              </button>
               <Link to="/jobs" className="btn-outline home-secondary-action">
                 Browse live jobs
               </Link>

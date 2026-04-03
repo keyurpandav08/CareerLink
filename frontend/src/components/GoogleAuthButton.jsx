@@ -19,7 +19,7 @@ const decodeJwtPayload = (token) => {
   }
 };
 
-const GoogleAuthButton = ({ label = 'Continue with Google', onError }) => {
+const GoogleAuthButton = ({ label = 'Continue with Google', onError, fullWidth = false }) => {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const invalidClientId = clientId && !isLikelyGoogleClientId(clientId);
   const buttonRef = useRef(null);
@@ -56,10 +56,15 @@ const GoogleAuthButton = ({ label = 'Continue with Google', onError }) => {
       });
 
       buttonRef.current.innerHTML = '';
+      const measuredWidth = Math.round(buttonRef.current.getBoundingClientRect().width || 320);
+      const buttonWidth = fullWidth
+        ? Math.min(Math.max(measuredWidth, 280), 440)
+        : 320;
+
       window.google.accounts.id.renderButton(buttonRef.current, {
         theme: 'outline',
         size: 'large',
-        width: 320,
+        width: buttonWidth,
         text: label.includes('Create') ? 'signup_with' : 'continue_with',
         shape: 'pill'
       });
@@ -78,13 +83,13 @@ const GoogleAuthButton = ({ label = 'Continue with Google', onError }) => {
     script.defer = true;
     script.onload = initializeGoogleButton;
     document.body.appendChild(script);
-  }, [clientId, invalidClientId, label, login, navigate, onError]);
+  }, [clientId, fullWidth, invalidClientId, label, login, navigate, onError]);
 
   if (!clientId || invalidClientId) {
     return (
       <button
         type="button"
-        className="google-auth-fallback"
+        className={`google-auth-fallback ${fullWidth ? 'google-auth-fallback-full' : ''}`.trim()}
         onClick={() => onError?.(
           invalidClientId
             ? 'Google sign-in is misconfigured. Use the Web Client ID that ends with .apps.googleusercontent.com, not the GOCSPX client secret.'
@@ -98,13 +103,14 @@ const GoogleAuthButton = ({ label = 'Continue with Google', onError }) => {
   }
 
   return (
-    <div className="google-auth-wrap">
+    <div className={`google-auth-wrap ${fullWidth ? 'google-auth-wrap-full' : ''}`.trim()}>
       <div ref={buttonRef} className={loading ? 'google-auth-disabled' : ''} />
     </div>
   );
 };
 
 GoogleAuthButton.propTypes = {
+  fullWidth: PropTypes.bool,
   label: PropTypes.string,
   onError: PropTypes.func
 };

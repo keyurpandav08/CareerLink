@@ -1,7 +1,7 @@
 .pricing-container {
   min-height: 100vh;
   padding: 80px 20px;
-  background: #f9fafb;
+  background: var(--app-page-gradient);
   text-align: center;
 }
 

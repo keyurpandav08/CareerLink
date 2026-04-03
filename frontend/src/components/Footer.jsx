@@ -9,9 +9,11 @@ import {
   Star,
   X
 } from 'lucide-react';
+import { useAuthModal } from '../context/AuthModalContext';
 import './Footer.css';
 
 const Footer = () => {
+  const { openAuthModal } = useAuthModal();
   const [showFeedback, setShowFeedback] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -36,18 +38,16 @@ const Footer = () => {
       <div className="container">
         <div className="footer-hero">
           <div className="footer-hero-copy">
-            <span className="footer-kicker">Career system</span>
-            <h2>Built for candidates, recruiters, and fast-moving hiring teams.</h2>
-            <p>
-              Explore roles, shape your profile, and move from discovery to interview inside one polished workflow.
-            </p>
+            <span className="footer-kicker">CareerLink</span>
+            <h2>Build your next move with a calmer hiring flow.</h2>
+            <p>Explore verified roles, polish your profile, and keep your job search inside one elegant workspace.</p>
           </div>
 
           <div className="footer-hero-actions">
-            <Link to="/jobs" className="footer-hero-primary">Browse Jobs</Link>
-            <button type="button" className="footer-hero-secondary" onClick={() => setShowFeedback(true)}>
-              Share Feedback
+            <button type="button" className="footer-hero-primary" onClick={() => openAuthModal('register')}>
+              Join Now
             </button>
+            <Link to="/jobs" className="footer-hero-secondary">Browse Jobs</Link>
           </div>
         </div>
 
@@ -56,8 +56,8 @@ const Footer = () => {
             <div className="footer-brand">
               <span className="footer-brand-icon"><Globe size={16} /></span>
               <div>
-                <h3>JobLithic</h3>
-                <p>Systematic hiring, cleaner candidate journeys, stronger decisions.</p>
+                <h3>CareerLink</h3>
+                <p>Soft visuals, sharper workflows, and a hiring journey that feels easier to trust.</p>
               </div>
             </div>
           </section>
@@ -87,11 +87,14 @@ const Footer = () => {
         </div>
 
         <div className="footer-bottom">
-          <span>{`Copyright ${currentYear} JobLithic`}</span>
+          <span>{`Copyright ${currentYear} CareerLink`}</span>
           <div className="footer-bottom-links">
             <Link to="/privacy-policy">Privacy</Link>
             <Link to="/terms">Terms</Link>
             <Link to="/contact">Support</Link>
+            <button type="button" className="footer-bottom-auth" onClick={() => openAuthModal('login')}>
+              Log in
+            </button>
           </div>
         </div>
       </div>

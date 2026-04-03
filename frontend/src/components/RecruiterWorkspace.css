@@ -2,16 +2,12 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: 272px minmax(0, 1fr);
-  background:
-    radial-gradient(circle at top left, rgba(14, 116, 144, 0.12), transparent 32%),
-    linear-gradient(180deg, #f8fbff 0%, #edf4f7 100%);
+  background: var(--app-page-gradient);
   color: #0f172a;
 }
 
 .recruiter-shell--dark {
-  background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.1), transparent 30%),
-    linear-gradient(180deg, #eef2f9 0%, #edf2fa 100%);
+  background: var(--app-page-gradient);
 }
 
 .recruiter-sidebar {

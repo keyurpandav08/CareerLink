@@ -1,7 +1,7 @@
 .postjob-container {
   min-height: 100vh;
   padding: 70px 20px;
-  background: #f9fafb;
+  background: var(--app-page-gradient);
   display: flex;
   justify-content: center;
 }

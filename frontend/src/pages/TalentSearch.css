@@ -3,7 +3,7 @@
   display: flex;
   justify-content: center;
   padding: 60px 20px;
-  background: #f9fafb;
+  background: var(--app-page-gradient);
 }
 
 .talent-card {
