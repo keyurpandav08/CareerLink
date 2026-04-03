@@ -13,6 +13,7 @@
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
     "framer-motion": "^12.34.3",
+    "html2pdf.js": "^0.14.0",
     "lucide-react": "^0.562.0",
     "prop-types": "^15.8.1",
     "react": "^19.2.0",

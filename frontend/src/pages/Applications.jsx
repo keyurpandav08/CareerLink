@@ -323,6 +323,7 @@ const CandidateApplications = () => {
                               jobTitle: application.jobTitle,
 
                               // 🔥 direct application mathi lai
+
                               companyName: application.companyName,
                               companyLogo: application.companyLogo,
                               salary: application.salary,

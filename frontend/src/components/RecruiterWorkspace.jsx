@@ -2,12 +2,12 @@ import PropTypes from 'prop-types';
 import { Link, useLocation } from 'react-router-dom';
 import {
   BarChart3,
-  Bell,
   BriefcaseBusiness,
   LayoutGrid,
   Search,
   Users,
-  Workflow
+  Workflow,
+  Home
 } from 'lucide-react';
 import {
   getRecruiterAvatarLabel,
@@ -17,6 +17,7 @@ import {
 import './RecruiterWorkspace.css';
 
 const NAV_ITEMS = [
+    { key: 'home', to: '/', label: 'Home', icon: Home },
   { key: 'overview', to: '/employer-dashboard', label: 'Overview', icon: LayoutGrid },
   { key: 'jobs', to: '/employer-dashboard/jobs', label: 'Jobs', icon: BriefcaseBusiness },
   { key: 'candidates', to: '/employer-dashboard/candidates', label: 'Candidates', icon: Users },
@@ -100,6 +101,11 @@ const RecruiterWorkspace = ({
           </div>
 
           <div className="recruiter-topbar-actions">
+<<<<<<< HEAD
+            <button type="button" className="recruiter-icon-btn" aria-label="Settings">
+              <Settings size={18} />
+            </button>
+=======
             <button type="button" className="recruiter-icon-btn" aria-label="Notifications">
               <Bell size={18} />
             </button>
@@ -117,6 +123,7 @@ const RecruiterWorkspace = ({
                 <span>{recruiterName}</span>
               </div>
             </Link>
+>>>>>>> 98c4fc460197534d796450d9ce1719b14f89147f
             {topActions || (
               <Link to="/employer-dashboard/jobs" className="recruiter-primary-btn">
                 Post a Job

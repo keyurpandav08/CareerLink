@@ -500,11 +500,15 @@
   filter: grayscale(0.3);
 }
 
-.candidate-application-card.accepted {
-  border-color: rgba(37, 99, 235, 0.18);
-  background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.06), transparent 25%),
-    rgba(255, 255, 255, 0.94);
+.candidate-application-card {
+  background: #ffffff !important;
+}
+
+.candidate-application-card.accepted,
+.candidate-application-card.pending,
+.candidate-application-card.reviewed,
+.candidate-application-card.rejected {
+  background: #ffffff !important;
 }
 
 .candidate-application-logo {
@@ -533,6 +537,7 @@
 }
 
 .candidate-application-title-row h2 {
+  color: #000000 !important;
   font-size: 1.16rem;
 }
 

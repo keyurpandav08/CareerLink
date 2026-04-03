@@ -5,10 +5,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoleRoute from './components/PublicRoleRoute';
 import Layout from './components/Layout';
 import { AuthProvider } from './context/AuthContext';
-import { AuthModalProvider } from './context/AuthModalContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Home from './pages/Home';
-import AuthRouteBridge from './components/AuthRouteBridge';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import JobList from './pages/JobList';
 import JobDetail from './pages/JobDetail';
 import Dashboard from './pages/Dashboard';
@@ -40,208 +40,206 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AuthModalProvider>
-          <BrowserRouter>
-            <Routes>
+        <BrowserRouter>
+          <Routes>
+            <Route
+              path="/admin/login"
+              element={
+                <PublicRoleRoute guestOnly>
+                  <AdminLogin />
+                </PublicRoleRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute role="ADMIN" redirectTo="/admin/login">
+                  <Navigate to="/admin/dashboard" replace />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute role="ADMIN" redirectTo="/admin/login">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Layout Wrapper */}
+            <Route path="/" element={<Layout />}>
+
+              {/* Public Pages */}
+              <Route index element={<Home />} />
               <Route
-                path="/admin/login"
+                path="login"
                 element={
                   <PublicRoleRoute guestOnly>
-                    <AdminLogin />
+                    <Login />
                   </PublicRoleRoute>
                 }
               />
               <Route
-                path="/admin"
+                path="register"
                 element={
-                  <ProtectedRoute role="ADMIN" redirectTo="/admin/login">
-                    <Navigate to="/admin/dashboard" replace />
+                  <PublicRoleRoute guestOnly>
+                    <Register />
+                  </PublicRoleRoute>
+                }
+              />
+              <Route
+                path="jobs"
+                element={
+                  <PublicRoleRoute allowGuests allowedRoles={['APPLICANT']}>
+                    <JobList />
+                  </PublicRoleRoute>
+                }
+              />
+              <Route
+                path="jobs/:id"
+                element={
+                  <PublicRoleRoute allowGuests allowedRoles={['APPLICANT']}>
+                    <JobDetail />
+                  </PublicRoleRoute>
+                }
+              />
+              <Route path="privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="terms" element={<Terms />} />
+              <Route path="contact" element={<Contact />} />
+              <Route path="career-advice" element={<CareerAdvice />} />
+              <Route
+                path="resume-builder"
+                element={
+                  <ProtectedRoute role="APPLICANT">
+                    <ResumeBuilder />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="interview-tips" element={<InterviewTips />} />
+              <Route path="talent-search" element={<TalentSearch />} />
+              <Route path="pricing" element={<Pricing />} />
+              <Route
+                path="forgot-password"
+                element={
+                  <PublicRoleRoute guestOnly>
+                    <ForgotPassword />
+                  </PublicRoleRoute>
+                }
+              />
+
+              {/* Protected Pages */}
+              <Route
+                path="dashboard"
+                element={
+                  <ProtectedRoute role="APPLICANT">
+                    <Dashboard />
                   </ProtectedRoute>
                 }
               />
               <Route
-                path="/admin/dashboard"
+                path="employer-dashboard"
                 element={
-                  <ProtectedRoute role="ADMIN" redirectTo="/admin/login">
-                    <AdminDashboard />
+                  <ProtectedRoute role="EMPLOYER">
+                    <EmployerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="employer-dashboard/jobs"
+                element={
+                  <ProtectedRoute role="EMPLOYER">
+                    <CreateJob />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="employer-dashboard/candidates"
+                element={
+                  <ProtectedRoute role="EMPLOYER">
+                    <RecruiterCandidates />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="employer-dashboard/pipeline"
+                element={
+                  <ProtectedRoute role="EMPLOYER">
+                    <RecruiterPipeline />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="employer-dashboard/analytics"
+                element={
+                  <ProtectedRoute role="EMPLOYER">
+                    <RecruiterAnalytics />
                   </ProtectedRoute>
                 }
               />
 
-              {/* Layout Wrapper */}
-              <Route path="/" element={<Layout />}>
+              <Route
+                path="profile"
+                element={
+                  <ProtectedRoute role="APPLICANT">
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
 
-                {/* Public Pages */}
-                <Route index element={<Home />} />
-                <Route
-                  path="login"
-                  element={
-                    <PublicRoleRoute guestOnly>
-                      <AuthRouteBridge mode="login" />
-                    </PublicRoleRoute>
-                  }
-                />
-                <Route
-                  path="register"
-                  element={
-                    <PublicRoleRoute guestOnly>
-                      <AuthRouteBridge mode="register" />
-                    </PublicRoleRoute>
-                  }
-                />
-                <Route
-                  path="jobs"
-                  element={
-                    <PublicRoleRoute allowGuests allowedRoles={['APPLICANT']}>
-                      <JobList />
-                    </PublicRoleRoute>
-                  }
-                />
-                <Route
-                  path="jobs/:id"
-                  element={
-                    <PublicRoleRoute allowGuests allowedRoles={['APPLICANT']}>
-                      <JobDetail />
-                    </PublicRoleRoute>
-                  }
-                />
-                <Route path="privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="terms" element={<Terms />} />
-                <Route path="contact" element={<Contact />} />
-                <Route path="career-advice" element={<CareerAdvice />} />
-                <Route
-                  path="resume-builder"
-                  element={
-                    <ProtectedRoute role="APPLICANT">
-                      <ResumeBuilder />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="interview-tips" element={<InterviewTips />} />
-                <Route path="talent-search" element={<TalentSearch />} />
-                <Route path="pricing" element={<Pricing />} />
-                <Route
-                  path="forgot-password"
-                  element={
-                    <PublicRoleRoute guestOnly>
-                      <ForgotPassword />
-                    </PublicRoleRoute>
-                  }
-                />
+              <Route
+                path="edit-profile"
+                element={
+                  <ProtectedRoute role="APPLICANT">
+                    <EditProfile />
+                  </ProtectedRoute>
+                }
+              />
 
-                {/* Protected Pages */}
-                <Route
-                  path="dashboard"
-                  element={
-                    <ProtectedRoute role="APPLICANT">
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="employer-dashboard"
-                  element={
-                    <ProtectedRoute role="EMPLOYER">
-                      <EmployerDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="employer-dashboard/jobs"
-                  element={
-                    <ProtectedRoute role="EMPLOYER">
-                      <CreateJob />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="employer-dashboard/candidates"
-                  element={
-                    <ProtectedRoute role="EMPLOYER">
-                      <RecruiterCandidates />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="employer-dashboard/pipeline"
-                  element={
-                    <ProtectedRoute role="EMPLOYER">
-                      <RecruiterPipeline />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="employer-dashboard/analytics"
-                  element={
-                    <ProtectedRoute role="EMPLOYER">
-                      <RecruiterAnalytics />
-                    </ProtectedRoute>
-                  }
-                />
+              <Route
+                path="applications"
+                element={
+                  <ProtectedRoute>
+                    <Applications />
+                  </ProtectedRoute>
+                }
+              />
 
-                <Route
-                  path="profile"
-                  element={
-                    <ProtectedRoute role="APPLICANT">
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
+              <Route
+                path="settings"
+                element={
+                  <ProtectedRoute role="APPLICANT">
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
 
-                <Route
-                  path="edit-profile"
-                  element={
-                    <ProtectedRoute role="APPLICANT">
-                      <EditProfile />
-                    </ProtectedRoute>
-                  }
-                />
+              <Route
+                path="saved-jobs"
+                element={
+                  <ProtectedRoute role="APPLICANT">
+                    <SavedJobs />
+                  </ProtectedRoute>
+                }
+              />
 
-                <Route
-                  path="applications"
-                  element={
-                    <ProtectedRoute>
-                      <Applications />
-                    </ProtectedRoute>
-                  }
-                />
+              <Route
+                path="post-job"
+                element={
+                  <ProtectedRoute role="EMPLOYER">
+                    <Navigate to="/employer-dashboard/jobs" replace />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/application/:id" element={<ApplicationDetails />} />
+             <Route path="offer-details" element={<OfferDetails />} />
+              {/* 404 */}
+              <Route path="*" element={<NotFound />} />
 
-                <Route
-                  path="settings"
-                  element={
-                    <ProtectedRoute role="APPLICANT">
-                      <Settings />
-                    </ProtectedRoute>
-                  }
-                />
+            </Route>
 
-                <Route
-                  path="saved-jobs"
-                  element={
-                    <ProtectedRoute role="APPLICANT">
-                      <SavedJobs />
-                    </ProtectedRoute>
-                  }
-                />
-
-                <Route
-                  path="post-job"
-                  element={
-                    <ProtectedRoute role="EMPLOYER">
-                      <Navigate to="/employer-dashboard/jobs" replace />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/application/:id" element={<ApplicationDetails />} />
-                <Route path="offer-details" element={<OfferDetails />} />
-                {/* 404 */}
-                <Route path="*" element={<NotFound />} />
-
-              </Route>
-
-            </Routes>
-          </BrowserRouter>
-        </AuthModalProvider>
+          </Routes>
+        </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
   );

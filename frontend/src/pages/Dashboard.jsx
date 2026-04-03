@@ -25,6 +25,7 @@ import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 
 const RESUME_PLACEHOLDER = 'resume_not_uploaded';
 const SIDEBAR_LINKS = [
+    { to: '/', label: 'Home', icon: Home },
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, active: true },
   { to: '/profile', label: 'Profile', icon: UserRound },
   { to: '/applications', label: 'My Applications', icon: FileText },
@@ -32,6 +33,10 @@ const SIDEBAR_LINKS = [
   { to: '/settings', label: 'Settings', icon: Settings }
 ];
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 98c4fc460197534d796450d9ce1719b14f89147f
 const PROFILE_FIELDS = [
   'fullName',
   'email',
@@ -139,6 +144,86 @@ const formatSalary = (salary) => {
   return `INR ${numericSalary}`;
 };
 
+<<<<<<< HEAD
+const getRecommendationMatch = (job, skills, hasExperience) => {
+  const haystack = normalizeText([
+    job.title,
+    job.employerName,
+    job.location,
+    job.description,
+    ...(job.tags || [])
+  ].join(' '));
+
+  const overlap = skills.filter((skill) => haystack.includes(normalizeText(skill))).length;
+  const baseScore = job.featured ? 86 : 80;
+  return clamp(baseScore + overlap * 5 + (hasExperience ? 3 : 0), 78, 97);
+};
+
+const createRecommendation = (job, skills, hasExperience) => {
+  const tags = job.tags?.length ? job.tags : skills.slice(0, 3);
+  const matchScore = getRecommendationMatch({ ...job, tags }, skills, hasExperience);
+
+  return {
+    id: job._id || job.id || job.title,
+    title: job.title,
+    company: job.employerName || 'Confidential employer',
+    companyLogo: job.companyLogoUrl || null,
+    companyBadge: createInitials(job.employerName || job.title),
+    location: job.location || 'Location not shared',
+    salary: formatSalary(job.salary),
+    tags: tags.length ? tags.slice(0, 3) : ['Growth', 'Team', 'Hiring'],
+    matchScore,
+    featured: Boolean(job.featured) || matchScore >= 92,
+    detailPath: `/jobs/${job._id || job.id}`
+  };
+};
+
+const getInsightItems = (profile, profileCompletion, skills, applications) => {
+  const insightScore = clamp(
+    Math.round(
+      profileCompletion * 0.62 +
+        Math.min(skills.length, 6) * 4 +
+        (hasResume(profile?.resumeUrl) ? 12 : 0) +
+        (profile?.profileSummary ? 6 : 0) +
+        (profile?.projects ? 6 : 0) +
+        (applications.length ? 4 : 0)
+    ),
+    48,
+    96
+  );
+
+  const positives = [];
+  const improvements = [];
+
+  if (skills.length >= 3) {
+    positives.push(`Strong keyword coverage across ${skills.slice(0, 3).join(', ')}.`);
+  } else if (profile?.profileSummary) {
+    positives.push('Your profile summary already gives recruiters useful context.');
+  } else {
+    positives.push('You already have a live candidate profile in the platform.');
+  }
+
+  if (!hasResume(profile?.resumeUrl)) {
+    improvements.push('Upload your latest resume so every application stays one-click ready.');
+  } else if (!profile?.projects) {
+    improvements.push('Add project highlights to improve technical credibility with hiring teams.');
+  } else if (!profile?.certifications) {
+    improvements.push('Certifications can strengthen niche or tool-specific role matching.');
+  } else {
+    improvements.push('Refresh role-specific keywords as you target more specialized openings.');
+  }
+
+  return {
+    score: insightScore,
+    items: [
+      { tone: 'positive', text: positives[0] },
+      { tone: 'warning', text: improvements[0] }
+    ]
+  };
+};
+
+=======
+>>>>>>> 98c4fc460197534d796450d9ce1719b14f89147f
 const Dashboard = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
@@ -149,7 +234,28 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+<<<<<<< HEAD
+  const profilePhoto = getProfilePhoto(user);
+const [jobs, setJobs] = useState([]);
+
+useEffect(() => {
+  const loadJobs = async () => {
+    try {
+      const res = await api.get("/job");
+
+      console.log(res.data); // check this once
+
+      setJobs(Array.isArray(res.data) ? res.data : res.data.data);
+    } catch (err) {
+      console.error("Jobs fetch failed", err);
+    }
+  };
+
+  loadJobs();
+}, []);
+=======
   const profilePhoto = useMemo(() => getProfilePhoto(user, profile), [profile, user]);
+>>>>>>> 98c4fc460197534d796450d9ce1719b14f89147f
 
   useEffect(() => {
     applications.forEach((application) => {
@@ -270,6 +376,23 @@ const Dashboard = () => {
     return { total, pending, reviewed, accepted };
   }, [applications]);
 
+<<<<<<< HEAD
+
+
+    const recommendedJobs = useMemo(() => {
+      if (!jobs || jobs.length === 0) return []; // no fake fallback
+
+      return jobs
+        .slice(0, 3)
+        .map((job) =>
+          createRecommendation(
+            job,
+            skills,
+            profile?.experience && profile.experience !== "Fresher"
+          )
+        );
+    }, [jobs, skills, profile?.experience]);
+=======
   const recommendedJobs = useMemo(() => (
     (aiDashboard?.recommendations || []).map((job) => ({
       id: job.jobId,
@@ -285,6 +408,7 @@ const Dashboard = () => {
       detailPath: `/jobs/${job.jobId}`
     }))
   ), [aiDashboard?.recommendations]);
+>>>>>>> 98c4fc460197534d796450d9ce1719b14f89147f
 
   const recentApplications = useMemo(() => {
     const list = [...applications];
@@ -409,11 +533,6 @@ const Dashboard = () => {
             })}
           </nav>
 
-          <div className="candidate-pro-plan">
-            <span>Pro Plan</span>
-            <p>Get unlimited AI resume critiques and priority job matching.</p>
-            <Link to="/pricing" className="candidate-pro-plan-btn">Upgrade Now</Link>
-          </div>
         </aside>
 
         <main className="candidate-main">
@@ -446,6 +565,8 @@ const Dashboard = () => {
             </div>
 
             <div className="candidate-topbar-actions">
+<<<<<<< HEAD
+=======
               <Link to="/jobs" className="candidate-icon-btn" aria-label="Browse jobs">
                 <BriefcaseBusiness size={18} />
               </Link>
@@ -453,6 +574,7 @@ const Dashboard = () => {
               <Link to="/settings" className="candidate-icon-btn" aria-label="Open settings">
                 <Settings size={18} />
               </Link>
+>>>>>>> 98c4fc460197534d796450d9ce1719b14f89147f
 
               <Link to="/profile" className="candidate-avatar-button">
                 <div className="candidate-avatar-badge">
@@ -564,7 +686,13 @@ const Dashboard = () => {
                       className={`candidate-job-card ${job.featured ? 'is-featured' : ''}`}
                     >
                       <div className="candidate-job-card-top">
-                        <div className="candidate-job-logo">{job.companyBadge}</div>
+                        <div className="candidate-job-logo">
+                          {job.companyLogo ? (
+                            <img src={job.companyLogo} alt={job.company} />
+                          ) : (
+                            job.companyBadge
+                          )}
+                        </div>
                         <span className={`candidate-job-badge ${job.featured ? 'is-featured' : ''}`}>
                           {job.featured ? 'Featured Match' : `${job.matchScore}% Match`}
                         </span>
@@ -606,20 +734,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {hasResume(profile.resumeUrl) && (
-                <div className="candidate-resume-strip">
-                  <div className="candidate-resume-strip-copy">
-                    <strong>{profile.resumeFileName || 'Uploaded profile resume'}</strong>
-                    <span>Your latest resume is attached to your candidate profile.</span>
-                  </div>
 
-                  <div className="candidate-resume-strip-actions">
-                    <a href={profile.resumeUrl} target="_blank" rel="noreferrer">
-                      Open current resume
-                    </a>
-                  </div>
-                </div>
-              )}
 
               {filteredApplications.length === 0 ? (
                 <div className="candidate-empty-state candidate-empty-state--table">

@@ -10,7 +10,8 @@ import {
   Settings,
   Sparkles,
   UserRound,
-  X
+  X,
+  Home
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -22,6 +23,7 @@ import {
 import './CandidateWorkspace.css';
 
 const NAV_ITEMS = [
+    { to: '/', label: 'Home', icon: Home },
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/profile', label: 'Profile', icon: UserRound },
   { to: '/applications', label: 'My Applications', icon: FileText },

@@ -3,7 +3,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: var(--app-page-gradient);
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
 }
 
 .details-card {
