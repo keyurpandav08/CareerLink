@@ -5,7 +5,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoleRoute from './components/PublicRoleRoute';
 import Layout from './components/Layout';
 import { AuthProvider } from './context/AuthContext';
+import { AuthModalProvider } from './context/AuthModalContext';
 import { ThemeProvider } from './context/ThemeContext';
+import AuthRouteBridge from './components/AuthRouteBridge';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -30,7 +32,6 @@ import CareerAdvice from "./pages/CareerAdvice";
 import ResumeBuilder from "./pages/ResumeBuilder";
 import InterviewTips from "./pages/InterviewTips";
 import TalentSearch from "./pages/TalentSearch";
-import Pricing from "./pages/Pricing";
 import ForgotPassword from './pages/ForgotPassword';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -40,6 +41,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <AuthModalProvider>
         <BrowserRouter>
           <Routes>
             <Route
@@ -76,7 +78,7 @@ function App() {
                 path="login"
                 element={
                   <PublicRoleRoute guestOnly>
-                    <Login />
+                    <AuthRouteBridge mode="login" />
                   </PublicRoleRoute>
                 }
               />
@@ -84,7 +86,7 @@ function App() {
                 path="register"
                 element={
                   <PublicRoleRoute guestOnly>
-                    <Register />
+                    <AuthRouteBridge mode="register" />
                   </PublicRoleRoute>
                 }
               />
@@ -118,7 +120,7 @@ function App() {
               />
               <Route path="interview-tips" element={<InterviewTips />} />
               <Route path="talent-search" element={<TalentSearch />} />
-              <Route path="pricing" element={<Pricing />} />
+              
               <Route
                 path="forgot-password"
                 element={
@@ -240,6 +242,7 @@ function App() {
 
           </Routes>
         </BrowserRouter>
+        </AuthModalProvider>
       </AuthProvider>
     </ThemeProvider>
   );

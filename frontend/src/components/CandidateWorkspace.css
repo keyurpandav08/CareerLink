@@ -32,8 +32,9 @@
   width: 274px;
   min-height: 100vh;
   padding: 1.5rem 1rem;
-  border-right: 1px solid rgba(117, 119, 126, 0.12);
-  background: rgba(250, 251, 255, 0.86);
+  border-right: 1px solid rgba(184, 165, 147, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 249, 242, 0.9) 0%, rgba(247, 239, 230, 0.84) 100%);
   backdrop-filter: blur(20px);
 }
 
@@ -89,15 +90,15 @@
 }
 
 .candidate-workspace-link:hover {
-  background: rgba(226, 232, 240, 0.72);
+  background: rgba(255, 251, 247, 0.8);
   color: #0f172a;
   transform: translateX(2px);
 }
 
 .candidate-workspace-link.is-active {
-  background: #ffffff;
-  color: #0b5164;
-  box-shadow: 0 16px 32px rgba(14, 116, 144, 0.08);
+  background: rgba(255, 253, 250, 0.96);
+  color: #2563eb;
+  box-shadow: 0 14px 28px rgba(84, 56, 36, 0.06);
 }
 
 .candidate-workspace-identity {

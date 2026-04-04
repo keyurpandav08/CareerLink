@@ -23,7 +23,7 @@ import {
 import './CandidateWorkspace.css';
 
 const NAV_ITEMS = [
-    { to: '/', label: 'Home', icon: Home },
+  { to: '/', label: 'Home', icon: Home },
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/profile', label: 'Profile', icon: UserRound },
   { to: '/applications', label: 'My Applications', icon: FileText },
@@ -118,7 +118,7 @@ const CandidateWorkspace = ({
 
               <Link to="/dashboard" className="candidate-workspace-product-name">
                 <span className="candidate-workspace-product-mark">JL</span>
-                <span>Job Lithic</span>
+                <span>CareerLink</span>
               </Link>
 
               <label className="candidate-workspace-search" htmlFor="candidateWorkspaceSearch">
@@ -170,7 +170,6 @@ const CandidateWorkspace = ({
               <div className="candidate-workspace-footer-links">
                 <Link to="/terms">Terms</Link>
                 <Link to="/privacy-policy">Privacy</Link>
-                <Link to="/pricing">Pricing</Link>
                 <Link to="/contact">Contact</Link>
               </div>
             </div>

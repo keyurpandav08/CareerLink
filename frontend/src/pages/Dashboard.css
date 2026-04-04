@@ -319,10 +319,7 @@
   overflow: hidden;
   padding: 2rem;
   border-radius: 28px;
-  background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.24), transparent 26%),
-    linear-gradient(145deg, #0b1f3a, #07142a);
-  color: #fff;
+  background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.24), #ede4dd 26%), linear-gradient(145deg, #eee5dd, #ede4dc);
 }
 
 .candidate-welcome-copy h1 {
@@ -333,7 +330,7 @@
 .candidate-welcome-copy p {
   max-width: 60ch;
   margin-top: 0.8rem;
-  color: rgba(255, 255, 255, 0.74);
+  color: #475569;
   font-size: 0.98rem;
 }
 
@@ -353,7 +350,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+  background: linear-gradient(90deg, #0e4b63ad 0%, #0f273c 100%);
 }
 
 .candidate-progress-labels {
@@ -362,16 +359,12 @@
   justify-content: space-between;
   gap: 0.75rem;
   margin-top: 0.65rem;
-  color: rgba(255, 255, 255, 0.72);
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-.candidate-progress-labels strong {
-  color: rgba(255, 255, 255, 0.92);
-}
 
 .candidate-hero-stats {
   display: grid;
@@ -389,7 +382,6 @@
 
 .candidate-hero-stats small {
   display: block;
-  color: rgba(255, 255, 255, 0.68);
   font-size: 0.76rem;
 }
 
@@ -431,9 +423,9 @@
 }
 
 .candidate-hero-secondary {
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #5c3b3b;
+    background: rgb(255 255 255 / 48%);
 }
 
 .candidate-hero-primary:hover,

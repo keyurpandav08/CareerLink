@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Clock3,
   FileText,
+  Home,
   LayoutDashboard,
   Menu,
   Search,
@@ -25,7 +26,7 @@ import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 
 const RESUME_PLACEHOLDER = 'resume_not_uploaded';
 const SIDEBAR_LINKS = [
-    { to: '/', label: 'Home', icon: Home },
+  { to: '/', label: 'Home', icon: Home },
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, active: true },
   { to: '/profile', label: 'Profile', icon: UserRound },
   { to: '/applications', label: 'My Applications', icon: FileText },
@@ -33,10 +34,6 @@ const SIDEBAR_LINKS = [
   { to: '/settings', label: 'Settings', icon: Settings }
 ];
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 98c4fc460197534d796450d9ce1719b14f89147f
 const PROFILE_FIELDS = [
   'fullName',
   'email',
@@ -144,7 +141,18 @@ const formatSalary = (salary) => {
   return `INR ${numericSalary}`;
 };
 
-<<<<<<< HEAD
+const extractSkills = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || '').trim()).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    return value.split(',').map((item) => item.trim()).filter(Boolean);
+  }
+
+  return [];
+};
+
 const getRecommendationMatch = (job, skills, hasExperience) => {
   const haystack = normalizeText([
     job.title,
@@ -221,9 +229,6 @@ const getInsightItems = (profile, profileCompletion, skills, applications) => {
     ]
   };
 };
-
-=======
->>>>>>> 98c4fc460197534d796450d9ce1719b14f89147f
 const Dashboard = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
@@ -234,28 +239,22 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-<<<<<<< HEAD
-  const profilePhoto = getProfilePhoto(user);
-const [jobs, setJobs] = useState([]);
-
-useEffect(() => {
-  const loadJobs = async () => {
-    try {
-      const res = await api.get("/job");
-
-      console.log(res.data); // check this once
-
-      setJobs(Array.isArray(res.data) ? res.data : res.data.data);
-    } catch (err) {
-      console.error("Jobs fetch failed", err);
-    }
-  };
-
-  loadJobs();
-}, []);
-=======
   const profilePhoto = useMemo(() => getProfilePhoto(user, profile), [profile, user]);
->>>>>>> 98c4fc460197534d796450d9ce1719b14f89147f
+  const [jobs, setJobs] = useState([]);
+
+  useEffect(() => {
+    const loadJobs = async () => {
+      try {
+        const response = await api.get('/job');
+        const nextJobs = Array.isArray(response.data) ? response.data : response.data?.data;
+        setJobs(Array.isArray(nextJobs) ? nextJobs : []);
+      } catch (requestError) {
+        console.error('Jobs fetch failed', requestError);
+      }
+    };
+
+    loadJobs();
+  }, []);
 
   useEffect(() => {
     applications.forEach((application) => {
@@ -376,39 +375,37 @@ useEffect(() => {
     return { total, pending, reviewed, accepted };
   }, [applications]);
 
-<<<<<<< HEAD
+  const skills = useMemo(() => extractSkills(profile?.skills), [profile?.skills]);
 
+  const recommendedJobs = useMemo(() => {
+    if (Array.isArray(aiDashboard?.recommendations) && aiDashboard.recommendations.length) {
+      return aiDashboard.recommendations.map((job) => ({
+        id: job.jobId,
+        title: job.title,
+        company: job.company || 'Confidential employer',
+        companyBadge: createInitials(job.company || job.title),
+        companyLogo: job.companyLogoUrl || null,
+        location: job.location || 'Location not shared',
+        salary: formatSalary(job.salary),
+        tags: Array.isArray(job.tags) && job.tags.length ? job.tags.slice(0, 3) : ['Growth', 'Team', 'Hiring'],
+        matchScore: Number(job.matchScore) || 0,
+        featured: Boolean(job.featured),
+        reason: job.reason || 'AI-selected based on your profile and live openings.',
+        detailPath: `/jobs/${job.jobId}`
+      }));
+    }
 
-    const recommendedJobs = useMemo(() => {
-      if (!jobs || jobs.length === 0) return []; // no fake fallback
+    if (!jobs.length) return [];
 
-      return jobs
-        .slice(0, 3)
-        .map((job) =>
-          createRecommendation(
-            job,
-            skills,
-            profile?.experience && profile.experience !== "Fresher"
-          )
-        );
-    }, [jobs, skills, profile?.experience]);
-=======
-  const recommendedJobs = useMemo(() => (
-    (aiDashboard?.recommendations || []).map((job) => ({
-      id: job.jobId,
-      title: job.title,
-      company: job.company || 'Confidential employer',
-      companyBadge: createInitials(job.company || job.title),
-      location: job.location || 'Location not shared',
-      salary: formatSalary(job.salary),
-      tags: Array.isArray(job.tags) && job.tags.length ? job.tags.slice(0, 3) : ['Growth', 'Team', 'Hiring'],
-      matchScore: Number(job.matchScore) || 0,
-      featured: Boolean(job.featured),
-      reason: job.reason || 'AI-selected based on your profile and live openings.',
-      detailPath: `/jobs/${job.jobId}`
-    }))
-  ), [aiDashboard?.recommendations]);
->>>>>>> 98c4fc460197534d796450d9ce1719b14f89147f
+    return jobs.slice(0, 3).map((job) => ({
+      ...createRecommendation(
+        job,
+        skills,
+        profile?.experience && profile.experience !== 'Fresher'
+      ),
+      reason: 'Recommended from current live openings based on your profile.'
+    }));
+  }, [aiDashboard?.recommendations, jobs, profile?.experience, skills]);
 
   const recentApplications = useMemo(() => {
     const list = [...applications];
@@ -422,16 +419,27 @@ useEffect(() => {
     return list.slice(0, 5);
   }, [applications]);
 
-  const resumeInsight = useMemo(() => ({
-    score: aiDashboard?.score ?? clamp(Math.round(profileCompletion * 0.72), 48, 92),
-    items: Array.isArray(aiDashboard?.highlights) && aiDashboard.highlights.length
-      ? aiDashboard.highlights
-      : [
-        { tone: 'positive', text: 'Complete your profile to unlock live AI guidance.' },
-        { tone: 'warning', text: aiError || 'Add your Gemini key to enable live AI analysis.' }
-      ],
-    focusNote: aiDashboard?.focusNote || aiError || 'Live AI guidance appears here after configuration.'
-  }), [aiDashboard, aiError, profileCompletion]);
+  const resumeInsight = useMemo(() => {
+    if (aiDashboard?.score || (Array.isArray(aiDashboard?.highlights) && aiDashboard.highlights.length)) {
+      return {
+        score: aiDashboard?.score ?? clamp(Math.round(profileCompletion * 0.72), 48, 92),
+        items: Array.isArray(aiDashboard?.highlights) && aiDashboard.highlights.length
+          ? aiDashboard.highlights
+          : [
+            { tone: 'positive', text: 'Complete your profile to unlock live AI guidance.' },
+            { tone: 'warning', text: aiError || 'Add your Gemini key to enable live AI analysis.' }
+          ],
+        focusNote: aiDashboard?.focusNote || aiError || 'Live AI guidance appears here after configuration.'
+      };
+    }
+
+    const fallbackInsight = getInsightItems(profile, profileCompletion, skills, applications);
+    return {
+      score: fallbackInsight.score,
+      items: fallbackInsight.items,
+      focusNote: aiError || 'Complete your profile to improve recruiter visibility and matching.'
+    };
+  }, [aiDashboard, aiError, applications, profile, profileCompletion, skills]);
 
   const welcomeNudge = useMemo(() => {
     if (!profile) return '';
@@ -549,7 +557,7 @@ useEffect(() => {
 
               <Link to="/dashboard" className="candidate-product-name">
                 <span className="candidate-product-mark">JL</span>
-                <span>Job Lithic</span>
+                <span>CareerLink</span>
               </Link>
 
               <label className="candidate-searchbar" htmlFor="candidateDashboardSearch">
@@ -565,8 +573,6 @@ useEffect(() => {
             </div>
 
             <div className="candidate-topbar-actions">
-<<<<<<< HEAD
-=======
               <Link to="/jobs" className="candidate-icon-btn" aria-label="Browse jobs">
                 <BriefcaseBusiness size={18} />
               </Link>
@@ -574,7 +580,6 @@ useEffect(() => {
               <Link to="/settings" className="candidate-icon-btn" aria-label="Open settings">
                 <Settings size={18} />
               </Link>
->>>>>>> 98c4fc460197534d796450d9ce1719b14f89147f
 
               <Link to="/profile" className="candidate-avatar-button">
                 <div className="candidate-avatar-badge">
@@ -732,7 +737,7 @@ useEffect(() => {
                 <div className="candidate-panel-actions">
                   <Link to="/applications" className="candidate-inline-link">View all</Link>
                 </div>
-              </div>
+                </div>
 
 
 
@@ -801,11 +806,10 @@ useEffect(() => {
                 <div className="candidate-footer-links">
                   <Link to="/terms">Terms</Link>
                   <Link to="/privacy-policy">Privacy</Link>
-                  <Link to="/pricing">Pricing</Link>
                   <Link to="/contact">Contact</Link>
-              </div>
+                </div>
 
-              <p>{`© ${new Date().getFullYear()} Job Lithic. Architectural career curation.`}</p>
+              <p>{`© ${new Date().getFullYear()} CareerLink. Architectural career curation.`}</p>
               </div>
             </footer>
           </div>

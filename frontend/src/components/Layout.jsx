@@ -16,7 +16,6 @@ import './Layout.css';
 const guestNav = [
   { to: '/', label: 'Home' },
   { to: '/jobs', label: 'Browse Jobs' },
-  { to: '/pricing', label: 'Pricing' },
   { to: '/career-advice', label: 'Career Advice' },
   { to: '/contact', label: 'Contact' }
 ];

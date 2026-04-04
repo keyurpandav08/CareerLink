@@ -65,7 +65,6 @@ const Footer = () => {
           <section className="footer-col">
             <h4>Explore</h4>
             <Link to="/jobs"><Briefcase size={14} />Browse Jobs</Link>
-            <Link to="/pricing"><Briefcase size={14} />Pricing</Link>
             <Link to="/contact"><Briefcase size={14} />Contact</Link>
           </section>
 
