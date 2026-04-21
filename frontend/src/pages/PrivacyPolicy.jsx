@@ -25,7 +25,7 @@ const PrivacyPolicy = () => {
 
       {/* Intro */}
       <p>
-        JobLithic respects your privacy and is committed to protecting your
+        CareerLink respects your privacy and is committed to protecting your
         personal information. This Privacy Policy explains how we collect,
         use, and safeguard your data when you use our platform.
       </p>
@@ -34,7 +34,7 @@ const PrivacyPolicy = () => {
       <p>
         We may collect personal information such as your name, email address,
         phone number, resume details, skills, and employment history when you
-        register or apply for jobs on JobLithic.
+        register or apply for jobs on CareerLink.
       </p>
       <p>
         We may also collect usage information such as login activity,
@@ -43,7 +43,7 @@ const PrivacyPolicy = () => {
 
       <SectionTitle number="2" title="How We Use Your Information" />
       <ul style={{ paddingLeft: "1.2rem" }}>
-        <li>Create and manage your JobLithic account</li>
+        <li>Create and manage your CareerLink account</li>
         <li>Connect job seekers with verified employers</li>
         <li>Enable job applications and recruitment processes</li>
         <li>Improve platform functionality and experience</li>
@@ -74,7 +74,7 @@ const PrivacyPolicy = () => {
 
       <SectionTitle number="5" title="Cookies" />
       <p>
-        JobLithic uses cookies to maintain sessions, enhance functionality,
+        CareerLink uses cookies to maintain sessions, enhance functionality,
         and analyze usage trends. You can manage cookies via browser settings.
       </p>
 
@@ -93,7 +93,7 @@ const PrivacyPolicy = () => {
 
       <SectionTitle number="8" title="Policy Updates" />
       <p>
-        JobLithic may update this policy periodically. Changes will be
+        CareerLink may update this policy periodically. Changes will be
         reflected on this page.
       </p>
 
@@ -111,7 +111,7 @@ const PrivacyPolicy = () => {
           border: "1px solid var(--border)"
         }}
       >
-        <strong>Email:</strong> support@JobLithic.com
+        <strong>Email:</strong> support@CareerLink.com
       </div>
 
       {/* Bottom Agreement */}
@@ -123,7 +123,7 @@ const PrivacyPolicy = () => {
           color: "var(--primary)"
         }}
       >
-        By using JobLithic, you agree to this Privacy Policy.
+        By using CareerLink, you agree to this Privacy Policy.
       </p>
 
       {/* Back Button */}

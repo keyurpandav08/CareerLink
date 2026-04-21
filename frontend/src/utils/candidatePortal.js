@@ -40,7 +40,7 @@ export const getCandidateHeadline = (profile) => {
   const experience = String(profile?.experience || '').trim();
 
   if (experience && experience !== 'Fresher' && skills.length) {
-    return `${experience} • ${skills.join(' / ')}`;
+    return `${experience} - ${skills.join(' / ')}`;
   }
 
   if (experience && experience !== 'Fresher') {

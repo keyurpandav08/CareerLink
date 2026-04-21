@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -26,11 +26,7 @@ const loadSavedJobs = () => {
 };
 
 const SavedJobs = () => {
-  const [jobs, setJobs] = useState([]);
-
-  useEffect(() => {
-    setJobs(loadSavedJobs());
-  }, []);
+  const [jobs, setJobs] = useState(loadSavedJobs);
 
   const insights = useMemo(() => {
     const locations = [...new Set(jobs.map((job) => job.location).filter(Boolean))];

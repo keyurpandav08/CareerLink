@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Footer from './Footer';
 import AuthModal from './AuthModal';
+import BrandLogo from './BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
 import { getProfilePhoto } from '../utils/candidatePortal';
@@ -81,8 +82,12 @@ const Layout = () => {
   }, []);
 
   useEffect(() => {
-    setShowMobileMenu(false);
-    setShowUserMenu(false);
+    const timer = window.setTimeout(() => {
+      setShowMobileMenu(false);
+      setShowUserMenu(false);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [location.pathname]);
 
   const handleLogout = async () => {
@@ -131,12 +136,11 @@ const Layout = () => {
   return (
     <div className="app-layout-root">
       <header className="site-header">
-        <div className="container site-header-frame">
-          <div className="site-header-shell">
-            <Link to="/" className="brand-link" onClick={() => setShowMobileMenu(false)}>
-              <span className="brand-mark">Career</span>
-              <span className="brand-mark brand-mark-accent">Link</span>
-            </Link>
+          <div className="container site-header-frame">
+            <div className="site-header-shell">
+              <Link to="/" className="brand-link" onClick={() => setShowMobileMenu(false)} aria-label="CareerLink home">
+                <BrandLogo variant="full" className="site-brand-logo" alt="CareerLink" />
+              </Link>
 
             <nav className="desktop-nav">
               {navItems.map((item) => (

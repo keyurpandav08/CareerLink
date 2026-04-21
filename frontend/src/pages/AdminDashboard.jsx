@@ -14,6 +14,7 @@ import {
   UserCog,
   Users
 } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './AdminDashboard.css';
@@ -87,7 +88,7 @@ const AdminDashboard = () => {
     loadAdminData();
   }, []);
 
-  const overview = dashboard?.overview || {};
+  const overview = useMemo(() => dashboard?.overview || {}, [dashboard?.overview]);
 
   const metricCards = useMemo(() => ([
     {
@@ -251,9 +252,9 @@ const AdminDashboard = () => {
       <aside className="admin-sidebar">
         <div>
           <div className="admin-brand">
-            <span className="admin-brand-mark">JL</span>
+            <BrandLogo variant="icon" className="admin-brand-mark" alt="CareerLink" />
             <div>
-              <strong>JobLithic Admin</strong>
+              <strong>CareerLink Admin</strong>
               <small>Platform control room</small>
             </div>
           </div>

@@ -68,68 +68,75 @@ const RecruiterAnalytics = () => {
   const jobTypes = buildJobTypeDistribution(jobs);
   const pipelineRows = buildPipelineRows(currentApplications.length ? currentApplications : applications);
 
-  const metrics = useMemo(() => {
-    const reviewedCurrent = currentApplications.filter((application) => application.status === 'REVIEWED').length;
-    const reviewedPrevious = previousApplications.filter((application) => application.status === 'REVIEWED').length;
-    const acceptedCurrent = currentApplications.filter((application) => application.status === 'ACCEPTED').length;
-    const acceptedPrevious = previousApplications.filter((application) => application.status === 'ACCEPTED').length;
+  const reviewedCurrent = currentApplications.filter((application) => application.status === 'REVIEWED').length;
+  const reviewedPrevious = previousApplications.filter((application) => application.status === 'REVIEWED').length;
+  const acceptedCurrent = currentApplications.filter((application) => application.status === 'ACCEPTED').length;
+  const acceptedPrevious = previousApplications.filter((application) => application.status === 'ACCEPTED').length;
 
-    return [
-      {
-        label: 'Total Applicants',
-        value: formatCompactNumber(currentApplications.length),
-        helper: 'Applications captured in this time window',
-        icon: Activity,
-        trend: getDeltaSummary(currentApplications.length, previousApplications.length)
-      },
-      {
-        label: 'Review Rate',
-        value: formatPercent(currentApplications.length ? (reviewedCurrent / currentApplications.length) * 100 : 0),
-        helper: 'Candidates moved into recruiter review',
-        icon: Sparkles,
-        trend: getDeltaSummary(reviewedCurrent, reviewedPrevious)
-      },
-      {
-        label: 'Offer Rate',
-        value: formatPercent(currentApplications.length ? (acceptedCurrent / currentApplications.length) * 100 : 0),
-        helper: 'Accepted outcomes inside the selected range',
-        icon: Clock3,
-        trend: getDeltaSummary(acceptedCurrent, acceptedPrevious)
-      },
-      {
-        label: 'Active Jobs',
-        value: formatCompactNumber(jobs.filter((job) => String(job.status).toLowerCase() === 'open').length),
-        helper: 'Open roles receiving candidate traffic',
-        icon: BriefcaseBusiness,
-        trend: { label: `${jobs.length} total`, tone: 'neutral' }
-      }
-    ];
-  }, [currentApplications, jobs, previousApplications]);
+  const metrics = [
+    {
+      label: 'Total Applicants',
+      value: formatCompactNumber(currentApplications.length),
+      helper: 'Applications captured in this time window',
+      icon: Activity,
+      trend: getDeltaSummary(currentApplications.length, previousApplications.length)
+    },
+    {
+      label: 'Review Rate',
+      value: formatPercent(currentApplications.length ? (reviewedCurrent / currentApplications.length) * 100 : 0),
+      helper: 'Candidates moved into recruiter review',
+      icon: Sparkles,
+      trend: getDeltaSummary(reviewedCurrent, reviewedPrevious)
+    },
+    {
+      label: 'Offer Rate',
+      value: formatPercent(currentApplications.length ? (acceptedCurrent / currentApplications.length) * 100 : 0),
+      helper: 'Accepted outcomes inside the selected range',
+      icon: Clock3,
+      trend: getDeltaSummary(acceptedCurrent, acceptedPrevious)
+    },
+    {
+      label: 'Active Jobs',
+      value: formatCompactNumber(jobs.filter((job) => String(job.status).toLowerCase() === 'open').length),
+      helper: 'Open roles receiving candidate traffic',
+      icon: BriefcaseBusiness,
+      trend: { label: `${jobs.length} total`, tone: 'neutral' }
+    }
+  ];
 
-  const donutSegments = useMemo(() => {
-    const source = locations.length ? locations : [{ label: 'Unspecified', count: 1 }];
-    const total = source.reduce((sum, item) => sum + item.count, 0) || 1;
-    let cursor = 0;
+  const source = locations.length ? locations : [{ label: 'Unspecified', count: 1 }];
+  const total = source.reduce((sum, item) => sum + item.count, 0) || 1;
+  const colors = ['#2563eb', '#0f172a', '#93c5fd'];
+  const donutParts = source.map((item, index) => {
+    const start = source.slice(0, index).reduce((sum, previous) => sum + (previous.count / total) * 360, 0);
+    const end = start + (item.count / total) * 360;
+    return `${colors[index % colors.length]} ${start}deg ${end}deg`;
+  });
 
-    const colors = ['#2563eb', '#0f172a', '#93c5fd'];
+  const donutSegments = {
+    background: `conic-gradient(${donutParts.join(', ')})`,
+    total,
+    legend: source.map((item, index) => ({
+      ...item,
+      color: colors[index % colors.length],
+      share: Math.round((item.count / total) * 100)
+    }))
+  };
 
-    const parts = source.map((item, index) => {
-      const start = cursor;
-      const slice = (item.count / total) * 360;
-      cursor += slice;
-      return `${colors[index % colors.length]} ${start}deg ${cursor}deg`;
-    });
-
-    return {
-      background: `conic-gradient(${parts.join(', ')})`,
-      total,
-      legend: source.map((item, index) => ({
-        ...item,
-        color: colors[index % colors.length],
-        share: Math.round((item.count / total) * 100)
-      }))
-    };
-  }, [locations]);
+  // eslint-disable-next-line no-unused-vars
+  const metricCards = metrics.map(({ label, value, helper, icon: Icon, trend }) => (
+    <article key={label} className="recruiter-card recruiter-stat-card">
+      <div className="recruiter-stat-top">
+        <div className="recruiter-stat-icon">
+          <Icon size={18} />
+        </div>
+        <div className={`recruiter-stat-trend ${trend.tone}`}>{trend.label}</div>
+      </div>
+      <small>{label}</small>
+      <strong>{value}</strong>
+      <span>{helper}</span>
+    </article>
+  ));
 
   if (loading) {
     return <section className="recruiter-page recruiter-empty-state">Loading analytics...</section>;
@@ -162,19 +169,7 @@ const RecruiterAnalytics = () => {
       )}
     >
       <section className="recruiter-suite-stats">
-        {metrics.map(({ label, value, helper, icon: Icon, trend }) => (
-          <article key={label} className="recruiter-card recruiter-stat-card">
-            <div className="recruiter-stat-top">
-              <div className="recruiter-stat-icon">
-                <Icon size={18} />
-              </div>
-              <div className={`recruiter-stat-trend ${trend.tone}`}>{trend.label}</div>
-            </div>
-            <small>{label}</small>
-            <strong>{value}</strong>
-            <span>{helper}</span>
-          </article>
-        ))}
+        {metricCards}
       </section>
 
       <section className="recruiter-suite-two-up" style={{ marginTop: '1.3rem' }}>

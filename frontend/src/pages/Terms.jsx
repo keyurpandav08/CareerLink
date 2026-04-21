@@ -29,13 +29,13 @@ const Terms = () => {
 
       <p>
         These Terms of Service govern your access to and use of the
-        JobLithic platform. By using JobLithic, you agree to comply
+        CareerLink platform. By using CareerLink, you agree to comply
         with these terms. If you do not agree, please discontinue use.
       </p>
 
       <SectionTitle number="1" title="Eligibility" />
       <p>
-        You must be at least 18 years old to use JobLithic. By registering,
+        You must be at least 18 years old to use CareerLink. By registering,
         you confirm that all information provided is accurate and complete.
       </p>
 
@@ -47,7 +47,7 @@ const Terms = () => {
 
       <SectionTitle number="3" title="Platform Usage" />
       <ul style={{ paddingLeft: "1.2rem" }}>
-        <li>Use JobLithic only for lawful job-related purposes</li>
+        <li>Use CareerLink only for lawful job-related purposes</li>
         <li>No false information, spam, or misleading content</li>
         <li>Employers must post genuine job opportunities</li>
         <li>Applicants must provide accurate profile details</li>
@@ -55,7 +55,7 @@ const Terms = () => {
 
       <SectionTitle number="4" title="Job Applications" />
       <p>
-        JobLithic does not guarantee job placement. We serve as a
+        CareerLink does not guarantee job placement. We serve as a
         connecting platform between job seekers and employers and
         are not responsible for hiring decisions.
       </p>
@@ -63,26 +63,26 @@ const Terms = () => {
       <SectionTitle number="5" title="Content Ownership" />
       <p>
         Users retain ownership of their submitted content but grant
-        JobLithic permission to display and use such content for
+        CareerLink permission to display and use such content for
         platform functionality.
       </p>
 
       <SectionTitle number="6" title="Account Suspension" />
       <p>
-        JobLithic reserves the right to suspend or terminate accounts
+        CareerLink reserves the right to suspend or terminate accounts
         that violate these terms or engage in harmful behavior.
       </p>
 
       <SectionTitle number="7" title="Limitation of Liability" />
       <p>
-        JobLithic shall not be liable for any direct or indirect damages
+        CareerLink shall not be liable for any direct or indirect damages
         resulting from the use or inability to use the platform.
       </p>
 
       <SectionTitle number="8" title="Changes to Terms" />
       <p>
         We may update these Terms of Service periodically. Continued use
-        of JobLithic after changes indicates acceptance of the revised terms.
+        of CareerLink after changes indicates acceptance of the revised terms.
       </p>
 
       <SectionTitle number="9" title="Governing Law" />
@@ -99,7 +99,7 @@ const Terms = () => {
           color: "var(--primary)"
         }}
       >
-        By using JobLithic, you agree to these Terms of Service.
+        By using CareerLink, you agree to these Terms of Service.
       </p>
 
       {/* Back Button */}

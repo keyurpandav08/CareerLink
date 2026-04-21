@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './Dashboard.css';
@@ -509,7 +510,9 @@ const Dashboard = () => {
         <aside className={`candidate-sidebar ${sidebarOpen ? 'is-open' : ''}`}>
           <div className="candidate-sidebar-head">
             <div>
-              <div className="candidate-sidebar-brand">Candidate Portal</div>
+              <Link to="/dashboard" className="candidate-sidebar-brand" aria-label="CareerLink candidate dashboard">
+                <BrandLogo variant="full" className="candidate-sidebar-brand-logo" alt="CareerLink" />
+              </Link>
               <p>Manage your career</p>
             </div>
 
@@ -556,7 +559,7 @@ const Dashboard = () => {
               </button>
 
               <Link to="/dashboard" className="candidate-product-name">
-                <span className="candidate-product-mark">JL</span>
+                <BrandLogo variant="icon" className="candidate-product-mark" alt="CareerLink" />
                 <span>CareerLink</span>
               </Link>
 

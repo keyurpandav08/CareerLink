@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import BrandLogo from './BrandLogo';
 import './AuthSplitLayout.css';
 
 const AuthSplitLayout = ({
@@ -19,7 +20,9 @@ const AuthSplitLayout = ({
   <section className="auth-shell auth-shell-reference">
     <div className="auth-reference-frame">
       <aside className="auth-reference-showcase">
-        <div className="auth-reference-brand">{brand}</div>
+        <div className="auth-reference-brand">
+          <BrandLogo variant="full" className="auth-reference-brand-logo" alt={brand} />
+        </div>
 
         <div className="auth-reference-copy">
           <h2>{showcaseTitle}</h2>

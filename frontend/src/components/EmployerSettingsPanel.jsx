@@ -170,7 +170,7 @@ const EmployerSettingsPanel = ({ open, profile, onClose, onSaved }) => {
           <div>
             <span className="settings-kicker">Recruiter Workspace Settings</span>
             <h2>{formProfile.companyName || 'Complete your company profile'}</h2>
-            <p>A polished employer profile makes your dashboard, jobs, and applications feel consistent with the new JobLithic UI.</p>
+            <p>A polished employer profile makes your dashboard, jobs, and applications feel consistent with the new CareerLink UI.</p>
           </div>
 
           <div className="settings-completion">

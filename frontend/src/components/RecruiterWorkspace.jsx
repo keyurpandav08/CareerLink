@@ -10,6 +10,7 @@ import {
   Users,
   Workflow
 } from 'lucide-react';
+import BrandLogo from './BrandLogo';
 import {
   getRecruiterAvatarLabel,
   getRecruiterCompany,
@@ -49,7 +50,9 @@ const RecruiterWorkspace = ({
     <div className={`recruiter-shell recruiter-shell--${tone}`}>
       <aside className="recruiter-sidebar">
         <div className="recruiter-brand-block">
-          <Link to="/employer-dashboard" className="recruiter-brand-link">CareerLink</Link>
+          <Link to="/employer-dashboard" className="recruiter-brand-link" aria-label="CareerLink employer dashboard">
+            <BrandLogo variant="full" className="recruiter-brand-logo" alt="CareerLink" />
+          </Link>
           <p>Recruiter Suite</p>
         </div>
 
@@ -87,7 +90,7 @@ const RecruiterWorkspace = ({
       <div className="recruiter-main">
         <header className="recruiter-topbar">
           <Link to="/employer-dashboard" className="recruiter-topbar-brand">
-            <span className="recruiter-topbar-mark">JL</span>
+            <BrandLogo variant="icon" className="recruiter-topbar-mark" alt="CareerLink" />
             <span>CareerLink</span>
           </Link>
 

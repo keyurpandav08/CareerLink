@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom';
 import {
   BookOpen,
   Briefcase,
-  Globe,
   Send,
   Shield,
   Star,
   X
 } from 'lucide-react';
+import BrandLogo from './BrandLogo';
 import { useAuthModal } from '../context/AuthModalContext';
 import './Footer.css';
 
@@ -38,7 +38,7 @@ const Footer = () => {
       <div className="container">
         <div className="footer-hero">
           <div className="footer-hero-copy">
-            <span className="footer-kicker">CareerLink</span>
+            <BrandLogo variant="full" className="footer-hero-logo" alt="CareerLink" />
             <h2>Build your next move with a calmer hiring flow.</h2>
             <p>Explore verified roles, polish your profile, and keep your job search inside one elegant workspace.</p>
           </div>
@@ -54,7 +54,9 @@ const Footer = () => {
         <div className="footer-grid">
           <section>
             <div className="footer-brand">
-              <span className="footer-brand-icon"><Globe size={16} /></span>
+              <span className="footer-brand-icon">
+                <BrandLogo variant="icon" className="footer-brand-icon-logo" alt="CareerLink" />
+              </span>
               <div>
                 <h3>CareerLink</h3>
                 <p>Soft visuals, sharper workflows, and a hiring journey that feels easier to trust.</p>

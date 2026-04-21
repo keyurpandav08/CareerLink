@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.keyurpandav</groupId>
-	<artifactId>Job-Portal-System</artifactId>
+	<artifactId>CareerLink</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>jobber</name>
-	<description>Job Portal System Using Springboot</description>
+	<name>CareerLink</name>
+	<description>CareerLink Using Springboot</description>
 	<url/>
 	<licenses>
 		<license/>

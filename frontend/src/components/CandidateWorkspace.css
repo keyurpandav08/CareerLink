@@ -34,7 +34,7 @@
   padding: 1.5rem 1rem;
   border-right: 1px solid rgba(184, 165, 147, 0.18);
   background:
-    linear-gradient(180deg, rgba(255, 249, 242, 0.9) 0%, rgba(247, 239, 230, 0.84) 100%);
+    linear-gradient(180deg, rgba(246, 250, 247, 0.94) 0%, rgba(231, 240, 234, 0.9) 100%);
   backdrop-filter: blur(20px);
 }
 
@@ -46,10 +46,15 @@
 }
 
 .candidate-workspace-brand {
-  font-family: var(--font-heading);
-  font-size: 1.08rem;
-  font-weight: 800;
-  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  max-width: 170px;
+}
+
+.candidate-workspace-brand-logo {
+  width: 100%;
+  height: auto;
 }
 
 .candidate-workspace-sidebar-head p {
@@ -173,7 +178,7 @@
   padding: 0.95rem 1rem;
   border: 1px solid rgba(213, 228, 236, 0.88);
   border-radius: 30px;
-  background: rgba(255, 255, 255, 0.84);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(18px);
   box-shadow: 0 20px 36px rgba(15, 23, 42, 0.06);
 }
@@ -203,16 +208,8 @@
 }
 
 .candidate-workspace-product-mark {
-  width: 38px;
-  height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #0f172a, #0e7490);
-  color: #fff;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
+  width: 36px;
+  height: 36px;
 }
 
 .candidate-workspace-search {
@@ -410,5 +407,9 @@
   .candidate-workspace-footer-card {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .candidate-workspace-brand {
+    max-width: 150px;
   }
 }

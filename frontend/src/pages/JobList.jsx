@@ -268,7 +268,7 @@ const JobList = () => {
           <header className="jobs-hero-card">
             <span className="jobs-kicker">Live Opportunities</span>
             <h1>Explore Open Roles</h1>
-            <p>Curated opportunities powered by your live data, employer activity, and the refreshed JobLithic UI.</p>
+            <p>Curated opportunities powered by your live data, employer activity, and the refreshed CareerLink UI.</p>
           </header>
 
           <form onSubmit={submitSearch} className="jobs-search-strip">

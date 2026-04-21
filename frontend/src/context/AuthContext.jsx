@@ -1,5 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import BrandLogo from '../components/BrandLogo';
 import api from '../services/api';
 import './AuthContext.css';
 
@@ -97,7 +99,10 @@ export const AuthProvider = ({ children }) => {
       {loading ? (
         <div className="auth-bootstrap-screen">
           <div className="auth-bootstrap-card">
-            <span className="auth-bootstrap-badge">JobLithic</span>
+            <span className="auth-bootstrap-badge">
+              <BrandLogo variant="icon" className="auth-bootstrap-badge-logo" alt="CareerLink" />
+              <span>CareerLink</span>
+            </span>
             <h1>Preparing your workspace</h1>
             <p>Checking your session and loading the right experience.</p>
             <div className="auth-bootstrap-bar" aria-hidden="true">

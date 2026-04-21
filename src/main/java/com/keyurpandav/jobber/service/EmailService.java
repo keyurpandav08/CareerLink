@@ -23,11 +23,11 @@ public class EmailService {
                 toEmail,
                 "New Job Alert",
                 "Hello " + safe(userName) + ",\n\n"
-                        + "A new job is available on JobLithic.\n\n"
+                        + "A new job is available on CareerLink.\n\n"
                         + "Role: " + safe(jobTitle) + "\n"
                         + "Company: " + safe(companyName) + "\n"
                         + "Link: " + safe(jobLink) + "\n\n"
-                        + "JobLithic Team"
+                        + "CareerLink Team"
         );
     }
 
@@ -38,19 +38,19 @@ public class EmailService {
                 "Your application has been submitted successfully.\n\n"
                         + "Role: " + safe(jobTitle) + "\n\n"
                         + "We will notify you when the employer updates your application.\n\n"
-                        + "JobLithic Team"
+                        + "CareerLink Team"
         );
     }
 
     public void sendOtpEmail(String email, String fullName, String otp, long expiryMinutes) {
         sendTextEmail(
                 email,
-                "JobLithic Password Reset OTP",
+                "CareerLink Password Reset OTP",
                 "Hello " + safe(fullName) + ",\n\n"
                         + "Your OTP for password reset is: " + safe(otp) + "\n"
                         + "This OTP will expire in " + expiryMinutes + " minutes.\n\n"
                         + "If you did not request this, ignore this email.\n\n"
-                        + "JobLithic Team"
+                        + "CareerLink Team"
         );
     }
 
@@ -61,7 +61,7 @@ public class EmailService {
                 "Hello " + safe(fullName) + ",\n\n"
                         + "Your password has been reset successfully.\n"
                         + "Login here: " + safe(frontendBaseUrl) + "/login\n\n"
-                        + "JobLithic Team"
+                        + "CareerLink Team"
         );
     }
 
@@ -74,8 +74,8 @@ public class EmailService {
                         + "Role: " + safe(jobTitle) + "\n"
                         + "Employer: " + safe(employerName) + "\n"
                         + "Status: " + safe(status) + "\n\n"
-                        + "Please check your JobLithic dashboard for more details.\n\n"
-                        + "JobLithic Team"
+                        + "Please check your CareerLink dashboard for more details.\n\n"
+                        + "CareerLink Team"
         );
     }
 

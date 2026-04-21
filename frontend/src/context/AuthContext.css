@@ -21,6 +21,8 @@
 
 .auth-bootstrap-badge {
   display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.4rem 0.8rem;
   border-radius: 999px;
   background: rgba(14, 116, 144, 0.1);
@@ -29,6 +31,11 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.auth-bootstrap-badge-logo {
+  width: 18px;
+  height: 18px;
 }
 
 .auth-bootstrap-card h1 {

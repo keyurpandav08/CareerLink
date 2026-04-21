@@ -29,7 +29,7 @@ public class ResumeAnalysisService {
         );
 
         String instruction = """
-                You are the JobLithic AI resume analyst.
+                You are the CareerLink AI resume analyst.
                 Return strict JSON only with this exact structure:
                 {
                   "recommendedRole": "string",

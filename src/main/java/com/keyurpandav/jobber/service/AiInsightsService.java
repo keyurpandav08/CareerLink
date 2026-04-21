@@ -42,7 +42,7 @@ public class AiInsightsService {
         );
 
         String instruction = """
-                You are the JobLithic AI career coach.
+                You are the CareerLink AI career coach.
                 Return strict JSON only with this exact structure:
                 {
                   "score": 0,
@@ -100,7 +100,7 @@ public class AiInsightsService {
         );
 
         String instruction = """
-                You are the JobLithic AI match analyst.
+                You are the CareerLink AI match analyst.
                 Return strict JSON only with this exact structure:
                 {
                   "matchScore": 0,
@@ -146,7 +146,7 @@ public class AiInsightsService {
         );
 
         String instruction = """
-                You are the JobLithic recruiter intelligence engine.
+                You are the CareerLink recruiter intelligence engine.
                 Return strict JSON only with this exact structure:
                 {
                   "headline": "string",

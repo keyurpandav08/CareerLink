@@ -426,7 +426,7 @@ const CreateJob = () => {
 
             <h3>{previewTitle}</h3>
             <p className="recruiter-preview-meta">
-              {(profile?.companyName || profile?.username || 'JobLithic')} | {previewLocation}
+              {(profile?.companyName || profile?.username || 'CareerLink')} | {previewLocation}
             </p>
 
             <div className="recruiter-preview-chip-row">

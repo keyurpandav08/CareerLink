@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, KeyRound, Shield, User } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import logo from '../pages/joblithic.png';
 import './Auth.css';
 import './AdminLogin.css';
 
@@ -57,7 +57,7 @@ const AdminLogin = () => {
         </div>
 
         <div className="auth-logo-wrap">
-          <img src={logo} alt="JobLithic" />
+          <BrandLogo variant="full" className="admin-login-logo" alt="CareerLink" />
         </div>
 
         <h1>Admin Sign In</h1>

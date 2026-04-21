@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import GoogleAuthButton from './GoogleAuthButton';
 import SkillTagInput from './SkillTagInput';
+import BrandLogo from './BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
 import { getDashboardPathByRole } from '../utils/role';
@@ -240,7 +241,7 @@ const AuthModal = () => {
         </button>
 
         <div className="auth-modal-showcase">
-          <span className="auth-modal-kicker">CareerLink</span>
+          <BrandLogo variant="full" className="auth-modal-brand-logo" alt="CareerLink" />
           <h2>Find work with a cleaner, calmer hiring experience.</h2>
           <p>
             Search opportunities, build your profile once, and move between applications without jumping between pages.

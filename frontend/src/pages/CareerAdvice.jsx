@@ -51,7 +51,7 @@ const CareerAdvice = () => {
           <div className="career-divider"></div>
 
           <p className="career-agree">
-            Start applying today and shape your future with JobLithic.
+            Start applying today and shape your future with CareerLink.
           </p>
 
           <button

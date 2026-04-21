@@ -27,25 +27,24 @@
   gap: 1rem;
   padding: 1rem 1.2rem;
   border-radius: 999px;
-  background: rgba(255, 252, 247, 0.82);
-  border: 1px solid rgba(175, 145, 118, 0.18);
-  box-shadow: 0 18px 44px rgba(84, 56, 36, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), transparent 34%),
+    radial-gradient(circle at 78% 28%, rgba(124, 174, 114, 0.18), transparent 28%),
+    linear-gradient(135deg, rgba(243, 248, 250, 0.96) 0%, rgba(226, 236, 242, 0.94) 52%, rgba(213, 226, 234, 0.92) 100%);
+  border: 1px solid rgba(95, 120, 144, 0.18);
+  box-shadow: 0 18px 44px rgba(47, 62, 82, 0.08);
 }
 
 .brand-link {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 0.18rem;
-  font-family: var(--font-display);
-  font-size: 2rem;
-  line-height: 1;
-  letter-spacing: -0.05em;
-  color: #1d1813;
+  line-height: 0;
 }
 
-.brand-mark-accent {
-  color: var(--accent-strong);
+.site-brand-logo {
+  width: clamp(168px, 18vw, 240px);
+  height: auto;
 }
 
 .desktop-nav {
@@ -54,8 +53,9 @@
   gap: 0.2rem;
   padding: 0.3rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(175, 145, 118, 0.12);
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(95, 120, 144, 0.12);
+  backdrop-filter: blur(10px);
 }
 
 .nav-item {
@@ -70,13 +70,13 @@
 
 .nav-item:hover {
   color: var(--accent-strong);
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .nav-item-active {
-  color: #20140e;
-  background: #ffffff;
-  box-shadow: 0 12px 24px rgba(84, 56, 36, 0.08);
+  color: #122033;
+  background: linear-gradient(180deg, #ffffff 0%, #eef5f8 100%);
+  box-shadow: 0 12px 24px rgba(47, 62, 82, 0.08);
 }
 
 .site-header-actions {
@@ -95,7 +95,7 @@
 .header-text-action {
   padding: 0.72rem 0.9rem;
   font-weight: 800;
-  color: #30221a;
+  color: #233241;
 }
 
 .btn-cta {
@@ -120,8 +120,8 @@
 }
 
 .user-trigger {
-  border: 1px solid rgba(175, 145, 118, 0.18);
-  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(95, 120, 144, 0.18);
+  background: rgba(255, 255, 255, 0.88);
   color: var(--text-main);
   border-radius: 999px;
   padding: 0.42rem 0.5rem 0.42rem 0.42rem;
@@ -129,7 +129,7 @@
   align-items: center;
   gap: 0.7rem;
   min-width: 188px;
-  box-shadow: 0 12px 28px rgba(84, 56, 36, 0.08);
+  box-shadow: 0 12px 28px rgba(47, 62, 82, 0.08);
 }
 
 .user-trigger-avatar {
@@ -139,7 +139,7 @@
   overflow: hidden;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #5d8f88, #7db7ac);
+  background: linear-gradient(135deg, #2f3e52, #5f7890);
   color: #fff;
   font-size: 0.82rem;
   font-weight: 800;
@@ -172,7 +172,7 @@
 }
 
 .user-trigger-copy span {
-  color: #8b7462;
+  color: #5f7890;
   font-size: 0.72rem;
 }
 
@@ -181,10 +181,10 @@
   top: calc(100% + 12px);
   right: 0;
   min-width: 210px;
-  background: #fffaf3;
+  background: linear-gradient(180deg, #fbfdff 0%, #eef5f8 100%);
   border-radius: 18px;
-  border: 1px solid rgba(175, 145, 118, 0.18);
-  box-shadow: 0 22px 44px rgba(84, 56, 36, 0.14);
+  border: 1px solid rgba(95, 120, 144, 0.18);
+  box-shadow: 0 22px 44px rgba(47, 62, 82, 0.14);
   overflow: hidden;
 }
 
@@ -203,7 +203,7 @@
 
 .user-menu a:hover,
 .user-menu button:hover {
-  background: #f8efe2;
+  background: #e8f0f5;
 }
 
 .user-menu .danger-item {
@@ -217,10 +217,10 @@
   width: 48px;
   height: 48px;
   border-radius: 18px;
-  border: 1px solid rgba(175, 145, 118, 0.18);
-  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(95, 120, 144, 0.18);
+  background: rgba(255, 255, 255, 0.88);
   color: var(--text-main);
-  box-shadow: 0 12px 24px rgba(84, 56, 36, 0.08);
+  box-shadow: 0 12px 24px rgba(47, 62, 82, 0.08);
 }
 
 .mobile-nav-panel {
@@ -229,9 +229,9 @@
   gap: 0.7rem;
   padding: 1rem;
   border-radius: 28px;
-  background: rgba(255, 252, 247, 0.9);
-  border: 1px solid rgba(175, 145, 118, 0.16);
-  box-shadow: 0 18px 36px rgba(84, 56, 36, 0.08);
+  background: linear-gradient(180deg, rgba(251, 253, 255, 0.95) 0%, rgba(235, 242, 247, 0.92) 100%);
+  border: 1px solid rgba(95, 120, 144, 0.16);
+  box-shadow: 0 18px 36px rgba(47, 62, 82, 0.08);
 }
 
 .mobile-nav-links,
@@ -250,7 +250,7 @@
   border-radius: 18px;
   color: var(--text-main);
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .mobile-logout {
@@ -296,6 +296,10 @@
   }
 
   .brand-link {
-    font-size: 1.7rem;
+    max-width: 170px;
+  }
+
+  .site-brand-logo {
+    width: 100%;
   }
 }

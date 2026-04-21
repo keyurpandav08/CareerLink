@@ -636,7 +636,7 @@ const EditProfile = () => {
                         icon={Briefcase}
                         id={`project-title-${index}`}
                         label="Project Title"
-                        placeholder="e.g, Job Portal System"
+                        placeholder="e.g, CareerLink"
                         value={item.title || ''}
                         onChange={(event) => updateCollectionItem(setProjects, index, 'title', event.target.value)}
                       />

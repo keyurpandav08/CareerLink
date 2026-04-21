@@ -129,6 +129,17 @@ const Home = () => {
     return () => timers.forEach((timer) => window.clearInterval(timer));
   }, []);
 
+  // eslint-disable-next-line no-unused-vars
+  const featureCardsRendered = featureCards.map(({ icon: Icon, title, description }) => (
+    <article key={title} className="home-feature-card">
+      <div className="home-feature-icon">
+        <Icon size={22} />
+      </div>
+      <h3>{title}</h3>
+      <p>{description}</p>
+    </article>
+  ));
+
   const handleSearchSubmit = (event) => {
     event.preventDefault();
 
@@ -156,7 +167,7 @@ const Home = () => {
             <span className="home-kicker">The curator&apos;s choice</span>
 
             <h1>
-              Find Your Dream Job with <span>JobLithic</span>
+              Find Your Dream Job with <span>CareerLink</span>
             </h1>
 
             <p className="home-hero-text">
@@ -271,15 +282,7 @@ const Home = () => {
           </div>
 
           <div className="home-feature-grid">
-            {featureCards.map(({ icon: Icon, title, description }) => (
-              <article key={title} className="home-feature-card">
-                <div className="home-feature-icon">
-                  <Icon size={22} />
-                </div>
-                <h3>{title}</h3>
-                <p>{description}</p>
-              </article>
-            ))}
+            {featureCardsRendered}
           </div>
         </div>
       </section>
@@ -340,7 +343,7 @@ const Home = () => {
 
             <div className="home-cta-actions">
               <Link to="/register" className="btn-primary-glow home-primary-action">
-                Join JobLithic
+                Join CareerLink
                 <ArrowRight size={18} />
               </Link>
               <Link to="/jobs" className="btn-outline home-secondary-action">

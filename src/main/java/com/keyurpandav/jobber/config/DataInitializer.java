@@ -31,7 +31,7 @@ public class DataInitializer {
             }
 
             boolean adminExists = userRepository.findByUsername("admin").isPresent()
-                    || userRepository.findByEmail("admin@joblithic.com").isPresent();
+                    || userRepository.findByEmail("admin@careerlink.com").isPresent();
 
             if (!adminExists) {
                 Role adminRole = roleRepository.findByName("ADMIN")
@@ -39,7 +39,7 @@ public class DataInitializer {
 
                 User adminUser = User.builder()
                         .username("admin")
-                        .email("admin@joblithic.com")
+                        .email("admin@careerlink.com")
                         .password(passwordEncoder.encode("Admin@123"))
                         .fullName("System Admin")
                         .phone("+91 9999999999")

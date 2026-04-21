@@ -1,8 +1,10 @@
+import BrandLogo from './BrandLogo';
+
 const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="container">
-        <h2 className="logo">JobLithic</h2>
+        <BrandLogo variant="full" className="navbar-logo" alt="CareerLink" />
 
         <div className="nav-links">
           <a href="/">Home</a>

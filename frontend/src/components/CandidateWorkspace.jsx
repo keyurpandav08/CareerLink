@@ -13,6 +13,7 @@ import {
   X,
   Home
 } from 'lucide-react';
+import BrandLogo from './BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import {
   createInitials,
@@ -59,7 +60,9 @@ const CandidateWorkspace = ({
         <aside className={`candidate-workspace-sidebar ${sidebarOpen ? 'is-open' : ''}`}>
           <div className="candidate-workspace-sidebar-head">
             <div>
-              <div className="candidate-workspace-brand">Candidate Portal</div>
+              <Link to="/dashboard" className="candidate-workspace-brand" aria-label="CareerLink candidate dashboard">
+                <BrandLogo variant="full" className="candidate-workspace-brand-logo" alt="CareerLink" />
+              </Link>
               <p>Manage your career</p>
             </div>
 
@@ -117,7 +120,7 @@ const CandidateWorkspace = ({
               </button>
 
               <Link to="/dashboard" className="candidate-workspace-product-name">
-                <span className="candidate-workspace-product-mark">JL</span>
+                <BrandLogo variant="icon" className="candidate-workspace-product-mark" alt="CareerLink" />
                 <span>CareerLink</span>
               </Link>
 
