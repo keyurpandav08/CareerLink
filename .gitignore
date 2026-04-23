@@ -34,3 +34,7 @@ build/
 
 ### Environment Variables ###
 .env
+
+### Frontend Maven Plugin ###
+frontend/node/
+frontend/dist/
