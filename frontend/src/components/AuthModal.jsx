@@ -139,7 +139,7 @@ const AuthModal = () => {
       params.append('username', loginData.username.trim());
       params.append('password', loginData.password);
 
-      await api.post('/login', params, {
+      await api.post('/api/auth/login', params, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
 

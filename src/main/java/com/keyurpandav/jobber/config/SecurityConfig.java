@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -39,6 +40,28 @@ public class SecurityConfig {
                         // Swagger / OpenAPI
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/favicon.ico",
+                                "/error",
+                                "/assets/**",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/login",
+                                "/register",
+                                "/forgot-password",
+                                "/privacy-policy",
+                                "/terms",
+                                "/contact",
+                                "/career-advice",
+                                "/interview-tips",
+                                "/talent-search",
+                                "/jobs",
+                                "/jobs/**",
+                                "/admin/login"
+                        ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/resume/**").permitAll()
@@ -57,12 +80,17 @@ public class SecurityConfig {
 
                         .requestMatchers("/employer/**").hasRole("EMPLOYER")
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/users/upload-resume").hasRole("APPLICANT")
-                        .requestMatchers("/", "/home", "/register", "/css/**", "/js/**", "/images/**", "/login", "/users/register").permitAll()
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(ex -> ex
+                        .defaultAuthenticationEntryPointFor(
+                                unauthorizedEntryPoint(),
+                                request -> request.getRequestURI().startsWith("/api/")
+                        )
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .loginProcessingUrl("/login")
+                        .loginProcessingUrl("/api/auth/login")
                         .successHandler((request, response, authentication) -> {
                             response.setStatus(200); // OK
                             response.setContentType("application/json");
@@ -77,7 +105,7 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/home?logout=true")
+                        .logoutSuccessHandler((request, response, authentication) -> response.setStatus(200))
                         .permitAll()
                 )
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()));
@@ -100,5 +128,9 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    private AuthenticationEntryPoint unauthorizedEntryPoint() {
+        return (request, response, authException) -> response.sendError(401, "Unauthorized");
     }
 }
