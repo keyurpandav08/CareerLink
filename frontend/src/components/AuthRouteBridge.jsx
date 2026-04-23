@@ -30,7 +30,7 @@ const AuthRouteBridge = ({ mode }) => {
 };
 
 AuthRouteBridge.propTypes = {
-  mode: PropTypes.oneOf(['login', 'register']).isRequired
+  mode: PropTypes.oneOf(['login', 'register', 'forgot']).isRequired
 };
 
 export default AuthRouteBridge;

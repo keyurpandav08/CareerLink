@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AtSign, ExternalLink, MapPin, ScrollText } from 'lucide-react';
+import { AtSign, ExternalLink, MapPin, ScrollText, Shield } from 'lucide-react';
 import CandidateWorkspace from '../components/CandidateWorkspace';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -8,24 +8,29 @@ import {
   createInitials,
   getDisplayName,
   getProfileMeta,
-  getProfessionalTitle,
   getProfilePhoto,
+  getProfileVisibilityMeta,
+  getProfessionalTitle,
   hasResume,
   parseStructuredEntries,
   parseTagList,
   resizeImageToDataUrl,
-  saveProfileMeta,
+  saveProfileMeta
 } from '../utils/candidatePortal';
 import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 import './Profile.css';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [profile, setProfile] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [profileMeta, setProfileMeta] = useState({});
-    const [popup, setPopup] = useState("");
+  const [popup, setPopup] = useState('');
+  const resumeRef = useRef(null);
+  const profilePhotoRef = useRef(null);
+  const visibilityMeta = useMemo(() => getProfileVisibilityMeta(user), [user]);
+
   useEffect(() => {
     const loadProfile = async () => {
       const cacheKey = `candidate-profile:${user.username}`;
@@ -63,7 +68,7 @@ const Profile = () => {
   const internships = useMemo(() => parseStructuredEntries(profile?.internships), [profile?.internships]);
   const projects = useMemo(() => parseStructuredEntries(profile?.projects), [profile?.projects]);
   const certifications = useMemo(() => parseStructuredEntries(profile?.certifications), [profile?.certifications]);
-const resumeRef = useRef();
+
   const handleCoverUpload = async (event) => {
     const [file] = Array.from(event.target.files || []);
     if (!file) return;
@@ -78,49 +83,55 @@ const resumeRef = useRef();
       event.target.value = '';
     }
   };
-const handleResumeUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
 
-  try {
-    // 👉 local preview URL
-    const fileUrl = URL.createObjectURL(file);
+  const handleProfileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    setProfile((prev) => ({
-      ...prev,
-      resumeUrl: fileUrl,
-      resumeFileName: file.name,
-    }));
+    try {
+      const dataUrl = await resizeImageToDataUrl(file, 420);
+      saveProfileMeta(user, { profilePhoto: dataUrl });
+      setProfileMeta((current) => ({ ...current, profilePhoto: dataUrl }));
+    } catch {
+      setError('Failed to update profile photo');
+    } finally {
+      event.target.value = '';
+    }
+  };
 
-    setPopup("Resume uploaded successfully");
+  const handleResumeUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file || !profile?.id) return;
 
-    // auto hide after 2.5 sec
-    setTimeout(() => {
-      setPopup("");
-    }, 2500);
+    try {
+      const formData = new FormData();
+      formData.append('userId', profile.id);
+      formData.append('resume', file);
 
-  } catch (err) {
-    console.error(err);
-    alert("❌ Upload failed");
-  }
-};
-const handleProfileUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+      const response = await api.post('/users/upload-resume', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
-  try {
-    const dataUrl = await resizeImageToDataUrl(file, 420);
+      const updatedUser = response.data.user || response.data;
+      const nextProfile = { ...profile, ...updatedUser };
 
-    saveProfileMeta(user, { profilePhoto: dataUrl });
+      setProfile(nextProfile);
+      login({
+        ...user,
+        ...updatedUser,
+        roleName: updatedUser.roleName || user?.roleName
+      });
+      writeCachedValue(`candidate-profile:${user.username}`, nextProfile);
 
-    setProfileMeta((prev) => ({
-      ...prev,
-      profilePhoto: dataUrl
-    }));
-  } catch {
-    setError("Failed to update profile photo");
-  }
-};
+      setPopup('Resume uploaded successfully');
+      window.setTimeout(() => setPopup(''), 2500);
+    } catch (requestError) {
+      setError(requestError.response?.data?.error || 'Resume upload failed.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
   if (!profile) {
     return (
       <CandidateWorkspace
@@ -142,15 +153,14 @@ const handleProfileUpload = async (e) => {
       searchValue={searchTerm}
       onSearchChange={setSearchTerm}
       searchPlaceholder="Search profile..."
-
     >
-
       <div className="candidate-profile-page">
         <section className="candidate-profile-hero">
-
           <div
             className="candidate-profile-cover"
-            style={coverImage ? { backgroundImage: `linear-gradient(135deg, rgba(7, 16, 33, 0.45), rgba(37, 99, 235, 0.18)), url(${coverImage})` } : undefined}
+            style={coverImage ? {
+              backgroundImage: `linear-gradient(135deg, rgba(7, 16, 33, 0.45), rgba(37, 99, 235, 0.18)), url(${coverImage})`
+            } : undefined}
           >
             <label className="candidate-profile-cover-upload">
               <span>{coverImage ? 'Change Cover Image' : 'Add Cover Image'}</span>
@@ -160,20 +170,18 @@ const handleProfileUpload = async (e) => {
 
           <div className="candidate-profile-identity-card">
             <div className="candidate-profile-identity">
-              <div
+              <button
+                type="button"
                 className="candidate-profile-hero-avatar"
-                onClick={() => document.getElementById("profileUpload").click()}
+                onClick={() => profilePhotoRef.current?.click()}
               >
-                {profilePhoto
-                  ? <img src={profilePhoto} alt={displayName} />
-                  : createInitials(displayName)}
-
+                {profilePhoto ? <img src={profilePhoto} alt={displayName} /> : createInitials(displayName)}
                 <div className="avatar-overlay">Change</div>
-              </div>
+              </button>
 
               <input
+                ref={profilePhotoRef}
                 type="file"
-                id="profileUpload"
                 accept="image/*"
                 hidden
                 onChange={handleProfileUpload}
@@ -191,7 +199,10 @@ const handleProfileUpload = async (e) => {
             </div>
 
             <div className="candidate-profile-actions">
-
+              <div className={`candidate-profile-visibility is-${visibilityMeta.visibility}`}>
+                <Shield size={14} />
+                <span>{visibilityMeta.label}</span>
+              </div>
               <Link to="/edit-profile" className="candidate-profile-edit-btn">Edit Profile</Link>
               {hasResume(profile.resumeUrl) && (
                 <a href={profile.resumeUrl} target="_blank" rel="noreferrer" className="candidate-profile-share-btn">
@@ -215,18 +226,21 @@ const handleProfileUpload = async (e) => {
             <section className="candidate-profile-card">
               <h2>Experience</h2>
               <div className="candidate-profile-list">
-                {(internships.length ? internships : [{ title: 'Experience not added yet', summary: 'Use Edit Profile to add internships, projects, and measurable outcomes.' }]).map((item, index) => (
-                  <article key={`${item.title || 'internship'}-${index}`} className="candidate-profile-entry">
-                    <div className="candidate-profile-entry-icon">{index + 1}</div>
-                    <div>
-                      <h3>{item.title || 'Internship'}</h3>
-                      <p className="candidate-profile-entry-subtitle">
-                        {[item.company, item.role, item.duration].filter(Boolean).join(' • ') || professionalTitle}
-                      </p>
-                      <p>{item.summary || item.title}</p>
-                    </div>
-                  </article>
-                ))}
+                {(internships.length
+                  ? internships
+                  : [{ title: 'Experience not added yet', summary: 'Use Edit Profile to add internships, projects, and measurable outcomes.' }])
+                  .map((item, index) => (
+                    <article key={`${item.title || 'internship'}-${index}`} className="candidate-profile-entry">
+                      <div className="candidate-profile-entry-icon">{index + 1}</div>
+                      <div>
+                        <h3>{item.title || 'Internship'}</h3>
+                        <p className="candidate-profile-entry-subtitle">
+                          {[item.company, item.role, item.duration].filter(Boolean).join(' • ') || professionalTitle}
+                        </p>
+                        <p>{item.summary || item.title}</p>
+                      </div>
+                    </article>
+                  ))}
               </div>
             </section>
 
@@ -273,11 +287,8 @@ const handleProfileUpload = async (e) => {
 
             <section className="candidate-profile-card">
               <h2>Resume</h2>
-
               <div className="candidate-profile-artifact">
-
                 <div className="candidate-profile-artifact-head">
-
                   <div className="candidate-profile-artifact-icon">
                     <ScrollText size={18} />
                   </div>
@@ -290,67 +301,59 @@ const handleProfileUpload = async (e) => {
                       accept=".pdf,.doc,.docx"
                       onChange={handleResumeUpload}
                     />
-                    <div className={`resume-card ${hasResume(profile.resumeUrl) ? "success" : "empty"}`}>
 
+                    <div className={`resume-card ${hasResume(profile.resumeUrl) ? 'success' : 'empty'}`}>
                       <div className="resume-top">
                         <div className="resume-icon">
-                          {hasResume(profile.resumeUrl) ? "✅" : "🚫"}
+                          {hasResume(profile.resumeUrl) ? '✅' : '🚫'}
                         </div>
 
                         <div className="resume-text">
-                          <h3>
-                            {hasResume(profile.resumeUrl)
-                              ? "Resume Added"
-                              : "Resume Not Added"}
-                          </h3>
+                          <h3>{hasResume(profile.resumeUrl) ? 'Resume Added' : 'Resume Not Added'}</h3>
                           <p>
                             {hasResume(profile.resumeUrl)
-                              ? "Your resume is ready to be viewed"
-                              : "Upload your resume to get better visibility"}
+                              ? 'Your resume is ready to be reused across applications and AI analysis.'
+                              : 'Upload your resume once to use it everywhere in the dashboard.'}
                           </p>
                         </div>
                       </div>
 
                       <div className="resume-actions">
                         {!hasResume(profile.resumeUrl) ? (
-                         <button
-                           className="btn primary"
-                           onClick={() => resumeRef.current.click()}
-                         >
-                           Upload Resume
-                         </button>
+                          <button
+                            type="button"
+                            className="btn primary"
+                            onClick={() => resumeRef.current?.click()}
+                          >
+                            Upload Resume
+                          </button>
                         ) : (
                           <>
                             <a href={profile.resumeUrl} target="_blank" rel="noreferrer" className="btn view">
                               View
                             </a>
                             <button
+                              type="button"
                               className="btn update"
-                              onClick={() => resumeRef.current.click()}
+                              onClick={() => resumeRef.current?.click()}
                             >
                               Update
                             </button>
                           </>
                         )}
                       </div>
-
                     </div>
-
                   </div>
-
                 </div>
-
               </div>
+
               {popup && (
                 <div className="popup-overlay">
                   <div className="popup-box">
-
                     <div className="popup-icon-box">
                       <span>✓</span>
                     </div>
-
                     <p>{popup}</p>
-
                   </div>
                 </div>
               )}

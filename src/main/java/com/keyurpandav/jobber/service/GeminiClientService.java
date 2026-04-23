@@ -53,7 +53,7 @@ public class GeminiClientService {
 
             return objectMapper.readTree(extractJson(textNode.asText()));
         } catch (RestClientResponseException exception) {
-            throw new IllegalStateException("Gemini request failed: " + trimMessage(exception.getResponseBodyAsString()));
+            throw new IllegalStateException(mapGeminiError(exception));
         } catch (Exception exception) {
             throw new IllegalStateException("Unable to process Gemini response: " + trimMessage(exception.getMessage()));
         }
@@ -94,5 +94,15 @@ public class GeminiClientService {
             return "Unknown Gemini error";
         }
         return message.length() > 280 ? message.substring(0, 280) + "..." : message;
+    }
+
+    private String mapGeminiError(RestClientResponseException exception) {
+        int status = exception.getStatusCode().value();
+        return switch (status) {
+            case 401, 403 -> "Gemini API access is not configured correctly. Check your API key and permissions.";
+            case 429 -> "Gemini quota limit reached. Try again later or review your billing plan.";
+            case 500, 502, 503, 504 -> "Gemini service is temporarily unavailable. Please try again later.";
+            default -> "Gemini analysis is temporarily unavailable. Please try again.";
+        };
     }
 }

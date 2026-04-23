@@ -24,7 +24,6 @@ const platformStats = [
 ];
 
 const experienceOptions = [
-  'Experience level',
   'Internship',
   'Entry level',
   '1-3 years',
@@ -100,7 +99,7 @@ const companyLogos = [
 
 const Home = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [experienceLevel, setExperienceLevel] = useState('Experience level');
+  const [experienceLevel, setExperienceLevel] = useState('');
   const [animatedStats, setAnimatedStats] = useState(
     platformStats.map(() => 0)
   );
@@ -151,7 +150,7 @@ const Home = () => {
       search: searchKeyword.trim()
     });
 
-    if (experienceLevel !== 'Experience level') {
+    if (experienceLevel) {
       params.set('experience', experienceLevel);
     }
 
@@ -193,6 +192,7 @@ const Home = () => {
                     value={experienceLevel}
                     onChange={(event) => setExperienceLevel(event.target.value)}
                   >
+                    <option value="" disabled hidden>Experience level</option>
                     {experienceOptions.map((option) => (
                       <option key={option} value={option}>
                         {option}
@@ -210,7 +210,7 @@ const Home = () => {
             <div className="home-hero-support">
               <Link to="/resume-builder" className="home-upload-link">
                 <FileUp size={16} />
-                Upload Resume
+                Resume Insights
               </Link>
 
               <div className="home-social-proof">

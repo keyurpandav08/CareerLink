@@ -16,6 +16,7 @@ import {
 import GoogleAuthButton from './GoogleAuthButton';
 import SkillTagInput from './SkillTagInput';
 import BrandLogo from './BrandLogo';
+import ForgotPasswordPanel from './ForgotPasswordPanel';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
 import { getDashboardPathByRole } from '../utils/role';
@@ -76,6 +77,23 @@ const AuthModal = () => {
   }), [registerData.password]);
 
   const passwordStrong = Object.values(passwordChecks).every(Boolean);
+  const authCopy = {
+    login: {
+      overline: 'Welcome back',
+      title: 'Sign in to continue.',
+      summary: 'Pick up where you left off with a quick, focused sign-in.'
+    },
+    register: {
+      overline: 'Create account',
+      title: 'Join CareerLink today.',
+      summary: 'Build your profile once and keep everything in one place.'
+    },
+    forgot: {
+      overline: 'Reset access',
+      title: 'Recover your account.',
+      summary: 'Use an OTP to verify your email and set a fresh password.'
+    }
+  }[authMode];
 
   useEffect(() => {
     if (!isAuthModalOpen) {
@@ -256,37 +274,65 @@ const AuthModal = () => {
         <div className="auth-modal-panel">
           <div className="auth-modal-panel-top">
             <div>
-              <span className="auth-modal-overline">{authMode === 'login' ? 'Welcome back' : 'Create account'}</span>
-              <h3>{authMode === 'login' ? 'Sign in to continue.' : 'Join CareerLink today.'}</h3>
+              <span className="auth-modal-overline">{authCopy.overline}</span>
+              <h3>{authCopy.title}</h3>
+              <p className="auth-modal-copy">{authCopy.summary}</p>
             </div>
 
-            <div className="auth-modal-switch">
+            {authMode === 'forgot' ? (
               <button
                 type="button"
-                className={authMode === 'login' ? 'active' : ''}
+                className="auth-modal-text-btn"
                 onClick={() => {
-                  setLoginError('');
                   setAuthMessage('');
                   switchAuthMode('login');
                 }}
               >
-                Log in
+                Back to sign in
               </button>
-              <button
-                type="button"
-                className={authMode === 'register' ? 'active' : ''}
-                onClick={() => {
-                  setRegisterError('');
-                  setAuthMessage('');
-                  switchAuthMode('register');
-                }}
-              >
-                Sign up
-              </button>
-            </div>
+            ) : (
+              <div className="auth-modal-switch">
+                <button
+                  type="button"
+                  className={authMode === 'login' ? 'active' : ''}
+                  onClick={() => {
+                    setLoginError('');
+                    setAuthMessage('');
+                    switchAuthMode('login');
+                  }}
+                >
+                  Log in
+                </button>
+                <button
+                  type="button"
+                  className={authMode === 'register' ? 'active' : ''}
+                  onClick={() => {
+                    setRegisterError('');
+                    setAuthMessage('');
+                    switchAuthMode('register');
+                  }}
+                >
+                  Sign up
+                </button>
+              </div>
+            )}
           </div>
 
-          {authMode === 'login' ? (
+          {authMode === 'forgot' ? (
+            <div className="auth-modal-form-shell auth-modal-form-shell-forgot">
+              <ForgotPasswordPanel
+                onBackToLogin={() => {
+                  setAuthMessage('');
+                  switchAuthMode('login');
+                }}
+                onResetSuccess={(message) => {
+                  setLoginError('');
+                  setRegisterError('');
+                  switchAuthMode('login', { message });
+                }}
+              />
+            </div>
+          ) : authMode === 'login' ? (
             <div className="auth-modal-form-shell">
               {authMessage && <div className="auth-banner success">{authMessage}</div>}
               {loginError && <div className="auth-banner error">{loginError}</div>}
@@ -330,7 +376,17 @@ const AuthModal = () => {
                 </div>
 
                 <div className="auth-row-right">
-                  <Link to="/forgot-password" onClick={closeAuthModal}>Forgot Password?</Link>
+                  <button
+                    type="button"
+                    className="auth-inline-link"
+                    onClick={() => {
+                      setLoginError('');
+                      setAuthMessage('');
+                      switchAuthMode('forgot');
+                    }}
+                  >
+                    Forgot Password?
+                  </button>
                 </div>
 
                 <button type="submit" className="auth-submit auth-submit-soft" disabled={loginLoading}>

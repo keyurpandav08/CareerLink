@@ -6,10 +6,10 @@ import {
   CalendarDays,
   GraduationCap,
   Home,
-  ImagePlus,
   Languages,
   MapPin,
   Phone,
+  Shield,
   Save,
   Trash2,
   Upload,
@@ -25,6 +25,7 @@ import {
   getProfileMeta,
   getProfilePhoto,
   parseStructuredEntries,
+  normalizeProfileVisibility,
   resizeImageToDataUrl,
   saveProfileMeta,
   serializeStructuredEntries
@@ -92,6 +93,7 @@ const EditProfile = () => {
     professionalTitle: '',
     portfolioUrl: '',
     publicProfileActive: true,
+    profileVisibility: 'public',
     profilePhoto: '',
     collegeName: '',
     collegeLocation: '',
@@ -119,6 +121,9 @@ const EditProfile = () => {
           professionalTitle: storedMeta.professionalTitle || '',
           portfolioUrl: storedMeta.portfolioUrl || '',
           publicProfileActive: storedMeta.publicProfileActive ?? true,
+          profileVisibility: normalizeProfileVisibility(
+            storedMeta.profileVisibility || (storedMeta.publicProfileActive === false ? 'private' : 'public')
+          ),
           profilePhoto: storedMeta.profilePhoto || '',
           collegeName: storedMeta.collegeName || '',
           collegeLocation: storedMeta.collegeLocation || '',
@@ -152,6 +157,21 @@ const EditProfile = () => {
 
   const profilePhoto = profileMeta.profilePhoto || getProfilePhoto(user, formData);
   const displayName = useMemo(() => getDisplayName(formData, user), [formData, user]);
+  const visibilityMeta = useMemo(() => {
+    const visibility = normalizeProfileVisibility(
+      profileMeta.profileVisibility || (profileMeta.publicProfileActive === false ? 'private' : 'public')
+    );
+    const labels = {
+      public: 'Public profile',
+      recruiters: 'Recruiters only',
+      private: 'Private profile'
+    };
+
+    return {
+      visibility,
+      label: labels[visibility]
+    };
+  }, [profileMeta.profileVisibility, profileMeta.publicProfileActive]);
 
   const handlePhotoUpload = async (event) => {
     const file = event.target.files?.[0];
@@ -197,6 +217,9 @@ const EditProfile = () => {
       professionalTitle: storedMeta.professionalTitle || '',
       portfolioUrl: storedMeta.portfolioUrl || '',
       publicProfileActive: storedMeta.publicProfileActive ?? true,
+      profileVisibility: normalizeProfileVisibility(
+        storedMeta.profileVisibility || (storedMeta.publicProfileActive === false ? 'private' : 'public')
+      ),
       profilePhoto: storedMeta.profilePhoto || '',
       collegeName: storedMeta.collegeName || '',
       collegeLocation: storedMeta.collegeLocation || '',
@@ -242,7 +265,11 @@ const EditProfile = () => {
         ...updatedProfile
       });
 
-      saveProfileMeta(user, profileMeta);
+      saveProfileMeta(user, {
+        ...profileMeta,
+        profileVisibility: normalizeProfileVisibility(profileMeta.profileVisibility),
+        publicProfileActive: profileMeta.profileVisibility !== 'private'
+      });
       setProfile(updatedProfile);
       setFormData(updatedProfile);
       setMessage('Profile updated successfully.');
@@ -323,8 +350,9 @@ const EditProfile = () => {
               <h2>{displayName}</h2>
               <p>{profileMeta.professionalTitle || 'Add your professional title'}</p>
 
-              <div className="edit-profile-toggle-card">
-                <span>{profileMeta.publicProfileActive ? 'Public Profile Active' : 'Private Profile'}</span>
+              <div className={`edit-profile-toggle-card is-${visibilityMeta.visibility}`}>
+                <Shield size={14} />
+                <span>{visibilityMeta.label}</span>
               </div>
             </section>
 
@@ -756,8 +784,14 @@ const EditProfile = () => {
               <label className="switch-btn">
                 <input
                   type="checkbox"
-                  checked={profileMeta.publicProfileActive}
-                  onChange={(event) => setProfileMeta((prev) => ({ ...prev, publicProfileActive: event.target.checked }))}
+                  checked={profileMeta.profileVisibility !== 'private'}
+                  onChange={(event) => setProfileMeta((prev) => ({
+                    ...prev,
+                    publicProfileActive: event.target.checked,
+                    profileVisibility: event.target.checked
+                      ? normalizeProfileVisibility(prev.profileVisibility === 'private' ? 'public' : prev.profileVisibility)
+                      : 'private'
+                  }))}
                 />
                 <span />
               </label>

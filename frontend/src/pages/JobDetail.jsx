@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { getRoleName } from '../utils/role';
 import api from '../services/api';
+import { getFriendlyAiError } from '../utils/aiError';
 import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 import './JobDetail.css';
 
@@ -21,9 +22,7 @@ const defaultApplyData = {
   experienceSummary: '',
   agreeEligibility: false,
   agreeProfileAccurate: false,
-  agreeDataConsent: false,
-  resumeFile: null,
-  resumeFileName: ''
+  agreeDataConsent: false
 };
 
 const splitContent = (value) =>
@@ -80,7 +79,6 @@ const JobDetail = () => {
   const [applyFeedback, setApplyFeedback] = useState('');
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [saved, setSaved] = useState(false);
-  const fileRef = useRef(null);
 
   const roleName = getRoleName(user);
   const isApplicant = roleName === 'APPLICANT';
@@ -96,7 +94,7 @@ const JobDetail = () => {
         setRelatedJobs(Array.isArray(cachedState.relatedJobs) ? cachedState.relatedJobs : []);
         setCandidateProfile(cachedState.candidateProfile || null);
         setAiInsight(cachedState.aiInsight || null);
-        setAiError(cachedState.aiError || '');
+        setAiError(getFriendlyAiError(cachedState.aiError, ''));
         setLoading(false);
       } else {
         setLoading(true);
@@ -153,7 +151,10 @@ const JobDetail = () => {
                 setAiError('');
               } else {
                 nextAiInsight = null;
-                nextAiError = aiResult.reason?.response?.data?.error || 'Add your Gemini key in application.properties to unlock live AI match insights.';
+                nextAiError = getFriendlyAiError(
+                  aiResult.reason,
+                  'Add your Gemini key in application.properties to unlock live AI match insights.'
+                );
                 setAiInsight(null);
                 setAiError(nextAiError);
               }
@@ -185,7 +186,10 @@ const JobDetail = () => {
                     aiError: ''
                   });
                 } catch (aiRequestError) {
-                  const nextAiError = aiRequestError.response?.data?.error || 'Add your Gemini key in application.properties to unlock live AI match insights.';
+                  const nextAiError = getFriendlyAiError(
+                    aiRequestError,
+                    'Add your Gemini key in application.properties to unlock live AI match insights.'
+                  );
                   setAiInsight(null);
                   setAiError(nextAiError);
                   writeCachedValue(cacheKey, {
@@ -243,7 +247,7 @@ const JobDetail = () => {
   const isApplyFormValid = useMemo(() => (
     applyData.expectedSalary.trim() &&
     applyData.experienceSummary.trim().length >= 30 &&
-    (applyData.resumeFile || hasProfileResume) &&
+    hasProfileResume &&
     applyData.agreeEligibility &&
     applyData.agreeProfileAccurate &&
     applyData.agreeDataConsent
@@ -323,25 +327,12 @@ const JobDetail = () => {
 
     try {
       setApplying(true);
-
-      if (applyData.resumeFile) {
-        const formData = new FormData();
-        formData.append('userId', user.id);
-        formData.append('jobId', job.id);
-        formData.append('applicationNote', note);
-        formData.append('resume', applyData.resumeFile);
-
-        await api.post('/applications/apply', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-      } else {
-        await api.post('/applications/apply-json', {
-          userId: user.id,
-          jobId: job.id,
-          applicationNote: note,
-          resumeUrl: candidateProfile?.resumeUrl
-        });
-      }
+      await api.post('/applications/apply-json', {
+        userId: user.id,
+        jobId: job.id,
+        applicationNote: note,
+        resumeUrl: candidateProfile?.resumeUrl
+      });
 
       setApplyFeedback('');
       setApplyOpen(false);
@@ -555,29 +546,21 @@ const JobDetail = () => {
               <div className="job-resume-block">
                 <div>
                   <strong>Resume</strong>
-                  <p>{hasProfileResume ? 'Your profile resume is ready, or upload a fresher one for this application.' : 'Upload a resume to continue with this application.'}</p>
+                  <p>
+                    {hasProfileResume
+                      ? 'Your saved profile resume will be attached to this application automatically.'
+                      : 'Upload your resume once from Profile before applying here.'}
+                  </p>
                 </div>
 
-                <input
-                  type="file"
-                  ref={fileRef}
-                  hidden
-                  accept=".pdf,.doc,.docx"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (!file) return;
-                    setApplyData((prev) => ({ ...prev, resumeFile: file, resumeFileName: file.name }));
-                  }}
-                />
-
-                <button type="button" className="job-secondary-btn" onClick={() => fileRef.current?.click()}>
-                  {applyData.resumeFile ? 'Replace Resume' : 'Upload Resume'}
-                </button>
-
-                {(applyData.resumeFileName || candidateProfile?.resumeFileName) && (
+                {hasProfileResume ? (
                   <div className="job-resume-chip">
-                    {applyData.resumeFileName || candidateProfile?.resumeFileName}
+                    {candidateProfile?.resumeFileName || 'Saved resume ready'}
                   </div>
+                ) : (
+                  <Link to="/profile" className="job-secondary-btn job-resume-link">
+                    Upload in Profile
+                  </Link>
                 )}
               </div>
 

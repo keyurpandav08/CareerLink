@@ -101,6 +101,9 @@
   height: 116px;
   flex-shrink: 0;
   margin-top: -58px;
+  padding: 0;
+  appearance: none;
+  cursor: pointer;
   border: 5px solid rgba(255, 255, 255, 0.96);
   border-radius: 50%;
   background: linear-gradient(135deg, #111827, #2563eb);
@@ -167,6 +170,34 @@
   align-items: center;
   gap: 0.7rem;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.candidate-profile-visibility {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.52rem 0.78rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.candidate-profile-visibility.is-public {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+
+.candidate-profile-visibility.is-recruiters {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+
+.candidate-profile-visibility.is-private {
+  background: rgba(15, 23, 42, 0.08);
+  color: #334155;
 }
 
 .candidate-profile-edit-btn,

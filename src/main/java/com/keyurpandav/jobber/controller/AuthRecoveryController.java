@@ -140,6 +140,12 @@ public class AuthRecoveryController {
         }
 
         try {
+            if (googleClientId.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Google sign-in is not configured. Set app.oauth.google.client-id in application.properties."
+                ));
+            }
+
             Map<String, Object> tokenInfo = verifyGoogleCredential(credential.trim());
             String email = String.valueOf(tokenInfo.getOrDefault("email", ""));
             String emailVerified = String.valueOf(tokenInfo.getOrDefault("email_verified", "false"));
@@ -151,7 +157,7 @@ public class AuthRecoveryController {
             if (!"true".equalsIgnoreCase(emailVerified)) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Google email is not verified"));
             }
-            if (!googleClientId.isBlank() && !googleClientId.equals(audience)) {
+            if (!googleClientId.equals(audience)) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Google client mismatch"));
             }
 
@@ -200,7 +206,7 @@ public class AuthRecoveryController {
     private String mapForgotPasswordError(Exception e) {
         String message = e.getMessage() != null ? e.getMessage() : "Failed to send OTP";
         if (message.toLowerCase().contains("authentication failed")) {
-            return "Email login failed. Check spring.mail.username and Gmail app password in application.yml.";
+            return "Gmail SMTP authentication failed. Verify spring.mail.username and the Gmail app password in application.properties.";
         }
         return message;
     }

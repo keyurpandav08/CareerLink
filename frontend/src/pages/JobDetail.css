@@ -426,6 +426,10 @@
   line-height: 1.6;
 }
 
+.job-resume-link {
+  text-decoration: none;
+}
+
 .job-resume-chip {
   display: inline-flex;
   width: fit-content;

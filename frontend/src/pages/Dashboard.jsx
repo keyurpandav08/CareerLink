@@ -22,6 +22,7 @@ import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './Dashboard.css';
+import { getFriendlyAiError } from '../utils/aiError';
 import { getProfilePhoto } from '../utils/candidatePortal';
 import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 
@@ -284,7 +285,7 @@ const Dashboard = () => {
         setProfile(cachedState.profile || null);
         setApplications(Array.isArray(cachedState.applications) ? cachedState.applications : []);
         setAiDashboard(cachedState.aiDashboard || null);
-        setAiError(cachedState.aiError || '');
+        setAiError(getFriendlyAiError(cachedState.aiError, ''));
         setLoading(false);
       } else {
         setLoading(true);
@@ -328,7 +329,10 @@ const Dashboard = () => {
             });
           })
           .catch((aiRequestError) => {
-            const nextAiError = aiRequestError.response?.data?.error || 'Add your Gemini key in application.properties to enable live AI insights.';
+            const nextAiError = getFriendlyAiError(
+              aiRequestError,
+              'Add your Gemini key in application.properties to enable live AI insights.'
+            );
             setAiDashboard(null);
             setAiError(nextAiError);
             writeCachedValue(cacheKey, {

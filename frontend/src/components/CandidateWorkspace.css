@@ -159,6 +159,37 @@
   font-size: 0.72rem;
 }
 
+.candidate-workspace-visibility {
+  margin-top: 0.42rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.34rem 0.62rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.candidate-workspace-visibility span {
+  margin-top: 0;
+}
+
+.candidate-workspace-visibility.is-public {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+
+.candidate-workspace-visibility.is-recruiters {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+
+.candidate-workspace-visibility.is-private {
+  background: rgba(15, 23, 42, 0.08);
+  color: #334155;
+}
+
 .candidate-workspace-main {
   flex: 1;
   min-width: 0;

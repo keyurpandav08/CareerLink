@@ -8,7 +8,13 @@ import {
 import CandidateWorkspace from '../components/CandidateWorkspace';
 import { useAuth } from '../context/AuthContext';
 import { getDashboardPathForUser, getRoleName } from '../utils/role';
-import { getDisplayName, getProfileStrength } from '../utils/candidatePortal';
+import {
+  getDisplayName,
+  getProfileMeta,
+  getProfileStrength,
+  normalizeProfileVisibility,
+  saveProfileMeta
+} from '../utils/candidatePortal';
 import api from '../services/api';
 import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 import './Settings.css';
@@ -71,7 +77,16 @@ const Settings = () => {
 
       try {
         const stored = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || '{}');
-        setSettings({ ...defaultSettings, ...stored });
+        const storedProfileMeta = getProfileMeta(user);
+        setSettings({
+          ...defaultSettings,
+          ...stored,
+          profileVisibility: normalizeProfileVisibility(
+            stored.profileVisibility
+            || storedProfileMeta.profileVisibility
+            || (storedProfileMeta.publicProfileActive === false ? 'private' : 'public')
+          )
+        });
       } catch {
         setSettings(defaultSettings);
       }
@@ -103,12 +118,31 @@ const Settings = () => {
     };
 
     loadData();
-  }, [user?.username]);
+  }, [user, user?.username]);
 
   const candidateStrength = useMemo(
     () => getProfileStrength(profile),
     [profile]
   );
+  const visibilityMeta = useMemo(() => {
+    const visibility = normalizeProfileVisibility(settings.profileVisibility);
+    const labels = {
+      public: 'Public profile',
+      recruiters: 'Recruiters only',
+      private: 'Private profile'
+    };
+    const descriptions = {
+      public: 'Visible to everyone on the platform.',
+      recruiters: 'Visible only to verified recruiters.',
+      private: 'Hidden from search and recruiter browsing.'
+    };
+
+    return {
+      visibility,
+      label: labels[visibility],
+      description: descriptions[visibility]
+    };
+  }, [settings.profileVisibility]);
 
   const setField = (name, value) => {
     setProfile((prev) => ({ ...prev, [name]: value }));
@@ -154,6 +188,10 @@ const Settings = () => {
       const updatedProfile = response.data;
       setProfile((prev) => ({ ...prev, ...updatedProfile }));
       login({ ...user, ...updatedProfile, roleName: updatedProfile.roleName || user?.roleName });
+      saveProfileMeta(user, {
+        profileVisibility: settings.profileVisibility,
+        publicProfileActive: settings.profileVisibility !== 'private'
+      });
 
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
       setBanner(isEmployer ? 'Company profile updated successfully.' : 'Settings saved successfully.');
@@ -257,6 +295,14 @@ const Settings = () => {
                   <option value="private">Private</option>
                 </select>
               </label>
+
+              <div className={`candidate-settings-visibility is-${visibilityMeta.visibility}`}>
+                <Shield size={14} />
+                <div>
+                  <strong>{visibilityMeta.label}</strong>
+                  <span>{visibilityMeta.description}</span>
+                </div>
+              </div>
 
               <div className="candidate-settings-switch">
                 <div>

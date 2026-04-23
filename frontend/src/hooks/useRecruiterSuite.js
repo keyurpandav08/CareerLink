@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { getFriendlyAiError } from '../utils/aiError';
 import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 
 const emptyAiInsights = {
@@ -78,11 +79,15 @@ export const useRecruiterSuite = () => {
           });
         })
         .catch((aiError) => {
+          const nextSummary = getFriendlyAiError(
+            aiError,
+            'Add your Gemini key in application.properties to enable live recruiter scoring.'
+          );
           const nextAiInsights = {
             headline: 'AI match insights are waiting for configuration.',
-            summary: aiError.response?.data?.error || 'Add your Gemini key in application.properties to enable live recruiter scoring.',
+            summary: nextSummary,
             matches: [],
-            error: aiError.response?.data?.error || 'AI insights unavailable'
+            error: nextSummary
           };
 
           setDashboard((currentDashboard) => {

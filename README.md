@@ -17,8 +17,9 @@ CareerLink is a full-stack job portal for applicants and employers. It includes:
 ## Local Setup
 
 1. Set the required environment variables for the backend database and AI keys.
-2. Start the Spring Boot backend.
-3. Start the Vite frontend.
+2. Paste your Google Web Client ID into `src/main/resources/application.properties` as `app.oauth.google.client-id=...`.
+3. Start the Spring Boot backend.
+4. Start the Vite frontend.
 
 Example backend command:
 

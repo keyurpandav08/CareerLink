@@ -143,11 +143,11 @@
   content: '';
   position: absolute;
   right: 1rem;
-  width: 0.55rem;
-  height: 0.55rem;
+  width: 0.72rem;
+  height: 0.72rem;
   border-right: 2px solid #6e8090;
   border-bottom: 2px solid #6e8090;
-  transform: rotate(45deg);
+  transform: translateY(-2px) rotate(45deg);
   pointer-events: none;
 }
 
@@ -155,10 +155,14 @@
   width: 100%;
   border: none;
   outline: none;
-  background: transparent;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(247, 250, 252, 0.98));
   appearance: none;
   cursor: pointer;
+  padding: 0 1.7rem 0 0.1rem;
+  color: #24313f;
   font-size: 0.95rem;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .home-search-button {
@@ -188,6 +192,7 @@
   color: var(--accent-strong);
   font-size: 0.96rem;
   font-weight: 700;
+  padding: 0.1rem 0;
 }
 
 .home-social-proof {

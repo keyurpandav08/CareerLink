@@ -1,14 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   BookOpenCheck,
+  FileText,
   Sparkles,
-  Target,
-  Upload
+  Target
 } from 'lucide-react';
 import CandidateWorkspace from '../components/CandidateWorkspace';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { hasResume } from '../utils/candidatePortal';
+import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 import './ResumeBuilder.css';
 
 const ROLE_OPTIONS = {
@@ -48,60 +51,53 @@ const calculateScore = (analysis, targetRole) => {
 };
 
 const ResumeBuilder = () => {
-  const [resumeFile, setResumeFile] = useState(null);
+  const { user } = useAuth();
+  const [profile, setProfile] = useState(null);
   const [targetRole, setTargetRole] = useState('JAVA_DEVELOPER');
   const [additionalSkills, setAdditionalSkills] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState('');
   const [feedback, setFeedback] = useState('');
   const [result, setResult] = useState(null);
 
-  const handleAnalyze = async (event) => {
-    event.preventDefault();
-    setError('');
-    setFeedback('');
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.username) {
+        setLoading(false);
+        return;
+      }
 
-    if (!resumeFile) {
-      setError('Please upload your resume first.');
-      return;
-    }
+      const cacheKey = `resume-builder:${user.username}`;
+      const cachedState = readCachedValue(cacheKey, null);
+      if (cachedState?.profile) {
+        setProfile(cachedState.profile);
+        setResult(cachedState.result || null);
+        setFeedback(cachedState.feedback || '');
+      }
 
-    try {
-      setLoading(true);
-      const formData = new FormData();
-      formData.append('resume', resumeFile);
-      formData.append('targetRole', targetRole);
-      formData.append('additionalSkills', additionalSkills);
+      try {
+        const response = await api.get(`/users/username/${user.username}`);
+        setProfile(response.data);
+        writeCachedValue(cacheKey, {
+          profile: response.data,
+          result: cachedState?.result || null,
+          feedback: cachedState?.feedback || ''
+        });
+      } catch (requestError) {
+        if (!cachedState?.profile) {
+          setError(requestError.response?.data?.error || 'Unable to load your saved resume.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      const response = await api.post('/api/resume/analyze', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+    loadProfile();
+  }, [user]);
 
-      setResult(response.data.analysis);
-      setFeedback('Live AI analysis completed successfully.');
-    } catch (requestError) {
-      setError(requestError.response?.data?.error || 'Resume analysis failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAutoUpdate = async () => {
-    if (!result?.resumeRewrite) {
-      setError('Run the AI analysis first to unlock an updated resume summary.');
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(result.resumeRewrite);
-      setFeedback('AI-updated resume summary copied to clipboard.');
-      setTimeout(() => setFeedback(''), 2200);
-    } catch {
-      setError('Could not copy the AI resume summary. Please try again.');
-    }
-  };
-
+  const savedResumeAvailable = hasResume(profile?.resumeUrl);
   const roleConfig = ROLE_OPTIONS[targetRole];
   const globalScore = useMemo(() => calculateScore(result, targetRole), [result, targetRole]);
 
@@ -158,6 +154,67 @@ const ResumeBuilder = () => {
     );
   }, [result?.suggestedJobs, searchTerm]);
 
+  const handleAnalyze = async (event) => {
+    event.preventDefault();
+    setError('');
+    setFeedback('');
+
+    if (!savedResumeAvailable) {
+      setError('Upload your resume once from Profile before running AI analysis here.');
+      return;
+    }
+
+    try {
+      setAnalyzing(true);
+      const resumeResponse = await api.get(profile.resumeUrl, { responseType: 'blob' });
+      const resumeFile = new File(
+        [resumeResponse.data],
+        profile.resumeFileName || 'resume.pdf',
+        { type: resumeResponse.data.type || 'application/pdf' }
+      );
+
+      const formData = new FormData();
+      formData.append('resume', resumeFile);
+      formData.append('targetRole', targetRole);
+      formData.append('additionalSkills', additionalSkills);
+
+      const response = await api.post('/api/resume/analyze', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      setResult(response.data.analysis);
+      setFeedback('Live AI analysis completed successfully.');
+      writeCachedValue(`resume-builder:${user.username}`, {
+        profile,
+        result: response.data.analysis,
+        feedback: 'Live AI analysis completed successfully.'
+      });
+    } catch (requestError) {
+      setError(requestError.response?.data?.error || 'Resume analysis failed.');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const handleAutoUpdate = async () => {
+    if (!result?.resumeRewrite) {
+      setError('Run the AI analysis first to unlock an updated resume summary.');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(result.resumeRewrite);
+      setFeedback('AI-updated resume summary copied to clipboard.');
+      setTimeout(() => setFeedback(''), 2200);
+    } catch {
+      setError('Could not copy the AI resume summary. Please try again.');
+    }
+  };
+
+  if (loading) {
+    return <CandidateWorkspace activePath="/resume-builder">Loading resume insights...</CandidateWorkspace>;
+  }
+
   return (
     <CandidateWorkspace
       activePath="/resume-builder"
@@ -174,23 +231,20 @@ const ResumeBuilder = () => {
               <span>Architecturally Analyzed.</span>
             </h1>
             <p>
-              Live Gemini-powered analysis now reviews your resume against the role you want, highlights missing skills,
-              and surfaces matching jobs from the actual platform data.
+              Live Gemini-powered analysis now reviews your saved profile resume against the role you want,
+              highlights missing skills, and surfaces matching jobs from the actual platform data.
             </p>
+            <div className="resume-source-pill">
+              <FileText size={16} />
+              <span>
+                {savedResumeAvailable
+                  ? `Using ${profile.resumeFileName || 'your saved resume'}`
+                  : 'Upload your resume once from Profile to unlock AI analysis'}
+              </span>
+            </div>
           </div>
 
           <form className="resume-insights-form" onSubmit={handleAnalyze}>
-            <label className="resume-insights-upload">
-              <Upload size={18} />
-              <span>{resumeFile ? resumeFile.name : 'Upload resume (PDF/DOC/DOCX)'}</span>
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={(event) => setResumeFile(event.target.files?.[0] || null)}
-                hidden
-              />
-            </label>
-
             <div className="resume-insights-grid">
               <label>
                 <span>Target Role</span>
@@ -212,9 +266,15 @@ const ResumeBuilder = () => {
               </label>
             </div>
 
-            <button type="submit" disabled={loading}>
-              {loading ? 'Analyzing...' : 'Analyze Resume'}
+            <button type="submit" disabled={analyzing || !savedResumeAvailable}>
+              {analyzing ? 'Analyzing...' : 'Analyze Saved Resume'}
             </button>
+
+            {!savedResumeAvailable && (
+              <Link to="/profile" className="resume-insights-profile-link">
+                Upload Resume in Profile
+              </Link>
+            )}
           </form>
         </section>
 

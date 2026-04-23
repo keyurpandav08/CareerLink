@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getDashboardPathByRole } from '../utils/role';
 import api from '../services/api';
+import { getPublicConfig } from '../services/publicConfig';
 
 const GOOGLE_SCRIPT_ID = 'google-identity-services';
 const isLikelyGoogleClientId = (value) => typeof value === 'string' && value.includes('.apps.googleusercontent.com');
@@ -20,12 +21,43 @@ const decodeJwtPayload = (token) => {
 };
 
 const GoogleAuthButton = ({ label = 'Continue with Google', onError, fullWidth = false }) => {
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  const invalidClientId = clientId && !isLikelyGoogleClientId(clientId);
   const buttonRef = useRef(null);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [clientId, setClientId] = useState('');
+  const [configLoading, setConfigLoading] = useState(true);
+  const [configError, setConfigError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadConfig = async () => {
+      try {
+        const config = await getPublicConfig();
+        if (!cancelled) {
+          setClientId(config.googleClientId || '');
+          setConfigError('');
+        }
+      } catch {
+        if (!cancelled) {
+          setConfigError('Google sign-in configuration could not be loaded from the backend.');
+        }
+      } finally {
+        if (!cancelled) {
+          setConfigLoading(false);
+        }
+      }
+    };
+
+    loadConfig();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const invalidClientId = clientId && !isLikelyGoogleClientId(clientId);
 
   useEffect(() => {
     if (!clientId || invalidClientId || !buttonRef.current) return;
@@ -85,7 +117,7 @@ const GoogleAuthButton = ({ label = 'Continue with Google', onError, fullWidth =
     document.body.appendChild(script);
   }, [clientId, fullWidth, invalidClientId, label, login, navigate, onError]);
 
-  if (!clientId || invalidClientId) {
+  if (configLoading || !clientId || invalidClientId) {
     return (
       <button
         type="button"
@@ -93,11 +125,14 @@ const GoogleAuthButton = ({ label = 'Continue with Google', onError, fullWidth =
         onClick={() => onError?.(
           invalidClientId
             ? 'Google sign-in is misconfigured. Use the Web Client ID that ends with .apps.googleusercontent.com, not the GOCSPX client secret.'
-            : 'Set VITE_GOOGLE_CLIENT_ID to enable Google sign-in.'
+            : configLoading
+              ? 'Loading Google sign-in configuration...'
+              : configError || 'Set app.oauth.google.client-id in src/main/resources/application.properties to enable Google sign-in.'
         )}
+        disabled={configLoading}
       >
         <Chrome size={18} />
-        {label}
+        {configLoading ? 'Loading Google...' : label}
       </button>
     );
   }

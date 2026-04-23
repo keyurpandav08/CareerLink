@@ -42,6 +42,19 @@
   line-height: 1.75;
 }
 
+.resume-source-pill {
+  margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.58rem 0.82rem;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
 .resume-insights-form {
   display: grid;
   gap: 1rem;
@@ -107,6 +120,12 @@
 
 .resume-insights-form button:disabled {
   opacity: 0.72;
+}
+
+.resume-insights-profile-link {
+  color: #1d4ed8;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .resume-insights-error {

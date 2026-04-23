@@ -9,6 +9,7 @@ import {
   Search,
   Settings,
   Sparkles,
+  Shield,
   UserRound,
   X,
   Home
@@ -19,7 +20,8 @@ import {
   createInitials,
   getDisplayName,
   getProfessionalTitle,
-  getProfilePhoto
+  getProfilePhoto,
+  getProfileVisibilityMeta
 } from '../utils/candidatePortal';
 import './CandidateWorkspace.css';
 
@@ -46,6 +48,7 @@ const CandidateWorkspace = ({
   const displayName = useMemo(() => getDisplayName(profile, user), [profile, user]);
   const headline = useMemo(() => getProfessionalTitle(profile, user), [profile, user]);
   const profilePhoto = useMemo(() => getProfilePhoto(user, profile), [profile, user]);
+  const visibilityMeta = useMemo(() => getProfileVisibilityMeta(user), [user]);
 
   return (
     <section className="candidate-workspace">
@@ -103,6 +106,10 @@ const CandidateWorkspace = ({
             <div>
               <strong>{displayName}</strong>
               <span>{headline}</span>
+              <div className={`candidate-workspace-visibility is-${visibilityMeta.visibility}`}>
+                <Shield size={12} />
+                <span>{visibilityMeta.label}</span>
+              </div>
             </div>
           </div>
         </aside>

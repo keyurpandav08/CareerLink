@@ -489,6 +489,44 @@
   font-size: 0.82rem;
 }
 
+.candidate-settings-visibility {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 18px;
+  border: 1px solid rgba(117, 119, 126, 0.1);
+}
+
+.candidate-settings-visibility strong,
+.candidate-settings-visibility span {
+  display: block;
+}
+
+.candidate-settings-visibility strong {
+  font-size: 0.92rem;
+}
+
+.candidate-settings-visibility span {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.candidate-settings-visibility.is-public {
+  background: rgba(34, 197, 94, 0.08);
+  color: #15803d;
+}
+
+.candidate-settings-visibility.is-recruiters {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+}
+
+.candidate-settings-visibility.is-private {
+  background: #f8fafc;
+  color: #334155;
+}
+
 .candidate-settings-note {
   padding: 1rem;
   border-radius: 18px;

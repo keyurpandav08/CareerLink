@@ -36,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/resume/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/users/register").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")

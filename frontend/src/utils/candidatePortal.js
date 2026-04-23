@@ -3,7 +3,22 @@ import defaultCandidateFemalePhoto from '../assets/default-candidate-female.svg'
 import { getRoleName } from './role';
 
 export const RESUME_PLACEHOLDER = 'resume_not_uploaded';
-const PROFILE_META_STORAGE_KEY = 'joblithic_candidate_profile_meta';
+export const PROFILE_META_STORAGE_KEY = 'joblithic_candidate_profile_meta';
+const PROFILE_VISIBILITY_LABELS = {
+  public: 'Public profile',
+  recruiters: 'Recruiters only',
+  private: 'Private profile'
+};
+const PROFILE_VISIBILITY_DESCRIPTIONS = {
+  public: 'Visible to everyone on the platform.',
+  recruiters: 'Visible only to verified recruiters.',
+  private: 'Hidden from search and recruiter browsing.'
+};
+const PROFILE_VISIBILITY_TONES = {
+  public: 'positive',
+  recruiters: 'warning',
+  private: 'danger'
+};
 
 export const parseTagList = (value) =>
   String(value || '')
@@ -79,6 +94,39 @@ export const saveProfileMeta = (user, nextMeta) => {
   const store = loadProfileMetaStore();
   store[username] = { ...(store[username] || {}), ...nextMeta };
   localStorage.setItem(PROFILE_META_STORAGE_KEY, JSON.stringify(store));
+};
+
+export const normalizeProfileVisibility = (value) => {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (normalized === 'public' || normalized === 'recruiters' || normalized === 'private') {
+    return normalized;
+  }
+
+  return 'public';
+};
+
+export const getProfileVisibility = (user) => {
+  const meta = getProfileMeta(user);
+  if (meta.profileVisibility) {
+    return normalizeProfileVisibility(meta.profileVisibility);
+  }
+
+  if (meta.publicProfileActive === false) {
+    return 'private';
+  }
+
+  return 'public';
+};
+
+export const getProfileVisibilityMeta = (user) => {
+  const visibility = getProfileVisibility(user);
+
+  return {
+    visibility,
+    label: PROFILE_VISIBILITY_LABELS[visibility],
+    description: PROFILE_VISIBILITY_DESCRIPTIONS[visibility],
+    tone: PROFILE_VISIBILITY_TONES[visibility]
+  };
 };
 
 export const getProfessionalTitle = (profile, user) => {
