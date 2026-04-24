@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.stream.Stream;
 
 @Service
 public class ResumeStorageService {
@@ -70,6 +71,23 @@ public class ResumeStorageService {
         }
     }
 
+    public void deleteAllForUser(Long userId) {
+        if (userId == null) {
+            return;
+        }
+
+        Path storageRoot = Paths.get(resumeDirectory).toAbsolutePath().normalize();
+        if (!Files.exists(storageRoot)) {
+            return;
+        }
+
+        try (Stream<Path> files = Files.list(storageRoot)) {
+            files.filter(path -> path.getFileName().toString().startsWith("resume-user-" + userId + "-"))
+                    .forEach(this::deletePath);
+        } catch (IOException ignored) {
+        }
+    }
+
     private String extractExtension(String fileName) {
         int lastDotIndex = fileName.lastIndexOf('.');
         if (lastDotIndex < 0 || lastDotIndex == fileName.length() - 1) {
@@ -77,6 +95,13 @@ public class ResumeStorageService {
         }
 
         return fileName.substring(lastDotIndex);
+    }
+
+    private void deletePath(Path path) {
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException ignored) {
+        }
     }
 
     public record StoredResume(String storagePath, String originalFileName) {

@@ -142,7 +142,7 @@ public class AuthRecoveryController {
         try {
             if (googleClientId.isBlank()) {
                 return ResponseEntity.badRequest().body(Map.of(
-                        "error", "Google sign-in is not configured. Set app.oauth.google.client-id in application.properties."
+                        "error", "Google sign-in is not configured. Set app.oauth.google.client-id in src/main/resources/application.properties."
                 ));
             }
 

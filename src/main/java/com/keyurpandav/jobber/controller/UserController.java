@@ -3,8 +3,6 @@ package com.keyurpandav.jobber.controller;
 import com.keyurpandav.jobber.dto.UserDto;
 import com.keyurpandav.jobber.entity.User;
 import com.keyurpandav.jobber.repository.ApplicationRepository;
-import com.keyurpandav.jobber.service.ResumeAnalysisService;
-import com.keyurpandav.jobber.service.ResumeParserService;
 import com.keyurpandav.jobber.service.ResumeStorageService;
 import com.keyurpandav.jobber.service.UserService;
 import jakarta.validation.Valid;
@@ -30,8 +28,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
-    private final ResumeParserService resumeParserService;
-    private final ResumeAnalysisService resumeAnalysisService;
     private final ResumeStorageService resumeStorageService;
     private final ApplicationRepository applicationRepository;
     
@@ -94,25 +90,20 @@ public class UserController {
     @PostMapping("/upload-resume")
     public ResponseEntity<?> uploadResume(
             @RequestParam("userId") Long userId,
-            @RequestParam("resume") MultipartFile resumeFile,
-            @RequestParam(value = "targetRole", required = false) String targetRole
+            @RequestParam("resume") MultipartFile resumeFile
     ) {
         try {
             User currentUser = getAuthenticatedUser();
             requireSelfOrAdmin(currentUser, userId);
 
             User user = userService.getUserById(userId);
-            String resumeText = resumeParserService.extractContent(resumeFile);
-            Map<String, Object> analysis = resumeAnalysisService.analyze(resumeText, targetRole, user.getSkills());
             UserDto updatedUser = saveUploadedResume(user, resumeFile);
-            String resumeUrl = updatedUser.getResumeUrl();
 
             return ResponseEntity.ok(Map.of(
-                    "message", "Resume uploaded and analyzed successfully",
+                    "message", "Resume uploaded successfully",
                     "fileName", resumeFile.getOriginalFilename(),
-                    "resumeUrl", resumeUrl,
-                    "user", updatedUser,
-                    "analysis", analysis
+                    "resumeUrl", updatedUser.getResumeUrl(),
+                    "user", updatedUser
             ));
         } catch (SecurityException e) {
             return forbidden(e.getMessage());
@@ -121,8 +112,33 @@ public class UserController {
         }
     }
 
+    @DeleteMapping("/{id}/resume")
+    public ResponseEntity<?> deleteResume(@PathVariable Long id) {
+        try {
+            User currentUser = getAuthenticatedUser();
+            requireSelfOrAdmin(currentUser, id);
+
+            User user = userService.getUserById(id);
+            resumeStorageService.deleteIfExists(user.getResumeStoragePath());
+            resumeStorageService.deleteAllForUser(id);
+            UserDto updatedUser = userService.clearResumeMetadata(id);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Resume removed successfully",
+                    "user", updatedUser
+            ));
+        } catch (SecurityException e) {
+            return forbidden(e.getMessage());
+        } catch (Exception e) {
+            return badRequest(e);
+        }
+    }
+
     @GetMapping("/{id}/resume")
-    public ResponseEntity<?> viewResume(@PathVariable Long id) {
+    public ResponseEntity<?> viewResume(
+            @PathVariable Long id,
+            @RequestParam(value = "download", required = false, defaultValue = "false") boolean download
+    ) {
         try {
             User currentUser = getAuthenticatedUser();
             User applicant = userService.getUserById(id);
@@ -143,10 +159,23 @@ public class UserController {
 
             return ResponseEntity.ok()
                     .contentType(mediaType)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, (download ? "attachment" : "inline") + "; filename=\"" + fileName + "\"")
                     .body(resource);
         } catch (Exception e) {
             return badRequest(e);
+        }
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<?> deleteCurrentAccount() {
+        try {
+            User currentUser = getAuthenticatedUser();
+            resumeStorageService.deleteAllForUser(currentUser.getId());
+            userService.deleteUserById(currentUser.getId());
+            SecurityContextHolder.clearContext();
+            return ResponseEntity.ok(Map.of("message", "Account deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -182,15 +211,12 @@ public class UserController {
     }
 
     private UserDto saveUploadedResume(User user, MultipartFile resumeFile) {
+        resumeStorageService.deleteIfExists(user.getResumeStoragePath());
         ResumeStorageService.StoredResume storedResume = resumeStorageService.storeResume(user, resumeFile);
         String resumeUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/users/{userId}/resume")
                 .buildAndExpand(user.getId())
                 .toUriString();
-
-        if (user.getResumeStoragePath() != null && !user.getResumeStoragePath().isBlank()) {
-            resumeStorageService.deleteIfExists(user.getResumeStoragePath());
-        }
 
         return userService.updateResumeMetadata(
                 user.getId(),

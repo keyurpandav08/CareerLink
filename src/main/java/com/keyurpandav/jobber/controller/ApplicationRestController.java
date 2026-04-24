@@ -184,12 +184,14 @@ public class ApplicationRestController {
     private String resolveApplicationResumeUrl(User applicant, Object resumeUrl) {
         if (resumeUrl != null) {
             String candidateResumeUrl = String.valueOf(resumeUrl).trim();
-            if (!candidateResumeUrl.isBlank()) {
+            if (!candidateResumeUrl.isBlank() && !"resume_not_uploaded".equals(candidateResumeUrl)) {
                 return candidateResumeUrl;
             }
         }
 
-        if (applicant.getResumeUrl() != null && !applicant.getResumeUrl().isBlank()) {
+        if (applicant.getResumeUrl() != null
+                && !applicant.getResumeUrl().isBlank()
+                && !"resume_not_uploaded".equals(applicant.getResumeUrl())) {
             return applicant.getResumeUrl();
         }
 

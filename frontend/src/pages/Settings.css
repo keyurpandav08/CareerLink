@@ -553,9 +553,81 @@
   justify-content: flex-end;
 }
 
+.candidate-settings-extras {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+
+.candidate-settings-resume {
+  display: grid;
+  gap: 0.95rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid rgba(117, 119, 126, 0.08);
+}
+
+.candidate-settings-resume strong,
+.candidate-settings-resume span {
+  display: block;
+}
+
+.candidate-settings-resume strong {
+  color: #0f172a;
+  margin-bottom: 0.35rem;
+}
+
+.candidate-settings-resume span {
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.candidate-settings-resume-actions,
+.candidate-settings-action-row {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.settings-chip-link,
+.settings-action-btn {
+  min-height: 42px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-weight: 800;
+}
+
+.settings-chip-link {
+  padding: 0.72rem 1rem;
+  border: 1px solid rgba(117, 119, 126, 0.14);
+  background: #fff;
+  color: #0f172a;
+}
+
+.settings-action-btn {
+  padding: 0.75rem 1rem;
+}
+
+.settings-action-btn.secondary {
+  background: #fff;
+  color: #0f172a;
+  border: 1px solid rgba(117, 119, 126, 0.14);
+}
+
+.settings-action-btn.danger {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
 @media (max-width: 860px) {
   .candidate-settings-grid,
-  .candidate-settings-field-grid {
+  .candidate-settings-field-grid,
+  .candidate-settings-extras {
     grid-template-columns: 1fr;
   }
 

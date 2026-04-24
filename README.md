@@ -18,6 +18,7 @@ CareerLink is a full-stack job portal for applicants and employers. It includes:
 
 1. Set the required environment variables for the backend database and AI keys.
 2. Paste your Google Web Client ID into `src/main/resources/application.properties` as `app.oauth.google.client-id=...`.
+   You do not need to export a terminal env var for Google sign-in when running locally.
 3. Start the Spring Boot backend.
 4. Start the Vite frontend.
 
@@ -50,11 +51,11 @@ This project is now configured to deploy as a single Render web service:
    - `APP_FRONTEND_BASE_URL` to your Render service URL
    - `MAIL_USERNAME`
    - `MAIL_PASSWORD`
-   - `APP_OAUTH_GOOGLE_CLIENT_ID`
    - `APP_CORS_ALLOWED_ORIGINS`
    - `APIKEY` or `GEMINI_API_KEY` for Gemini
    - `APP_H2_CONSOLE_ENABLED=false`
-6. After deployment, open the service URL and confirm the React app loads.
+6. If you prefer not to inject the Google client ID as a runtime environment variable, set `app.oauth.google.client-id` directly in `src/main/resources/application.properties` before building.
+7. After deployment, open the service URL and confirm the React app loads.
 
 The Maven build now compiles `frontend/` automatically and copies the generated SPA into the Spring Boot JAR, so your submission only needs one live URL.
 

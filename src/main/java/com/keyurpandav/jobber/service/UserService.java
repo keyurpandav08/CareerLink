@@ -84,11 +84,24 @@ public class UserService {
         return saveUserAsDto(user);
     }
 
+    public UserDto clearResumeMetadata(Long userId) {
+        User user = getExistingUserForUpdate(userId);
+        user.setResumeUrl(null);
+        user.setResumeFileName(null);
+        user.setResumeStoragePath(null);
+        return saveUserAsDto(user);
+    }
+
     public User updatePassword(String email, String rawPassword) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
         user.setPassword(passwordEncoder.encode(rawPassword));
         return userRepository.save(user);
+    }
+
+    public void deleteUserById(Long userId) {
+        User user = getExistingUserForUpdate(userId);
+        userRepository.delete(user);
     }
 
     public User findOrCreateGoogleApplicant(String email, String fullName) {

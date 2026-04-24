@@ -80,6 +80,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/employer/**").hasRole("EMPLOYER")
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/users/upload-resume").hasRole("APPLICANT")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/users/*/resume").hasAnyRole("APPLICANT", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

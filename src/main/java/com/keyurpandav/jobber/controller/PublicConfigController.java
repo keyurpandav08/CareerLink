@@ -14,10 +14,18 @@ public class PublicConfigController {
     @Value("${app.oauth.google.client-id:}")
     private String googleClientId;
 
+    @Value("${app.company.name:CareerLink}")
+    private String companyName;
+
+    @Value("${app.company.official-email:support@careerlink.com}")
+    private String officialEmail;
+
     @GetMapping("/config")
     public Map<String, String> publicConfig() {
         return Map.of(
-                "googleClientId", googleClientId == null ? "" : googleClientId.trim()
+                "googleClientId", googleClientId == null ? "" : googleClientId.trim(),
+                "companyName", companyName == null ? "CareerLink" : companyName.trim(),
+                "officialEmail", officialEmail == null ? "support@careerlink.com" : officialEmail.trim()
         );
     }
 }

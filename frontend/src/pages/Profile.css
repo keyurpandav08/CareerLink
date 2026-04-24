@@ -536,6 +536,19 @@
   margin: 2px 0 0;
 }
 
+.resume-file-meta {
+  display: inline-flex;
+  margin-top: 0.65rem;
+  padding: 0.38rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 /* BUTTONS */
 .resume-actions {
   margin-top: 15px;
@@ -567,6 +580,7 @@
 .btn.view {
   background: #2563eb;
   color: white;
+  gap: 0.35rem;
 }
 
 .btn.update {

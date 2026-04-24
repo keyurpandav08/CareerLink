@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AtSign, ExternalLink, MapPin, ScrollText, Shield } from 'lucide-react';
+import { AtSign, ExternalLink, MapPin, Shield } from 'lucide-react';
 import CandidateWorkspace from '../components/CandidateWorkspace';
+import ResumeManagerCard from '../components/ResumeManagerCard';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import {
@@ -26,7 +27,8 @@ const Profile = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [profileMeta, setProfileMeta] = useState({});
-  const [popup, setPopup] = useState('');
+  const [resumeBusy, setResumeBusy] = useState(false);
+  const [resumeMessage, setResumeMessage] = useState('');
   const resumeRef = useRef(null);
   const profilePhotoRef = useRef(null);
   const visibilityMeta = useMemo(() => getProfileVisibilityMeta(user), [user]);
@@ -69,6 +71,24 @@ const Profile = () => {
   const projects = useMemo(() => parseStructuredEntries(profile?.projects), [profile?.projects]);
   const certifications = useMemo(() => parseStructuredEntries(profile?.certifications), [profile?.certifications]);
 
+  const syncResumeState = (updatedUser, overrides = {}) => {
+    const nextProfile = { ...profile, ...updatedUser, ...overrides };
+    setProfile(nextProfile);
+    login({
+      ...user,
+      ...updatedUser,
+      ...overrides,
+      roleName: updatedUser.roleName || user?.roleName
+    });
+    writeCachedValue(`candidate-profile:${user.username}`, nextProfile);
+    writeCachedValue(`settings-profile:${user.username}`, nextProfile);
+    writeCachedValue(`resume-builder:${user.username}`, {
+      profile: nextProfile,
+      result: null,
+      feedback: ''
+    });
+  };
+
   const handleCoverUpload = async (event) => {
     const [file] = Array.from(event.target.files || []);
     if (!file) return;
@@ -104,6 +124,10 @@ const Profile = () => {
     if (!file || !profile?.id) return;
 
     try {
+      setResumeBusy(true);
+      setError('');
+      setResumeMessage('');
+
       const formData = new FormData();
       formData.append('userId', profile.id);
       formData.append('resume', file);
@@ -113,22 +137,35 @@ const Profile = () => {
       });
 
       const updatedUser = response.data.user || response.data;
-      const nextProfile = { ...profile, ...updatedUser };
-
-      setProfile(nextProfile);
-      login({
-        ...user,
-        ...updatedUser,
-        roleName: updatedUser.roleName || user?.roleName
-      });
-      writeCachedValue(`candidate-profile:${user.username}`, nextProfile);
-
-      setPopup('Resume uploaded successfully');
-      window.setTimeout(() => setPopup(''), 2500);
+      syncResumeState(updatedUser);
+      setResumeMessage('Resume saved successfully. This file will now be reused across profile, applications, and AI analysis.');
     } catch (requestError) {
       setError(requestError.response?.data?.error || 'Resume upload failed.');
     } finally {
+      setResumeBusy(false);
       event.target.value = '';
+    }
+  };
+
+  const handleResumeDelete = async () => {
+    if (!profile?.id || !hasResume(profile.resumeUrl)) return;
+
+    const confirmed = window.confirm('Remove your saved resume from CareerLink?');
+    if (!confirmed) return;
+
+    try {
+      setResumeBusy(true);
+      setError('');
+      setResumeMessage('');
+
+      const response = await api.delete(`/users/${profile.id}/resume`);
+      const updatedUser = response.data.user || {};
+      syncResumeState(updatedUser, { resumeUrl: '', resumeFileName: '' });
+      setResumeMessage('Saved resume removed successfully.');
+    } catch (requestError) {
+      setError(requestError.response?.data?.error || 'Resume removal failed.');
+    } finally {
+      setResumeBusy(false);
     }
   };
 
@@ -286,77 +323,18 @@ const Profile = () => {
             </section>
 
             <section className="candidate-profile-card">
-              <h2>Resume</h2>
-              <div className="candidate-profile-artifact">
-                <div className="candidate-profile-artifact-head">
-                  <div className="candidate-profile-artifact-icon">
-                    <ScrollText size={18} />
-                  </div>
-
-                  <div className="candidate-profile-artifact-content">
-                    <input
-                      type="file"
-                      ref={resumeRef}
-                      hidden
-                      accept=".pdf,.doc,.docx"
-                      onChange={handleResumeUpload}
-                    />
-
-                    <div className={`resume-card ${hasResume(profile.resumeUrl) ? 'success' : 'empty'}`}>
-                      <div className="resume-top">
-                        <div className="resume-icon">
-                          {hasResume(profile.resumeUrl) ? '✅' : '🚫'}
-                        </div>
-
-                        <div className="resume-text">
-                          <h3>{hasResume(profile.resumeUrl) ? 'Resume Added' : 'Resume Not Added'}</h3>
-                          <p>
-                            {hasResume(profile.resumeUrl)
-                              ? 'Your resume is ready to be reused across applications and AI analysis.'
-                              : 'Upload your resume once to use it everywhere in the dashboard.'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="resume-actions">
-                        {!hasResume(profile.resumeUrl) ? (
-                          <button
-                            type="button"
-                            className="btn primary"
-                            onClick={() => resumeRef.current?.click()}
-                          >
-                            Upload Resume
-                          </button>
-                        ) : (
-                          <>
-                            <a href={profile.resumeUrl} target="_blank" rel="noreferrer" className="btn view">
-                              View
-                            </a>
-                            <button
-                              type="button"
-                              className="btn update"
-                              onClick={() => resumeRef.current?.click()}
-                            >
-                              Update
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {popup && (
-                <div className="popup-overlay">
-                  <div className="popup-box">
-                    <div className="popup-icon-box">
-                      <span>✓</span>
-                    </div>
-                    <p>{popup}</p>
-                  </div>
-                </div>
-              )}
+              <ResumeManagerCard
+                title="Resume"
+                description="Manage your single saved resume here. The same stored file is reused in applications and AI analysis."
+                resumeUrl={profile.resumeUrl}
+                resumeFileName={profile.resumeFileName}
+                busy={resumeBusy}
+                error={error}
+                success={resumeMessage}
+                fileInputRef={resumeRef}
+                onUpload={handleResumeUpload}
+                onDelete={handleResumeDelete}
+              />
             </section>
 
             <section className="candidate-profile-card">

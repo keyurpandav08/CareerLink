@@ -2,17 +2,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bell,
+  LogOut,
+  Trash2,
   Shield,
   UserRound
 } from 'lucide-react';
 import CandidateWorkspace from '../components/CandidateWorkspace';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { getDashboardPathForUser, getRoleName } from '../utils/role';
 import {
   getDisplayName,
   getProfileMeta,
   getProfileStrength,
   normalizeProfileVisibility,
+  hasResume,
   saveProfileMeta
 } from '../utils/candidatePortal';
 import api from '../services/api';
@@ -59,7 +63,8 @@ const defaultProfile = {
 };
 
 const Settings = () => {
-  const { user, login } = useAuth();
+  const { user, login, logout } = useAuth();
+  const navigate = useNavigate();
   const roleName = getRoleName(user);
   const isEmployer = roleName === 'EMPLOYER';
 
@@ -67,6 +72,7 @@ const Settings = () => {
   const [settings, setSettings] = useState(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [accountActionLoading, setAccountActionLoading] = useState(false);
   const [banner, setBanner] = useState('');
   const [error, setError] = useState('');
   const [workspaceSearch, setWorkspaceSearch] = useState('');
@@ -200,6 +206,27 @@ const Settings = () => {
       setError(requestError.response?.data?.error || 'Failed to save profile settings.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm('Delete your CareerLink account? This will remove your profile and resume.');
+    if (!confirmed) return;
+
+    try {
+      setAccountActionLoading(true);
+      await api.delete('/users/me');
+      await logout();
+      navigate('/');
+    } catch (requestError) {
+      setError(requestError.response?.data?.error || 'Unable to delete your account.');
+    } finally {
+      setAccountActionLoading(false);
     }
   };
 
@@ -387,6 +414,54 @@ const Settings = () => {
             </section>
 
 
+          </div>
+
+          <div className="candidate-settings-extras">
+            <section className="candidate-settings-card">
+              <h2><Shield size={16} />Resume Source</h2>
+              <div className="candidate-settings-resume">
+                <div>
+                  <strong>{hasResume(profile.resumeUrl) ? (profile.resumeFileName || 'Uploaded resume') : 'No resume uploaded yet'}</strong>
+                  <span>
+                    {hasResume(profile.resumeUrl)
+                      ? 'Resume management now lives only on your Profile page, and that same saved file is reused everywhere.'
+                      : 'Upload your resume from the Profile page once, then reuse the same file for applications and AI analysis.'}
+                  </span>
+                </div>
+
+                <div className="candidate-settings-resume-actions">
+                  <Link to="/profile" className="settings-chip-link">
+                    Open Profile Resume Manager
+                  </Link>
+                  {hasResume(profile.resumeUrl) && (
+                    <a href={profile.resumeUrl} target="_blank" rel="noreferrer" className="settings-chip-link">View Saved Resume</a>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            <section className="candidate-settings-card">
+              <h2><Shield size={16} />Account Actions</h2>
+              <p className="candidate-settings-note">
+                Use these controls to leave the account safely or remove it completely if you are done with the platform.
+              </p>
+
+              <div className="candidate-settings-action-row">
+                <button type="button" className="settings-action-btn secondary" onClick={handleLogout}>
+                  <LogOut size={16} />
+                  Log out
+                </button>
+                <button
+                  type="button"
+                  className="settings-action-btn danger"
+                  onClick={handleDeleteAccount}
+                  disabled={accountActionLoading}
+                >
+                  <Trash2 size={16} />
+                  {accountActionLoading ? 'Deleting...' : 'Delete account'}
+                </button>
+              </div>
+            </section>
           </div>
 
           <div className="candidate-settings-save-row">

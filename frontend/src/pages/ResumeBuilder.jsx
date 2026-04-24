@@ -5,7 +5,8 @@ import {
   BookOpenCheck,
   FileText,
   Sparkles,
-  Target
+  Target,
+  Zap
 } from 'lucide-react';
 import CandidateWorkspace from '../components/CandidateWorkspace';
 import { useAuth } from '../context/AuthContext';
@@ -224,27 +225,56 @@ const ResumeBuilder = () => {
     >
       <div className="resume-insights-page">
         <section className="resume-insights-hero">
-          <div>
+          <div className="resume-insights-copy">
+            <span className="resume-insights-kicker">
+              <Sparkles size={14} />
+              Resume Intelligence
+            </span>
             <h1>
               Your Career,
               <br />
               <span>Architecturally Analyzed.</span>
             </h1>
             <p>
-              Live Gemini-powered analysis now reviews your saved profile resume against the role you want,
-              highlights missing skills, and surfaces matching jobs from the actual platform data.
+              Gemini is used only at analysis time. Your saved profile resume is fetched from the single profile manager,
+              then reviewed against the role you want to highlight missing skills and surface matching jobs.
             </p>
-            <div className="resume-source-pill">
-              <FileText size={16} />
-              <span>
-                {savedResumeAvailable
-                  ? `Using ${profile.resumeFileName || 'your saved resume'}`
-                  : 'Upload your resume once from Profile to unlock AI analysis'}
-              </span>
+            <div className="resume-insights-meta">
+              <div className="resume-source-pill">
+                <FileText size={16} />
+                <span>
+                  {savedResumeAvailable
+                    ? `Using ${profile.resumeFileName || 'your saved resume'}`
+                    : 'Upload your resume once in Profile to unlock AI analysis'}
+                </span>
+              </div>
+
+              <div className="resume-insights-mini-stats">
+                <div>
+                  <strong>{roleConfig.label}</strong>
+                  <span>Current target</span>
+                </div>
+                <div>
+                  <strong>{roleConfig.growth}</strong>
+                  <span>Market momentum</span>
+                </div>
+              </div>
             </div>
           </div>
 
           <form className="resume-insights-form" onSubmit={handleAnalyze}>
+            <div className="resume-insights-form-head">
+              <div>
+                <span>Analysis Controls</span>
+                <h2>Run a focused resume review</h2>
+                <p>Choose the target role, add optional keywords, then analyze the same saved resume used across your profile and applications.</p>
+              </div>
+              <div className={`resume-insights-form-status ${savedResumeAvailable ? 'is-ready' : 'is-empty'}`}>
+                <Zap size={16} />
+                <span>{savedResumeAvailable ? 'Resume ready' : 'Resume missing'}</span>
+              </div>
+            </div>
+
             <div className="resume-insights-grid">
               <label>
                 <span>Target Role</span>
@@ -266,15 +296,21 @@ const ResumeBuilder = () => {
               </label>
             </div>
 
-            <button type="submit" disabled={analyzing || !savedResumeAvailable}>
-              {analyzing ? 'Analyzing...' : 'Analyze Saved Resume'}
-            </button>
+            <div className="resume-insights-actions">
+              <button type="submit" disabled={analyzing || !savedResumeAvailable}>
+                {analyzing ? 'Analyzing...' : 'Analyze Saved Resume'}
+              </button>
 
-            {!savedResumeAvailable && (
-              <Link to="/profile" className="resume-insights-profile-link">
-                Upload Resume in Profile
-              </Link>
-            )}
+              {!savedResumeAvailable ? (
+                <Link to="/profile" className="resume-insights-profile-link">
+                  Manage Resume in Profile
+                </Link>
+              ) : (
+                <p className="resume-insights-helper">
+                  Analysis starts only when you submit. Uploading and storing your resume does not use Gemini.
+                </p>
+              )}
+            </div>
           </form>
         </section>
 

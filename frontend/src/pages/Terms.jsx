@@ -1,160 +1,109 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from 'react-router-dom';
+import { BookOpen, FileCheck2, Scale, ShieldCheck, Users, BriefcaseBusiness } from 'lucide-react';
+import './ContentPage.css';
 
 const Terms = () => {
-  const navigate = useNavigate();
-
   return (
-    <div
-      style={{
-        maxWidth: "950px",
-        margin: "4rem auto",
-        padding: "3rem",
-        background: "var(--surface)",
-        borderRadius: "16px",
-        boxShadow: "0 20px 40px rgba(0,0,0,0.05)",
-        lineHeight: "1.8",
-        color: "var(--text-main)",
-        border: "1px solid var(--border)"
-      }}
-    >
-      {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-        <h1 style={{ fontWeight: "800", marginBottom: "0.5rem" }}>
-          📄 Terms of Service
-        </h1>
-        <p style={{ color: "var(--text-secondary)" }}>
-          Last Updated: 2026
-        </p>
+    <section className="info-page">
+      <div className="info-shell">
+        <header className="info-hero">
+          <div>
+            <span className="info-kicker">Platform usage rules</span>
+            <h1>Terms of Use</h1>
+            <p>
+              These terms describe how CareerLink should be used by applicants, employers, and visitors. They
+              are written to keep the platform fair, secure, and useful for everyone.
+            </p>
+          </div>
+
+          <div className="info-hero-meta">
+            <strong>Last updated</strong>
+            <span>April 2026</span>
+          </div>
+        </header>
+
+        <div className="info-grid">
+          <article className="info-card">
+            <div className="info-pill-row">
+              <span className="info-pill">Account safety</span>
+              <span className="info-pill">Fair usage</span>
+              <span className="info-pill">Content ownership</span>
+            </div>
+
+            <section className="info-section">
+              <h3><Scale size={18} /> Eligibility and account responsibility</h3>
+              <p>
+                You must provide accurate account details and keep your login credentials secure. You are
+                responsible for activity that happens under your account.
+              </p>
+            </section>
+
+            <section className="info-section">
+              <h3><BriefcaseBusiness size={18} /> Using the platform</h3>
+              <ul className="info-list">
+                <li>Use CareerLink only for lawful recruitment and job-search activity</li>
+                <li>Do not submit spam, false profiles, or misleading job posts</li>
+                <li>Employers should only contact candidates for genuine hiring needs</li>
+                <li>Applicants should keep resumes and application details current</li>
+              </ul>
+            </section>
+
+            <section className="info-section">
+              <h3><FileCheck2 size={18} /> Applications and resume use</h3>
+              <p>
+                CareerLink does not guarantee placement or interview outcomes. We provide tools to store resumes,
+                apply for jobs, and review fit, but hiring decisions stay with the employer.
+              </p>
+            </section>
+
+            <section className="info-section">
+              <h3><Users size={18} /> Visibility and access</h3>
+              <p>
+                Profile visibility settings control who can view your candidate information. Employers can only
+                access data that is available through the platform workflow and your current account settings.
+              </p>
+            </section>
+
+            <section className="info-section">
+              <h3><ShieldCheck size={18} /> Suspension and changes</h3>
+              <p>
+                We may suspend accounts that violate these terms or compromise platform integrity. We can also
+                update these terms from time to time, and continued use means you accept the updated version.
+              </p>
+            </section>
+
+            <section className="info-section">
+              <h3><BookOpen size={18} /> Governing law</h3>
+              <p>
+                These terms are interpreted according to applicable law and are meant to support a professional
+                and respectful hiring environment.
+              </p>
+            </section>
+          </article>
+
+          <aside className="info-side">
+            <div className="info-side-card">
+              <h3>Need help with these terms?</h3>
+              <p>Our support team can answer account or policy questions.</p>
+              <div className="info-cta">
+                <Link to="/contact" className="info-button">Contact Support</Link>
+                <Link to="/privacy-policy" className="info-button-secondary">Privacy Policy</Link>
+              </div>
+            </div>
+
+            <div className="info-side-card">
+              <h3>Key reminders</h3>
+              <ul>
+                <li>Keep your profile accurate</li>
+                <li>Use the resume manager to replace outdated files</li>
+                <li>Delete your account from Settings if you no longer want to use CareerLink</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
       </div>
-
-      <p>
-        These Terms of Service govern your access to and use of the
-        CareerLink platform. By using CareerLink, you agree to comply
-        with these terms. If you do not agree, please discontinue use.
-      </p>
-
-      <SectionTitle number="1" title="Eligibility" />
-      <p>
-        You must be at least 18 years old to use CareerLink. By registering,
-        you confirm that all information provided is accurate and complete.
-      </p>
-
-      <SectionTitle number="2" title="Account Responsibility" />
-      <p>
-        You are responsible for maintaining the confidentiality of your
-        account credentials and for all activities conducted under your account.
-      </p>
-
-      <SectionTitle number="3" title="Platform Usage" />
-      <ul style={{ paddingLeft: "1.2rem" }}>
-        <li>Use CareerLink only for lawful job-related purposes</li>
-        <li>No false information, spam, or misleading content</li>
-        <li>Employers must post genuine job opportunities</li>
-        <li>Applicants must provide accurate profile details</li>
-      </ul>
-
-      <SectionTitle number="4" title="Job Applications" />
-      <p>
-        CareerLink does not guarantee job placement. We serve as a
-        connecting platform between job seekers and employers and
-        are not responsible for hiring decisions.
-      </p>
-
-      <SectionTitle number="5" title="Content Ownership" />
-      <p>
-        Users retain ownership of their submitted content but grant
-        CareerLink permission to display and use such content for
-        platform functionality.
-      </p>
-
-      <SectionTitle number="6" title="Account Suspension" />
-      <p>
-        CareerLink reserves the right to suspend or terminate accounts
-        that violate these terms or engage in harmful behavior.
-      </p>
-
-      <SectionTitle number="7" title="Limitation of Liability" />
-      <p>
-        CareerLink shall not be liable for any direct or indirect damages
-        resulting from the use or inability to use the platform.
-      </p>
-
-      <SectionTitle number="8" title="Changes to Terms" />
-      <p>
-        We may update these Terms of Service periodically. Continued use
-        of CareerLink after changes indicates acceptance of the revised terms.
-      </p>
-
-      <SectionTitle number="9" title="Governing Law" />
-      <p>
-        These terms are governed by and interpreted in accordance with
-        applicable laws.
-      </p>
-
-      <p
-        style={{
-          marginTop: "3rem",
-          fontWeight: "600",
-          textAlign: "center",
-          color: "var(--primary)"
-        }}
-      >
-        By using CareerLink, you agree to these Terms of Service.
-      </p>
-
-      {/* Back Button */}
-      <div style={{ display: "flex", justifyContent: "center", marginTop: "2rem" }}>
-        <button
-          onClick={() => navigate("/")}
-          style={{
-            padding: "0.7rem 1.8rem",
-            borderRadius: "8px",
-            border: "none",
-            background: "linear-gradient(135deg, var(--primary), var(--primary-hover))",
-            color: "white",
-            fontWeight: "600",
-            cursor: "pointer",
-            boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-            transition: "0.3s ease"
-          }}
-        >
-          ← Go Back
-        </button>
-      </div>
-    </div>
+    </section>
   );
 };
-
-/* Reusable Section Title */
-const SectionTitle = ({ number, title }) => (
-  <h4
-    style={{
-      marginTop: "2.2rem",
-      marginBottom: "0.8rem",
-      fontWeight: "700",
-      display: "flex",
-      alignItems: "center",
-      gap: "0.6rem"
-    }}
-  >
-    <span
-      style={{
-        backgroundColor: "var(--primary)",
-        color: "white",
-        borderRadius: "50%",
-        width: "28px",
-        height: "28px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "0.8rem",
-        fontWeight: "bold"
-      }}
-    >
-      {number}
-    </span>
-    {title}
-  </h4>
-);
 
 export default Terms;

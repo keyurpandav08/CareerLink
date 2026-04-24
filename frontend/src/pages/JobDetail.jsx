@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { getRoleName } from '../utils/role';
 import api from '../services/api';
 import { getFriendlyAiError } from '../utils/aiError';
+import { hasResume } from '../utils/candidatePortal';
 import { readCachedValue, writeCachedValue } from '../utils/pageCache';
 import './JobDetail.css';
 
@@ -241,7 +242,7 @@ const JobDetail = () => {
   const highlights = useMemo(() => splitContent(job?.jobHighlights), [job?.jobHighlights]);
   const skills = useMemo(() => splitContent(job?.keySkills), [job?.keySkills]);
   const requirements = useMemo(() => splitContent(job?.jobRequirements), [job?.jobRequirements]);
-  const hasProfileResume = Boolean(candidateProfile?.resumeUrl && candidateProfile.resumeUrl !== 'resume_not_uploaded');
+  const hasProfileResume = hasResume(candidateProfile?.resumeUrl);
 
   const canApply = Boolean(user) && isApplicant && String(job?.status).toLowerCase() === 'open';
   const isApplyFormValid = useMemo(() => (

@@ -1,78 +1,104 @@
-import { MessageSquare, Clock, Brain, Briefcase, ShieldCheck } from "lucide-react";
-import "./InterviewTips.css";
+import { Link } from 'react-router-dom';
+import { Brain, Clock3, MessageSquare, Mic, ShieldCheck, Target, ArrowRight } from 'lucide-react';
+import './InterviewTips.css';
+
+const interviewItems = [
+  {
+    icon: Brain,
+    title: 'Research the company like a product',
+    text: 'Learn the company mission, products, competitors, and recent news so your answers feel informed and relevant.'
+  },
+  {
+    icon: Target,
+    title: 'Tailor answers to the role',
+    text: 'Prepare examples that match the job description and use the STAR method for clear, structured answers.'
+  },
+  {
+    icon: Clock3,
+    title: 'Plan the interview day',
+    text: 'Join early, test your setup, and keep a few notes ready so you can stay calm and focused.'
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Show confidence with clarity',
+    text: 'Speak clearly, keep eye contact, and keep your answers concise while still showing ownership of your work.'
+  },
+  {
+    icon: MessageSquare,
+    title: 'Ask thoughtful questions',
+    text: 'Ask about the team structure, success metrics, and what great performance looks like in the first 90 days.'
+  }
+];
 
 const InterviewTips = () => {
   return (
-    <div className="interview-container">
-      <div className="interview-card">
+    <section className="interview-page">
+      <div className="interview-shell">
+        <header className="interview-hero">
+          <div>
+            <span className="interview-kicker">Interview preparation</span>
+            <h1>Interview Tips</h1>
+            <p>
+              A strong interview is usually the result of preparation, clear stories, and good questions. Use this
+              checklist to enter each interview with more confidence.
+            </p>
+          </div>
 
-        <div className="interview-header">
-          <MessageSquare size={32} />
-          <h1>Interview Preparation Guide</h1>
-          <p>Master your interviews with practical and professional strategies.</p>
+          <div className="interview-hero-meta">
+            <strong>Prep goal</strong>
+            <span>Sound clear, confident, and ready</span>
+          </div>
+        </header>
+
+        <div className="interview-grid">
+          <article className="interview-card">
+            <div className="interview-list">
+              {interviewItems.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <section key={item.title} className="interview-item">
+                    <div className="interview-item-icon">
+                      <Icon size={18} />
+                    </div>
+                    <div>
+                      <h2>{item.title}</h2>
+                      <p>{item.text}</p>
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          </article>
+
+          <aside className="interview-side">
+            <div className="interview-side-card">
+              <Mic size={18} />
+              <h3>Before the call</h3>
+              <ul>
+                <li>Test your camera and microphone</li>
+                <li>Keep the job description open</li>
+                <li>Have 2 or 3 project examples ready</li>
+              </ul>
+            </div>
+
+            <div className="interview-side-card">
+              <h3>After the interview</h3>
+              <p>Send a short thank-you note, review what went well, and update your resume with any new keywords.</p>
+              <Link to="/resume-builder" className="interview-link">
+                Improve your resume <ArrowRight size={16} />
+              </Link>
+            </div>
+
+            <div className="interview-side-card muted">
+              <h3>Need help?</h3>
+              <p>Use the contact page to reach the official support inbox for application or profile questions.</p>
+              <Link to="/contact" className="interview-secondary-link">Contact support</Link>
+            </div>
+          </aside>
         </div>
-
-        <div className="interview-list">
-
-          <div className="interview-item">
-            <Brain size={22} />
-            <div>
-              <h3>1. Research the Company Thoroughly</h3>
-              <p>Understand the company’s mission, products, competitors, and recent news. Interviewers expect preparation.</p>
-            </div>
-          </div>
-
-          <div className="interview-item">
-            <Briefcase size={22} />
-            <div>
-              <h3>2. Prepare for Role-Specific Questions</h3>
-              <p>Study common technical and behavioral questions related to the job position.</p>
-            </div>
-          </div>
-
-          <div className="interview-item">
-            <Clock size={22} />
-            <div>
-              <h3>3. Practice Time Management</h3>
-              <p>Arrive early. Keep answers structured and concise using the STAR method.</p>
-            </div>
-          </div>
-
-          <div className="interview-item">
-            <ShieldCheck size={22} />
-            <div>
-              <h3>4. Demonstrate Confidence & Professionalism</h3>
-              <p>Maintain eye contact, clear communication, and positive body language.</p>
-            </div>
-          </div>
-
-          <div className="interview-item">
-            <MessageSquare size={22} />
-            <div>
-              <h3>5. Ask Smart Questions</h3>
-              <p>Ask about team structure, growth opportunities, and performance expectations.</p>
-            </div>
-          </div>
-
-        </div>
-
-        <div className="interview-bottom">
-          <div className="interview-divider"></div>
-
-          <p className="interview-note">
-            Proper preparation increases your hiring chances significantly.
-          </p>
-
-          <button
-            className="interview-back-btn"
-            onClick={() => window.history.back()}
-          >
-            ← Go Back
-          </button>
-        </div>
-
       </div>
-    </div>
+    </section>
   );
 };
 

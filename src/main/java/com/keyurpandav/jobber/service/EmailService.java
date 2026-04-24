@@ -18,6 +18,12 @@ public class EmailService {
     @Value("${app.frontend.base-url:http://localhost:5173}")
     private String frontendBaseUrl;
 
+    @Value("${app.company.name:CareerLink}")
+    private String companyName;
+
+    @Value("${app.company.official-email:support@careerlink.com}")
+    private String officialEmail;
+
     public void sendJobAlertEmail(String toEmail, String userName, String jobTitle, String companyName, String jobLink) {
         sendTextEmail(
                 toEmail,
@@ -79,6 +85,32 @@ public class EmailService {
         );
     }
 
+    public void sendContactMessage(String name, String email, String subject, String message) {
+        sendTextEmail(
+                resolveOfficialEmail(),
+                "[" + safe(companyName) + " Contact] " + safe(subject),
+                "New contact request received.\n\n"
+                        + "Name: " + safe(name) + "\n"
+                        + "Email: " + safe(email) + "\n"
+                        + "Subject: " + safe(subject) + "\n\n"
+                        + "Message:\n" + safe(message) + "\n\n"
+                        + "Sent via CareerLink contact form."
+        );
+    }
+
+    public void sendReviewMessage(String name, String email, Integer rating, String comment) {
+        sendTextEmail(
+                resolveOfficialEmail(),
+                "[" + safe(companyName) + " Review] " + (rating == null ? "New feedback" : rating + "-star feedback"),
+                "New review submitted through the CareerLink footer.\n\n"
+                        + "Name: " + safe(name) + "\n"
+                        + "Email: " + safe(email) + "\n"
+                        + "Rating: " + (rating == null ? "Not provided" : rating + "/5") + "\n\n"
+                        + "Comment:\n" + safe(comment) + "\n\n"
+                        + "Sent via CareerLink footer feedback."
+        );
+    }
+
     private void sendTextEmail(String toEmail, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -110,5 +142,11 @@ public class EmailService {
 
     private String safe(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private String resolveOfficialEmail() {
+        return officialEmail == null || officialEmail.isBlank()
+                ? fromEmail
+                : officialEmail.trim();
     }
 }
