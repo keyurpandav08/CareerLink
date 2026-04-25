@@ -26,7 +26,7 @@ const AdminLogin = () => {
       params.append('username', formData.username.trim());
       params.append('password', formData.password);
 
-      await api.post('/login', params, {
+      await api.post('/api/auth/login', params, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
 
